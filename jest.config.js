@@ -19,7 +19,7 @@ const customJestConfig = {
     '!**/node_modules/**',
     '!components/ui/**', // Exclude shadcn/ui components from coverage
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
       branches: 80,
       functions: 80,

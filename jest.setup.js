@@ -1,13 +1,23 @@
 import '@testing-library/jest-dom'
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+// Mock localStorage with actual storage
+const createLocalStorageMock = () => {
+  let store = {}
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = value.toString()
+    },
+    removeItem: (key) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+  }
 }
-global.localStorage = localStorageMock
+
+global.localStorage = createLocalStorageMock()
 
 // Mock crypto.randomUUID
 global.crypto = {
