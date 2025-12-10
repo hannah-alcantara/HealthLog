@@ -24,18 +24,18 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Install dependencies: zod, react-hook-form, @hookform/resolvers
-- [ ] T002 [P] Install shadcn/ui and configure with `npx shadcn-ui@latest init`
-- [ ] T003 [P] Install shadcn/ui components: button, card, form, input, label, dialog, select, textarea
-- [ ] T004 [P] Install testing dependencies: jest, jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event
-- [ ] T005 [P] Install Playwright for E2E tests: @playwright/test
-- [ ] T006 Create jest.config.js with Next.js preset and coverage thresholds (80% global, 100% schemas)
-- [ ] T007 [P] Create jest.setup.js with localStorage mock and crypto.randomUUID mock
-- [ ] T008 [P] Create playwright.config.ts with browser targets and base URL
-- [ ] T009 [P] Update package.json scripts: test, test:watch, test:coverage, test:e2e, test:e2e:ui
-- [ ] T010 Create directory structure: lib/schemas, lib/storage, lib/hooks, lib/utils, components/ui, components/medical-history, components/appointments, components/documents, components/dashboard, __tests__/components, __tests__/lib, __tests__/integration, __tests__/e2e
+- [x] T001 Install dependencies: zod, react-hook-form, @hookform/resolvers
+- [x] T002 [P] Install shadcn/ui and configure with `npx shadcn-ui@latest init`
+- [x] T003 [P] Install shadcn/ui components: button, card, form, input, label, dialog, select, textarea
+- [x] T004 [P] Install testing dependencies: jest, jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event
+- [x] T005 [P] Install Playwright for E2E tests: @playwright/test
+- [x] T006 Create jest.config.js with Next.js preset and coverage thresholds (80% global, 100% schemas)
+- [x] T007 [P] Create jest.setup.js with localStorage mock and crypto.randomUUID mock
+- [x] T008 [P] Create playwright.config.ts with browser targets and base URL
+- [x] T009 [P] Update package.json scripts: test, test:watch, test:coverage, test:e2e, test:e2e:ui
+- [x] T010 Create directory structure: lib/schemas, lib/storage, lib/hooks, lib/utils, components/ui, components/medical-history, components/appointments, components/documents, components/dashboard, __tests__/components, __tests__/lib, __tests__/integration, __tests__/e2e
 
-**Checkpoint**: Dependencies installed, test infrastructure configured, directory structure created
+**Checkpoint**: ✅ Dependencies installed, test infrastructure configured, directory structure created
 
 ---
 

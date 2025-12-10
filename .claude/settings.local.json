@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(git fetch:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(yarn add:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add button card form input label dialog select textarea --yes)"
     ]
   }
 }
