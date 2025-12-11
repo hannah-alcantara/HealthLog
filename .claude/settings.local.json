@@ -8,7 +8,9 @@
       "Bash(yarn add:*)",
       "Bash(npx shadcn@latest init:*)",
       "Bash(npx shadcn@latest add button card form input label dialog select textarea --yes)",
-      "Bash(yarn test:*)"
+      "Bash(yarn test:*)",
+      "Bash(yarn build)",
+      "Bash(yarn dev)"
     ]
   }
 }
