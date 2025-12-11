@@ -9,6 +9,7 @@ export function Navigation() {
   const links = [
     { href: '/', label: 'Home' },
     { href: '/medical-history', label: 'Medical History' },
+    { href: '/appointments', label: 'Appointments' },
   ];
 
   return (

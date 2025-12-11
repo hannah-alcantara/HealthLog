@@ -123,7 +123,9 @@ describe('Storage Integration Tests', () => {
         appointmentDate: '2025-01-15T10:30:00.000Z',
         doctorName: 'Dr. Smith',
         reason: 'Annual checkup',
+        symptoms: null,
         notes: 'All good',
+        generatedQuestions: null,
       });
 
       expect(appointment.id).toBeDefined();
@@ -141,8 +143,8 @@ describe('Storage Integration Tests', () => {
     });
 
     it('should handle multiple appointments', () => {
-      appointmentService.create({ appointmentDate: '2025-01-15T10:00:00.000Z', doctorName: 'Dr. A', reason: 'Checkup', notes: null });
-      appointmentService.create({ appointmentDate: '2025-02-15T14:00:00.000Z', doctorName: 'Dr. B', reason: 'Follow-up', notes: null });
+      appointmentService.create({ appointmentDate: '2025-01-15T10:00:00.000Z', doctorName: 'Dr. A', reason: 'Checkup', symptoms: null, notes: null, generatedQuestions: null });
+      appointmentService.create({ appointmentDate: '2025-02-15T14:00:00.000Z', doctorName: 'Dr. B', reason: 'Follow-up', symptoms: null, notes: null, generatedQuestions: null });
 
       expect(appointmentService.count()).toBe(2);
 

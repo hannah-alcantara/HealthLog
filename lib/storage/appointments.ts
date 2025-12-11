@@ -51,4 +51,16 @@ export const appointmentService = {
   count(): number {
     return appointmentsStorage.count();
   },
+
+  /**
+   * Get all appointments sorted by appointmentDate in descending order (newest first)
+   */
+  getAllSorted(): Appointment[] {
+    const appointments = appointmentsStorage.getAll();
+    return appointments.sort((a, b) => {
+      const dateA = new Date(a.appointmentDate).getTime();
+      const dateB = new Date(b.appointmentDate).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    });
+  },
 };

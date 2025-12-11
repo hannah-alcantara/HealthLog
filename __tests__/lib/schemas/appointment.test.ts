@@ -11,7 +11,9 @@ describe('Appointment Schema', () => {
     appointmentDate: '2025-01-15T10:30:00.000Z',
     doctorName: 'Dr. Jane Smith',
     reason: 'Annual checkup',
+    symptoms: 'Mild headache',
     notes: 'Blood pressure normal, weight stable',
+    generatedQuestions: ['What is my blood pressure?', 'Should I change diet?'],
     createdAt: '2025-01-10T14:30:00.000Z',
     updatedAt: '2025-01-10T14:30:00.000Z',
   };
@@ -23,6 +25,11 @@ describe('Appointment Schema', () => {
 
     it('should validate appointment with null notes', () => {
       const appointment = { ...validAppointment, notes: null };
+      expect(() => appointmentSchema.parse(appointment)).not.toThrow();
+    });
+
+    it('should validate appointment with null symptoms and generatedQuestions', () => {
+      const appointment = { ...validAppointment, symptoms: null, generatedQuestions: null };
       expect(() => appointmentSchema.parse(appointment)).not.toThrow();
     });
 
@@ -93,7 +100,9 @@ describe('Appointment Schema', () => {
       appointmentDate: '2025-02-10T14:00:00.000Z',
       doctorName: 'Dr. Michael Brown',
       reason: 'Vaccination appointment',
+      symptoms: 'None',
       notes: 'Flu shot administered',
+      generatedQuestions: null,
     };
 
     it('should validate valid create input', () => {

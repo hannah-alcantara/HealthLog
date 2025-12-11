@@ -22,12 +22,15 @@ export default function Home() {
             </p>
           </Link>
 
-          <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 opacity-60">
-            <h2 className="text-xl font-semibold mb-2 text-gray-500">Appointments</h2>
-            <p className="text-gray-500 dark:text-gray-600">
-              Coming soon - Track your doctor visits and appointments.
+          <Link
+            href="/appointments"
+            className="block p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
+          >
+            <h2 className="text-xl font-semibold mb-2">Appointments</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track doctor visits, symptoms, and prepare for appointments.
             </p>
-          </div>
+          </Link>
 
           <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 opacity-60">
             <h2 className="text-xl font-semibold mb-2 text-gray-500">Documents</h2>
