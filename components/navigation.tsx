@@ -7,9 +7,9 @@ export function Navigation() {
   const pathname = usePathname();
 
   const links = [
-    { href: '/', label: 'Home' },
-    { href: '/medical-history', label: 'Medical History' },
+    { href: '/', label: 'Dashboard' },
     { href: '/appointments', label: 'Appointments' },
+    { href: '/medical-history', label: 'Medical History' },
   ];
 
   return (
