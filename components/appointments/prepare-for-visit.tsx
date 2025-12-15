@@ -6,9 +6,11 @@ import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { generateAppointmentQuestions } from '@/lib/utils/question-generator';
 import type { Condition, Medication, Allergy } from '@/lib/schemas/medical-history';
 import type { Appointment } from '@/lib/schemas/appointment';
+import type { Symptom } from '@/lib/schemas/symptom';
 
 interface PrepareForVisitProps {
   appointment: Appointment;
+  symptomLogs: Symptom[];
   conditions: Condition[];
   medications: Medication[];
   allergies: Allergy[];
@@ -19,6 +21,7 @@ interface PrepareForVisitProps {
 
 export function PrepareForVisit({
   appointment,
+  symptomLogs,
   conditions,
   medications,
   allergies,
@@ -37,6 +40,7 @@ export function PrepareForVisit({
     setTimeout(() => {
       const generated = generateAppointmentQuestions(
         appointment.symptoms,
+        symptomLogs,
         conditions,
         medications,
         allergies

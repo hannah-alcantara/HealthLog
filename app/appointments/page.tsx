@@ -5,6 +5,7 @@ import { useAppointments } from '@/lib/hooks/use-appointments';
 import { useConditions } from '@/lib/hooks/use-conditions';
 import { useMedications } from '@/lib/hooks/use-medications';
 import { useAllergies } from '@/lib/hooks/use-allergies';
+import { useSymptoms } from '@/lib/hooks/use-symptoms';
 import { AppointmentsList } from '@/components/appointments/appointments-list';
 import { AppointmentForm } from '@/components/appointments/appointment-form';
 import { PrepareForVisit } from '@/components/appointments/prepare-for-visit';
@@ -22,6 +23,7 @@ export default function AppointmentsPage() {
   const { conditions } = useConditions();
   const { medications } = useMedications();
   const { allergies } = useAllergies();
+  const { symptoms } = useSymptoms();
 
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'closed' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,6 +151,7 @@ export default function AppointmentsPage() {
           {dialogState.type === 'prepare' && (
             <PrepareForVisit
               appointment={dialogState.appointment}
+              symptomLogs={symptoms}
               conditions={conditions}
               medications={medications}
               allergies={allergies}

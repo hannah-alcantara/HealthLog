@@ -1,12 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createAppointmentSchema, type CreateAppointmentInput } from '@/lib/schemas/appointment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface AppointmentFormProps {
   defaultValues?: Partial<CreateAppointmentInput>;
@@ -24,11 +25,12 @@ export function AppointmentForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateAppointmentInput>({
     resolver: zodResolver(createAppointmentSchema),
     defaultValues: defaultValues || {
-      appointmentDate: '',
+      appointmentDate: new Date().toISOString(),
       doctorName: '',
       reason: '',
       symptoms: null,
@@ -41,11 +43,18 @@ export function AppointmentForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="appointmentDate">Appointment Date *</Label>
-        <Input
-          id="appointmentDate"
-          type="datetime-local"
-          {...register('appointmentDate')}
-          aria-invalid={!!errors.appointmentDate}
+        <Controller
+          name="appointmentDate"
+          control={control}
+          render={({ field }) => (
+            <DateTimePicker
+              value={field.value ? new Date(field.value) : undefined}
+              onChange={(date) => {
+                field.onChange(date ? date.toISOString() : new Date().toISOString());
+              }}
+              placeholder="Select appointment date and time"
+            />
+          )}
         />
         {errors.appointmentDate && (
           <p className="text-sm text-red-600" role="alert">

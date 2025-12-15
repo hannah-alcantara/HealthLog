@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createSymptomSchema,
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface SymptomFormProps {
   defaultValues?: Partial<CreateSymptomInput>;
@@ -33,23 +34,31 @@ export function SymptomForm({
   onCancel,
   isSubmitting,
 }: SymptomFormProps) {
+  const formDefaultValues = defaultValues
+    ? {
+        ...defaultValues,
+        loggedAt: defaultValues.loggedAt || new Date().toISOString(),
+      }
+    : {
+        symptomType: '',
+        category: 'other' as const,
+        severity: 5,
+        bodyPart: null,
+        triggers: null,
+        notes: null,
+        loggedAt: new Date().toISOString(),
+      };
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<CreateSymptomInput>({
     resolver: zodResolver(createSymptomSchema),
-    defaultValues: defaultValues || {
-      symptomType: '',
-      category: 'other',
-      severity: 5,
-      bodyPart: null,
-      triggers: null,
-      notes: null,
-      loggedAt: new Date().toISOString(),
-    },
+    defaultValues: formDefaultValues,
   });
 
   const category = watch('category');
@@ -155,11 +164,18 @@ export function SymptomForm({
 
       <div className="space-y-2">
         <Label htmlFor="loggedAt">Date & Time *</Label>
-        <Input
-          id="loggedAt"
-          type="datetime-local"
-          {...register('loggedAt')}
-          aria-invalid={!!errors.loggedAt}
+        <Controller
+          name="loggedAt"
+          control={control}
+          render={({ field }) => (
+            <DateTimePicker
+              value={field.value ? new Date(field.value) : undefined}
+              onChange={(date) => {
+                field.onChange(date ? date.toISOString() : new Date().toISOString());
+              }}
+              placeholder="Select date and time"
+            />
+          )}
         />
         {errors.loggedAt && (
           <p className="text-sm text-red-600" role="alert">
