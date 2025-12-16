@@ -24,7 +24,11 @@ export default function DashboardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const stats = !symptomsLoading ? getStats() : { total: 0, averageSeverity: 0, mostCommonSymptom: null, mostCommonCategory: null };
-  const recentSymptoms = symptoms.slice(0, 5);
+
+  // Sort symptoms by date (newest first) and take the 5 most recent
+  const recentSymptoms = [...symptoms]
+    .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())
+    .slice(0, 5);
 
   // Find next upcoming appointment
   const now = new Date();
@@ -199,14 +203,15 @@ export default function DashboardPage() {
           </Card>
         )}
 
+
         {/* Recent Symptoms */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">Recent Symptoms</h2>
             {symptoms.length > 5 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Showing 5 of {symptoms.length}
-              </p>
+              <Link href="/symptoms">
+                <Button variant="outline">View All Symptoms</Button>
+              </Link>
             )}
           </div>
 
@@ -267,41 +272,41 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Add/Edit Symptom Dialog */}
-      <Dialog
-        open={dialogState.type !== 'closed'}
-        onOpenChange={(open) => {
-          if (!open) closeDialog();
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogState.type === 'edit' ? 'Edit Symptom' : 'Log New Symptom'}
-            </DialogTitle>
-          </DialogHeader>
-          <SymptomForm
-            defaultValues={
-              dialogState.type === 'edit'
-                ? {
-                    symptomType: dialogState.symptom.symptomType,
-                    category: dialogState.symptom.category,
-                    severity: dialogState.symptom.severity,
-                    bodyPart: dialogState.symptom.bodyPart,
-                    triggers: dialogState.symptom.triggers,
-                    notes: dialogState.symptom.notes,
-                    loggedAt: dialogState.symptom.loggedAt,
-                  }
-                : undefined
-            }
-            onSubmit={handleSubmit}
-            onCancel={closeDialog}
-            isSubmitting={isSubmitting}
-          />
-        </DialogContent>
-      </Dialog>
+        {/* Add/Edit Symptom Dialog */}
+        <Dialog
+          open={dialogState.type !== 'closed'}
+          onOpenChange={(open) => {
+            if (!open) closeDialog();
+          }}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {dialogState.type === 'edit' ? 'Edit Symptom' : 'Log New Symptom'}
+              </DialogTitle>
+            </DialogHeader>
+            <SymptomForm
+              defaultValues={
+                dialogState.type === 'edit'
+                  ? {
+                      symptomType: dialogState.symptom.symptomType,
+                      category: dialogState.symptom.category,
+                      severity: dialogState.symptom.severity,
+                      bodyPart: dialogState.symptom.bodyPart,
+                      triggers: dialogState.symptom.triggers,
+                      notes: dialogState.symptom.notes,
+                      loggedAt: dialogState.symptom.loggedAt,
+                    }
+                  : undefined
+              }
+              onSubmit={handleSubmit}
+              onCancel={closeDialog}
+              isSubmitting={isSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
