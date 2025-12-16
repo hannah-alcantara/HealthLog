@@ -1,12 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMedicationSchema, type CreateMedicationInput } from '@/lib/schemas/medical-history';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface MedicationFormProps {
   defaultValues?: Partial<CreateMedicationInput>;
@@ -19,6 +20,7 @@ export function MedicationForm({ defaultValues, onSubmit, onCancel, isSubmitting
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateMedicationInput>({
     resolver: zodResolver(createMedicationSchema),
@@ -82,13 +84,18 @@ export function MedicationForm({ defaultValues, onSubmit, onCancel, isSubmitting
 
       <div className="space-y-2">
         <Label htmlFor="startDate">Start Date</Label>
-        <Input
-          id="startDate"
-          type="datetime-local"
-          {...register('startDate', {
-            setValueAs: (v) => (v === '' ? null : new Date(v).toISOString()),
-          })}
-          aria-invalid={!!errors.startDate}
+        <Controller
+          name="startDate"
+          control={control}
+          render={({ field }) => (
+            <DateTimePicker
+              value={field.value ? new Date(field.value) : undefined}
+              onChange={(date) => {
+                field.onChange(date ? date.toISOString() : null);
+              }}
+              placeholder="Select start date and time"
+            />
+          )}
         />
         {errors.startDate && (
           <p className="text-sm text-red-600" role="alert">

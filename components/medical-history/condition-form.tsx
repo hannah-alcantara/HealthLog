@@ -1,12 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createConditionSchema, type CreateConditionInput } from '@/lib/schemas/medical-history';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface ConditionFormProps {
   defaultValues?: Partial<CreateConditionInput>;
@@ -19,6 +20,7 @@ export function ConditionForm({ defaultValues, onSubmit, onCancel, isSubmitting 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateConditionInput>({
     resolver: zodResolver(createConditionSchema),
@@ -48,13 +50,18 @@ export function ConditionForm({ defaultValues, onSubmit, onCancel, isSubmitting 
 
       <div className="space-y-2">
         <Label htmlFor="diagnosisDate">Diagnosis Date</Label>
-        <Input
-          id="diagnosisDate"
-          type="datetime-local"
-          {...register('diagnosisDate', {
-            setValueAs: (v) => (v === '' ? null : new Date(v).toISOString()),
-          })}
-          aria-invalid={!!errors.diagnosisDate}
+        <Controller
+          name="diagnosisDate"
+          control={control}
+          render={({ field }) => (
+            <DateTimePicker
+              value={field.value ? new Date(field.value) : undefined}
+              onChange={(date) => {
+                field.onChange(date ? date.toISOString() : null);
+              }}
+              placeholder="Select diagnosis date and time"
+            />
+          )}
         />
         {errors.diagnosisDate && (
           <p className="text-sm text-red-600" role="alert">
