@@ -5,6 +5,8 @@ import { useSymptoms } from '@/lib/hooks/use-symptoms';
 import { useAppointments } from '@/lib/hooks/use-appointments';
 import { SymptomsList } from '@/components/symptoms/symptoms-list';
 import { SymptomForm } from '@/components/symptoms/symptom-form';
+import { SymptomFrequencyChart } from '@/components/dashboard/symptom-frequency-chart';
+import { CategoryBreakdownChart } from '@/components/dashboard/category-breakdown-chart';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -133,6 +135,39 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Charts Section */}
+        {symptoms.length > 0 && (
+          <div className="space-y-6 mb-8">
+            <h2 className="text-2xl font-semibold">Symptom Analytics</h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold">Symptom Trends</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Most frequently logged symptoms (top 10)
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <SymptomFrequencyChart symptoms={symptoms} />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold">Category Breakdown</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Distribution of symptoms by category
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <CategoryBreakdownChart symptoms={symptoms} />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Next Appointment Countdown */}
         {nextAppointment && daysUntil !== null && (

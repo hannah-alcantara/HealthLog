@@ -155,22 +155,22 @@
 
 ---
 
-## Phase 8: Dashboard Visualizations (NEXT - Recommended)
+## Phase 8: Dashboard Visualizations ✅ COMPLETE
 
 **Goal**: Make symptom data more actionable with charts and graphs
 
 ### Chart Components
-- [ ] T125 Install chart library (recharts or chart.js)
-- [ ] T126 Create components/dashboard/symptom-frequency-chart.tsx (bar chart of last 30 days)
-- [ ] T127 Create components/dashboard/severity-trend-chart.tsx (line graph showing severity over time)
-- [ ] T128 Create components/dashboard/category-breakdown-chart.tsx (pie chart of symptom categories)
+- [x] T125 Install chart library (recharts 3.6.0 with react-is peer dependency)
+- [x] T126 Create components/dashboard/symptom-frequency-chart.tsx (bar chart of last 30 days)
+- [x] T127 Create components/dashboard/severity-trend-chart.tsx (line graph showing severity over time)
+- [x] T128 Create components/dashboard/category-breakdown-chart.tsx (pie chart of symptom categories)
 
 ### Dashboard Enhancement
-- [ ] T129 Update app/page.tsx to include chart components
-- [ ] T130 Add date range selector for chart filtering
-- [ ] T131 Add export functionality (PDF/CSV) for symptom logs
+- [x] T129 Update app/page.tsx to include chart components
+- [ ] T130 Add date range selector for chart filtering (deferred - optional enhancement)
+- [ ] T131 Add export functionality (PDF/CSV) for symptom logs (deferred - optional enhancement)
 
-**Checkpoint**: Symptom data visualized for better pattern recognition
+**Checkpoint**: ✅ Symptom data visualized for better pattern recognition
 
 ---
 
@@ -251,10 +251,9 @@
 - **Testing (Phase 10)**: Ongoing, can run parallel with development
 - **Polish (Phase 11)**: Depends on all desired features being complete
 
-### Current Status (2025-12-15)
-✅ **Completed**: Phases 1-6
-🔄 **In Progress**: Phase 7 (navigation)
-📋 **Next**: Phase 8 (dashboard visualizations)
+### Current Status (2025-12-16)
+✅ **Completed**: Phases 1-8 (Setup → Onboarding → Dashboard Visualizations)
+📋 **Next**: Phase 9 (Search & Filter) or Phase 10 (Testing & Quality)
 
 ---
 
@@ -276,13 +275,13 @@
 - Appointment tracking with AI question generation
 - Symptom tracking with pattern analysis
 - Onboarding flow for new users
+- Dashboard visualizations (frequency chart, severity trends, category breakdown)
 - Basic navigation
 
 ### Next Steps (Recommended Priority)
-1. **Dashboard Visualizations** (Phase 8) - Make data more actionable
-2. **Search & Filter** (Phase 9) - Improve symptom log usability
-3. **Testing** (Phase 10) - Ensure quality and coverage
-4. **Polish** (Phase 11) - Meet all quality gates
+1. **Search & Filter** (Phase 9) - Improve symptom log usability with date ranges and filters
+2. **Testing** (Phase 10) - Ensure quality and coverage
+3. **Polish** (Phase 11) - Meet all quality gates (accessibility, performance, lighthouse scores)
 
 ### Future Enhancements (v2)
 - Document upload/management
