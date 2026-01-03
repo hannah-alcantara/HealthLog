@@ -23,7 +23,7 @@ describe('SymptomsList', () => {
     {
       id: '2',
       symptomType: 'Fatigue',
-      category: 'general',
+      category: 'other',
       severity: 4,
       bodyPart: undefined,
       triggers: undefined,
@@ -127,6 +127,7 @@ describe('SymptomsList', () => {
 
       expect(screen.getByText('Fatigue')).toBeInTheDocument();
       expect(screen.getByText('Severity: 4/10')).toBeInTheDocument();
+      expect(screen.getByText('Other')).toBeInTheDocument();
       expect(screen.queryByText(/triggers/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/notes/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/📍/)).not.toBeInTheDocument();
@@ -358,11 +359,7 @@ describe('SymptomsList', () => {
 
       expect(screen.getByText('Neurological')).toBeInTheDocument();
       expect(screen.getByText('Pain')).toBeInTheDocument();
-      // Note: The second symptom uses 'general' category which displays as 'General'
-      const allText = screen.getByText((content, element) => {
-        return element?.textContent?.includes('General') || false;
-      });
-      expect(allText).toBeInTheDocument();
+      expect(screen.getByText('Other')).toBeInTheDocument();
     });
   });
 });
