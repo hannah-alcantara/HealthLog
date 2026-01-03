@@ -74,8 +74,11 @@ describe('useAppointments', () => {
 
     await result.current.create(input);
 
+    await waitFor(() => {
+      expect(result.current.appointments).toContainEqual(newAppointment);
+    });
+
     expect(appointmentService.create).toHaveBeenCalledWith(input);
-    expect(result.current.appointments).toContainEqual(newAppointment);
   });
 
   it('should update an appointment', async () => {
@@ -110,8 +113,11 @@ describe('useAppointments', () => {
 
     await result.current.update('1', { notes: 'All tests normal' });
 
+    await waitFor(() => {
+      expect(result.current.appointments[0].notes).toBe('All tests normal');
+    });
+
     expect(appointmentService.update).toHaveBeenCalledWith('1', { notes: 'All tests normal' });
-    expect(result.current.appointments[0].notes).toBe('All tests normal');
   });
 
   it('should delete an appointment', async () => {
@@ -137,8 +143,11 @@ describe('useAppointments', () => {
 
     await result.current.remove('1');
 
+    await waitFor(() => {
+      expect(result.current.appointments).toHaveLength(0);
+    });
+
     expect(appointmentService.delete).toHaveBeenCalledWith('1');
-    expect(result.current.appointments).toHaveLength(0);
   });
 
   it('should handle errors when loading appointments', async () => {

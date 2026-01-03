@@ -149,10 +149,10 @@ function analyzeMostAffectedBodyParts(symptoms: Symptom[]): string[] {
  */
 export function generateAppointmentQuestions(
   appointmentSymptoms: string | null,
-  symptomLogs: Symptom[],
-  conditions: Condition[],
-  medications: Medication[],
-  allergies: Allergy[],
+  symptomLogs: Symptom[] = [],
+  conditions: Condition[] = [],
+  medications: Medication[] = [],
+  allergies: Allergy[] = [],
   daysToAnalyze: number = 30
 ): string[] {
   const questions: string[] = [];
