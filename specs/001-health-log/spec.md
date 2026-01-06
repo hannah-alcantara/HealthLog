@@ -56,11 +56,19 @@ Users want to record past doctor visits including date, doctor name, reason for 
 
 ---
 
-### User Story 3 - Document Management (Priority: P3)
+### User Story 3 - Document Management (Priority: P3) **[DEFERRED]**
+
+**Status**: This feature has been deferred to a future iteration. Users can manually reference physical documents or email attachments for now.
 
 Users need to upload and store medical documents (lab results, prescriptions, medical images) for easy reference. Documents can be viewed but not edited within the app.
 
-**Why this priority**: Document storage is valuable but users can manually reference physical/email documents initially. This enhances the app but isn't critical for MVP.
+**Why this priority**: Document storage is valuable but users can manually reference physical/email documents initially. This enhances the app but isn't critical for MVP. Given the complexity of file handling and storage quota concerns with localStorage, this feature is postponed.
+
+**Why deferred**:
+- File uploads add significant complexity to localStorage management
+- Large files (PDFs, images) can quickly exhaust browser storage quotas
+- Core symptom tracking and appointment features provide sufficient value for MVP
+- Physical/digital documents can be referenced externally until proper cloud storage is implemented
 
 **Independent Test**: Can be tested by uploading various document types (PDF, images), viewing them, and deleting them. Success means users can maintain a digital filing system for medical documents.
 
@@ -74,20 +82,22 @@ Users need to upload and store medical documents (lab results, prescriptions, me
 
 ---
 
-### User Story 4 - Dashboard Overview (Priority: P4)
+### User Story 4 - Symptom Dashboard (Priority: P4)
 
-Users want a dashboard showing recent activity across all sections (recently added entries, upcoming appointments if dates are in future, quick stats) to get an at-a-glance view of their health tracking.
+Users want a symptom-focused dashboard showing symptom analytics, recent symptom logs, upcoming appointments, and quick access to key features. The dashboard provides data visualization through charts showing symptom frequency and category breakdown, along with calculated statistics.
 
-**Why this priority**: The dashboard provides convenience and overview but requires other features to be built first. It's the "nice to have" that enhances user experience after core features work.
+**Why this priority**: The dashboard is the landing page and provides immediate value by visualizing symptom patterns. It helps users identify trends and prepare for appointments without navigating multiple sections.
 
-**Independent Test**: Can be tested by creating entries in other sections, then viewing the dashboard to see recent activity and summary statistics. Success means users can quickly understand their health tracking status without navigating to each section.
+**Independent Test**: Can be tested by logging multiple symptoms over time, scheduling appointments, and viewing the dashboard to see charts, stats, and recent activity. Success means users can quickly understand their symptom patterns and access key features.
 
 **Acceptance Scenarios**:
 
-1. **Given** the user has added entries in Medical History and Appointments, **When** they view the Dashboard, **Then** they see their most recent 5 activities across all sections
-2. **Given** the user has tracked data over time, **When** they view the Dashboard, **Then** they see quick stats (e.g., "3 active medications", "5 appointments logged", "2 documents stored")
-3. **Given** the user is new with no data, **When** they view the Dashboard, **Then** they see a welcome message with quick links to start adding data in each section
-4. **Given** the user frequently uses the app, **When** they open it, **Then** the Dashboard loads as the default landing page
+1. **Given** the user has logged symptoms, **When** they view the Dashboard, **Then** they see summary stats (total symptoms, average severity, most common symptom, top category)
+2. **Given** the user has logged multiple symptoms, **When** they view the Dashboard, **Then** they see visual charts showing symptom frequency trends and category breakdown
+3. **Given** the user has an upcoming appointment, **When** they view the Dashboard, **Then** they see a countdown card with days until appointment and quick access to prepare questions
+4. **Given** the user has logged symptoms, **When** they view the Dashboard, **Then** they see their 5 most recent symptoms with ability to edit/delete
+5. **Given** the user is new with no data, **When** they view the Dashboard, **Then** they see an empty state with a "Log Your First Symptom" call-to-action
+6. **Given** the user frequently uses the app, **When** they open it, **Then** the Symptom Dashboard loads as the default landing page with quick links to Appointments and Medical History sections
 
 ---
 
