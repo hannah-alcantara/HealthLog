@@ -66,13 +66,13 @@ export function SymptomFrequencyChart({ symptoms }: SymptomFrequencyChartProps) 
             fill="hsl(var(--primary))"
             radius={[0, 4, 4, 0]}
             name="Occurrences"
-            label={(props: BarLabelProps) => {
+            label={(props) => {
               const { x = 0, y = 0, width = 0, value = 0, index = 0 } = props;
               const symptom = chartData[index]?.symptom || '';
               return (
                 <text
-                  x={x + 10}
-                  y={y + (width / 2)}
+                  x={Number(x) + 10}
+                  y={Number(y) + (Number(width) / 2)}
                   fill="white"
                   fontSize={12}
                   textAnchor="start"

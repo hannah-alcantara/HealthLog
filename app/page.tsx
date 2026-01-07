@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Symptom, CreateSymptomInput } from '@/lib/schemas/symptom';
 import { symptomCategoryLabels } from '@/lib/schemas/symptom';
 import Link from 'next/link';
+import { StorageWarningBanner } from '@/components/storage-warning-banner';
 
 type DialogState = { type: 'closed' } | { type: 'add' } | { type: 'edit'; symptom: Symptom };
 
@@ -98,6 +99,8 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">Symptom Dashboard</h1>
           <Button onClick={handleAdd} size="lg">+ Log Symptom</Button>
         </div>
+
+        <StorageWarningBanner />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

@@ -21,6 +21,12 @@ interface CustomTooltipProps {
 
 interface ChartEntry {
   name: string;
+  value: number;
+  percentage: number;
+}
+
+interface PieLabelProps {
+  name: string;
   percentage: number;
 }
 
@@ -99,7 +105,7 @@ export function CategoryBreakdownChart({ symptoms }: CategoryBreakdownChartProps
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={(entry: ChartEntry) => `${entry.name} (${entry.percentage}%)`}
+            label={(entry) => `${entry.name} (${Math.round((entry.percent || 0) * 100)}%)`}
             outerRadius={80}
             fill="hsl(var(--primary))"
             dataKey="value"
