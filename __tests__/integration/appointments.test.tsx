@@ -4,48 +4,18 @@ import AppointmentsPage from '@/app/appointments/page';
 import type { Appointment } from '@/lib/schemas/appointment';
 
 // Mock all storage services and hooks
-jest.mock('@/lib/storage/appointments', () => ({
-  appointmentService: {
-    getAllSorted: jest.fn(() => []),
-    create: jest.fn((input) => ({
-      id: 'apt-test-id-1',
-      ...input,
-      createdAt: '2025-01-10T10:00:00.000Z',
-      updatedAt: '2025-01-10T10:00:00.000Z',
-    })),
-    update: jest.fn((id, updates) => ({
-      id,
-      appointmentDate: '2024-01-15T10:00:00.000Z',
-      doctorName: 'Dr. Smith',
-      reason: 'Checkup',
-      symptoms: null,
-      notes: null,
-      generatedQuestions: null,
-      ...updates,
-      createdAt: '2025-01-10T10:00:00.000Z',
-      updatedAt: '2025-01-10T11:00:00.000Z',
-    })),
-    delete: jest.fn(),
-  },
-}));
+jest.mock('@/lib/storage/appointments');
+jest.mock('@/lib/storage/medical-history');
+jest.mock('@/lib/storage/symptoms');
 
-jest.mock('@/lib/storage/medical-history', () => ({
-  conditionService: {
-    getAll: jest.fn(() => []),
-  },
-  medicationService: {
-    getAll: jest.fn(() => []),
-  },
-  allergyService: {
-    getAll: jest.fn(() => []),
-  },
-}));
+// Import mocked modules
+import { appointmentService } from '@/lib/storage/appointments';
+import { conditionService, medicationService } from '@/lib/storage/medical-history';
 
-jest.mock('@/lib/storage/symptoms', () => ({
-  symptomService: {
-    getAll: jest.fn(() => []),
-  },
-}));
+// Mock implementations
+const mockAppointmentService = appointmentService as jest.Mocked<typeof appointmentService>;
+const mockConditionService = conditionService as jest.Mocked<typeof conditionService>;
+const mockMedicationService = medicationService as jest.Mocked<typeof medicationService>;
 
 describe('Appointments Integration Tests', () => {
   beforeEach(() => {
@@ -56,10 +26,9 @@ describe('Appointments Integration Tests', () => {
   // AS-1: Add new appointment
   it('AS-1: should add a new appointment and display it in chronological order', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
 
     // Setup: Mock empty appointments list initially
-    appointmentService.getAllSorted.mockReturnValue([]);
+    mockAppointmentService.getAllSorted.mockReturnValue([]);
 
     render(<AppointmentsPage />);
 
@@ -89,7 +58,7 @@ describe('Appointments Integration Tests', () => {
 
     // Verify appointment was created
     await waitFor(() => {
-      expect(appointmentService.create).toHaveBeenCalledWith(
+      expect(mockAppointmentService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           doctorName: 'Dr. Smith',
           reason: 'Annual checkup',
@@ -101,7 +70,6 @@ describe('Appointments Integration Tests', () => {
   // AS-2: Edit appointment notes
   it('AS-2: should allow editing notes for an existing appointment', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
 
     const existingAppointment: Appointment = {
       id: 'apt-1',
@@ -115,7 +83,7 @@ describe('Appointments Integration Tests', () => {
       updatedAt: '2025-01-10T10:00:00.000Z',
     };
 
-    appointmentService.getAllSorted.mockReturnValue([existingAppointment]);
+    mockAppointmentService.getAllSorted.mockReturnValue([existingAppointment]);
 
     render(<AppointmentsPage />);
 
@@ -141,7 +109,7 @@ describe('Appointments Integration Tests', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(appointmentService.update).toHaveBeenCalledWith(
+      expect(mockAppointmentService.update).toHaveBeenCalledWith(
         'apt-1',
         expect.objectContaining({
           notes: 'Blood pressure normal, schedule follow-up in 6 months',
@@ -152,7 +120,6 @@ describe('Appointments Integration Tests', () => {
 
   // AS-3: Appointments sorted chronologically
   it('AS-3: should display appointments sorted by date (most recent first)', async () => {
-    const { appointmentService } = require('@/lib/storage/appointments');
 
     const appointments: Appointment[] = [
       {
@@ -190,7 +157,7 @@ describe('Appointments Integration Tests', () => {
       },
     ];
 
-    appointmentService.getAllSorted.mockReturnValue(appointments);
+    mockAppointmentService.getAllSorted.mockReturnValue(appointments);
 
     render(<AppointmentsPage />);
 
@@ -210,7 +177,6 @@ describe('Appointments Integration Tests', () => {
   // AS-4: Delete appointment
   it('AS-4: should delete an appointment when user confirms deletion', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
 
     const existingAppointment: Appointment = {
       id: 'apt-delete',
@@ -224,7 +190,7 @@ describe('Appointments Integration Tests', () => {
       updatedAt: '2025-01-10T10:00:00.000Z',
     };
 
-    appointmentService.getAllSorted.mockReturnValue([existingAppointment]);
+    mockAppointmentService.getAllSorted.mockReturnValue([existingAppointment]);
 
     // Mock window.confirm to return true
     const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
@@ -241,7 +207,7 @@ describe('Appointments Integration Tests', () => {
 
     await waitFor(() => {
       expect(confirmSpy).toHaveBeenCalled();
-      expect(appointmentService.delete).toHaveBeenCalledWith('apt-delete');
+      expect(mockAppointmentService.delete).toHaveBeenCalledWith('apt-delete');
     });
 
     confirmSpy.mockRestore();
@@ -250,9 +216,8 @@ describe('Appointments Integration Tests', () => {
   // AS-6: Enter symptoms for appointment
   it('AS-6: should save symptoms when entered in appointment form', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
 
-    appointmentService.getAllSorted.mockReturnValue([]);
+    mockAppointmentService.getAllSorted.mockReturnValue([]);
 
     render(<AppointmentsPage />);
 
@@ -283,7 +248,7 @@ describe('Appointments Integration Tests', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(appointmentService.create).toHaveBeenCalledWith(
+      expect(mockAppointmentService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           symptoms: 'Headache, fatigue, dizziness',
         })
@@ -294,11 +259,9 @@ describe('Appointments Integration Tests', () => {
   // AS-7: Generate questions based on symptoms and medical history
   it('AS-7: should generate questions when clicking Prepare for Next Visit', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
-    const { conditionService, medicationService } = require('@/lib/storage/medical-history');
 
     // Setup medical history
-    conditionService.getAll.mockReturnValue([
+    mockConditionService.getAll.mockReturnValue([
       {
         id: 'cond-1',
         name: 'Hypertension',
@@ -309,7 +272,7 @@ describe('Appointments Integration Tests', () => {
       },
     ]);
 
-    medicationService.getAll.mockReturnValue([
+    mockMedicationService.getAll.mockReturnValue([
       {
         id: 'med-1',
         name: 'Lisinopril',
@@ -334,7 +297,7 @@ describe('Appointments Integration Tests', () => {
       updatedAt: '2025-01-10T10:00:00.000Z',
     };
 
-    appointmentService.getAllSorted.mockReturnValue([existingAppointment]);
+    mockAppointmentService.getAllSorted.mockReturnValue([existingAppointment]);
 
     render(<AppointmentsPage />);
 
@@ -361,7 +324,6 @@ describe('Appointments Integration Tests', () => {
 
   // AS-8: View generated questions
   it('AS-8: should display saved questions for an appointment', async () => {
-    const { appointmentService } = require('@/lib/storage/appointments');
 
     const appointmentWithQuestions: Appointment = {
       id: 'apt-with-q',
@@ -379,7 +341,7 @@ describe('Appointments Integration Tests', () => {
       updatedAt: '2025-01-10T10:00:00.000Z',
     };
 
-    appointmentService.getAllSorted.mockReturnValue([appointmentWithQuestions]);
+    mockAppointmentService.getAllSorted.mockReturnValue([appointmentWithQuestions]);
 
     render(<AppointmentsPage />);
 
@@ -399,8 +361,7 @@ describe('Appointments Integration Tests', () => {
 
   // Empty state test
   it('should display empty state when no appointments exist', async () => {
-    const { appointmentService } = require('@/lib/storage/appointments');
-    appointmentService.getAllSorted.mockReturnValue([]);
+    mockAppointmentService.getAllSorted.mockReturnValue([]);
 
     render(<AppointmentsPage />);
 
@@ -412,9 +373,8 @@ describe('Appointments Integration Tests', () => {
   // Form validation test
   it('should validate required fields in appointment form', async () => {
     const user = userEvent.setup();
-    const { appointmentService } = require('@/lib/storage/appointments');
 
-    appointmentService.getAllSorted.mockReturnValue([]);
+    mockAppointmentService.getAllSorted.mockReturnValue([]);
 
     render(<AppointmentsPage />);
 

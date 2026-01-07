@@ -37,10 +37,10 @@ export function CompleteStep({ onComplete }: CompleteStepProps) {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-2">You're All Set!</h2>
+            <h2 className="text-2xl font-bold mb-2">You&apos;re All Set!</h2>
             <p className="text-gray-600 dark:text-gray-400">
               {totalAdded > 0
-                ? `You've added ${totalAdded} ${totalAdded === 1 ? 'item' : 'items'} to your health profile`
+                ? `You&apos;ve added ${totalAdded} ${totalAdded === 1 ? 'item' : 'items'} to your health profile`
                 : 'Your health profile is ready to go'}
             </p>
           </div>
@@ -62,7 +62,7 @@ export function CompleteStep({ onComplete }: CompleteStepProps) {
           </div>
 
           <div className="border-t pt-6 space-y-3">
-            <h3 className="font-semibold">What's Next?</h3>
+            <h3 className="font-semibold">What&apos;s Next?</h3>
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400">•</span>

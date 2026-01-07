@@ -43,7 +43,7 @@ export function MedicationsStep({ onNext, onBack }: MedicationsStepProps) {
         <CardHeader>
           <h2 className="text-2xl font-bold">Current Medications</h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Add any medications you're currently taking (optional)
+            Add any medications you&apos;re currently taking (optional)
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

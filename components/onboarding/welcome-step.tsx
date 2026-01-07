@@ -15,7 +15,7 @@ export function WelcomeStep({ onNext, onSkip }: WelcomeStepProps) {
         <CardHeader>
           <h1 className="text-3xl font-bold text-center mb-2">Welcome to Health Log</h1>
           <p className="text-center text-gray-600 dark:text-gray-400">
-            Let's set up your health profile to get the most out of symptom tracking
+            Let&apos;s set up your health profile to get the most out of symptom tracking
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
