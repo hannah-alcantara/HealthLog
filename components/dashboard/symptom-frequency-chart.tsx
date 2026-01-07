@@ -1,12 +1,20 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Symptom } from '@/lib/schemas/symptom';
 
 interface SymptomFrequencyChartProps {
   symptoms: Symptom[];
   days?: number;
+}
+
+interface BarLabelProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  value?: number;
+  index?: number;
 }
 
 export function SymptomFrequencyChart({ symptoms }: SymptomFrequencyChartProps) {
@@ -58,8 +66,8 @@ export function SymptomFrequencyChart({ symptoms }: SymptomFrequencyChartProps) 
             fill="hsl(var(--primary))"
             radius={[0, 4, 4, 0]}
             name="Occurrences"
-            label={(props: any) => {
-              const { x, y, width, value, index } = props;
+            label={(props: BarLabelProps) => {
+              const { x = 0, y = 0, width = 0, value = 0, index = 0 } = props;
               const symptom = chartData[index]?.symptom || '';
               return (
                 <text

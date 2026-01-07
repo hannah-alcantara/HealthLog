@@ -8,6 +8,22 @@ interface CategoryBreakdownChartProps {
   symptoms: Symptom[];
 }
 
+interface TooltipPayload {
+  name: string;
+  value: number;
+  payload: { percentage: number };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+}
+
+interface ChartEntry {
+  name: string;
+  percentage: number;
+}
+
 // Color palette for categories
 const COLORS = [
   'hsl(var(--primary))',
@@ -19,6 +35,31 @@ const COLORS = [
   'hsl(24.6 95% 53.1%)', // Orange
   'hsl(173 80.4% 40%)', // Teal
 ];
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div
+        className="bg-background border border-border rounded-md p-2 shadow-lg"
+        style={{
+          backgroundColor: 'hsl(var(--background))',
+          border: '1px solid hsl(var(--border))',
+        }}
+      >
+        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+          {payload[0].name}
+        </p>
+        <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
+          Count: {payload[0].value}
+        </p>
+        <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
+          {payload[0].payload.percentage}%
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export function CategoryBreakdownChart({ symptoms }: CategoryBreakdownChartProps) {
   const chartData = useMemo(() => {
@@ -49,31 +90,6 @@ export function CategoryBreakdownChart({ symptoms }: CategoryBreakdownChartProps
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div
-          className="bg-background border border-border rounded-md p-2 shadow-lg"
-          style={{
-            backgroundColor: 'hsl(var(--background))',
-            border: '1px solid hsl(var(--border))',
-          }}
-        >
-          <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-            {payload[0].name}
-          </p>
-          <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-            Count: {payload[0].value}
-          </p>
-          <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-            {payload[0].payload.percentage}%
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="w-full h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -83,7 +99,7 @@ export function CategoryBreakdownChart({ symptoms }: CategoryBreakdownChartProps
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={(entry: any) => `${entry.name} (${entry.percentage}%)`}
+            label={(entry: ChartEntry) => `${entry.name} (${entry.percentage}%)`}
             outerRadius={80}
             fill="hsl(var(--primary))"
             dataKey="value"

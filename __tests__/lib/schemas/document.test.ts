@@ -89,7 +89,7 @@ describe('Document Schema', () => {
     });
 
     it('should reject invalid mime type', () => {
-      const document = { ...validDocument, mimeType: 'text/plain' as any };
+      const document = { ...validDocument, mimeType: 'text/plain' as unknown as 'application/pdf' };
       expect(() => documentSchema.parse(document)).toThrow();
     });
 
@@ -182,7 +182,7 @@ describe('Document Schema', () => {
     });
 
     it('should reject invalid mime type', () => {
-      const input = { ...validInput, mimeType: 'application/msword' as any };
+      const input = { ...validInput, mimeType: 'application/msword' as unknown as 'application/pdf' };
       expect(() => uploadDocumentSchema.parse(input)).toThrow();
     });
 

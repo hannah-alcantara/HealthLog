@@ -1,9 +1,15 @@
 import { z } from 'zod';
 
 /**
- * Generic localStorage-based CRUD operations for health data entities
+ * Generic localStorage-based CRUD operations for health data entities.
+ *
+ * This module provides error classes and a base storage implementation
+ * for managing health data in the browser's localStorage with Zod validation.
  */
 
+/**
+ * Base error class for storage operations.
+ */
 export class StorageError extends Error {
   constructor(message: string) {
     super(message);
@@ -11,6 +17,12 @@ export class StorageError extends Error {
   }
 }
 
+/**
+ * Error thrown when localStorage quota is exceeded.
+ *
+ * Typically occurs when storing large files or many entries.
+ * Users should delete some data or clear their browser storage.
+ */
 export class QuotaExceededError extends StorageError {
   constructor() {
     super('Storage quota exceeded. Please delete some entries or documents.');
@@ -18,6 +30,12 @@ export class QuotaExceededError extends StorageError {
   }
 }
 
+/**
+ * Error thrown when attempting to access a non-existent entity.
+ *
+ * @param entityName - Human-readable name of the entity type (e.g., "Appointment")
+ * @param id - The ID that was not found
+ */
 export class NotFoundError extends StorageError {
   constructor(entityName: string, id: string) {
     super(`${entityName} with id "${id}" not found`);
@@ -26,7 +44,12 @@ export class NotFoundError extends StorageError {
 }
 
 /**
- * Check if localStorage is available
+ * Check if localStorage is available and functional.
+ *
+ * Tests by attempting to write and remove a test key.
+ * Returns false in private browsing mode or when storage is disabled.
+ *
+ * @returns True if localStorage is available, false otherwise
  */
 export function checkStorageAvailable(): boolean {
   try {
@@ -40,7 +63,26 @@ export function checkStorageAvailable(): boolean {
 }
 
 /**
- * Generic base storage class for CRUD operations
+ * Generic base storage class for CRUD operations on health entities.
+ *
+ * Provides localStorage-backed persistence with automatic Zod validation,
+ * error handling, and data corruption recovery. Subclasses can extend
+ * this to add domain-specific query methods.
+ *
+ * @template T - Entity type that must have an `id` field
+ *
+ * @param storageKey - localStorage key for persistence
+ * @param schema - Zod array schema for validation
+ * @param entityName - Human-readable name for error messages
+ *
+ * @example
+ * ```ts
+ * const storage = new BaseStorage<Appointment>(
+ *   'health-log:appointments',
+ *   appointmentsArraySchema,
+ *   'Appointment'
+ * );
+ * ```
  */
 export class BaseStorage<T extends { id: string }> {
   constructor(

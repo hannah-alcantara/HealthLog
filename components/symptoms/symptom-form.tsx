@@ -7,6 +7,7 @@ import {
   type CreateSymptomInput,
   symptomCategories,
   symptomCategoryLabels,
+  type SymptomCategory,
 } from '@/lib/schemas/symptom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,7 +86,7 @@ export function SymptomForm({
         <Label htmlFor="category">Category *</Label>
         <Select
           value={category}
-          onValueChange={(value) => setValue('category', value as any)}
+          onValueChange={(value) => setValue('category', value as SymptomCategory)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select category" />

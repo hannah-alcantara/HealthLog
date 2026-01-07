@@ -85,7 +85,7 @@ export function MedicalHistoryList({
           {conditions.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-gray-500">
-                No conditions recorded. Click "Add Condition" to get started.
+                No conditions recorded. Click &quot;Add Condition&quot; to get started.
               </CardContent>
             </Card>
           ) : (
@@ -135,7 +135,7 @@ export function MedicalHistoryList({
           {medications.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-gray-500">
-                No medications recorded. Click "Add Medication" to get started.
+                No medications recorded. Click &quot;Add Medication&quot; to get started.
               </CardContent>
             </Card>
           ) : (
@@ -188,7 +188,7 @@ export function MedicalHistoryList({
           {allergies.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-gray-500">
-                No allergies recorded. Click "Add Allergy" to get started.
+                No allergies recorded. Click &quot;Add Allergy&quot; to get started.
               </CardContent>
             </Card>
           ) : (

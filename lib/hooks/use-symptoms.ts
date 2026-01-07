@@ -4,6 +4,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { symptomService } from '@/lib/storage/symptoms';
 import type { Symptom, CreateSymptomInput } from '@/lib/schemas/symptom';
 
+/**
+ * React hook for managing symptom data with localStorage persistence.
+ *
+ * Provides CRUD operations for symptoms with automatic state management,
+ * error handling, and loading states. Symptoms are automatically sorted
+ * by date (newest first) after creation and updates.
+ *
+ * @returns Object containing symptoms array, CRUD methods, and state flags
+ *
+ * @example
+ * ```tsx
+ * const { symptoms, create, update, remove, loading, error } = useSymptoms();
+ *
+ * // Create new symptom
+ * await create({ symptomType: 'Headache', severity: 7, category: 'pain' });
+ *
+ * // Get recent symptoms
+ * const recentWeek = getRecentDays(7);
+ * ```
+ */
 export function useSymptoms() {
   const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [loading, setLoading] = useState(true);

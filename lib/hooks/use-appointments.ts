@@ -4,6 +4,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { appointmentService } from '@/lib/storage/appointments';
 import type { Appointment, CreateAppointmentInput } from '@/lib/schemas/appointment';
 
+/**
+ * React hook for managing appointment data with localStorage persistence.
+ *
+ * Provides CRUD operations for appointments with automatic state management,
+ * error handling, and loading states. Appointments are automatically sorted
+ * by date (newest first) after creation and updates.
+ *
+ * @returns Object containing appointments array, CRUD methods, and state flags
+ *
+ * @example
+ * ```tsx
+ * const { appointments, create, update, remove, loading, error } = useAppointments();
+ *
+ * // Create new appointment
+ * await create({
+ *   doctor: 'Dr. Smith',
+ *   appointmentDate: '2024-01-15',
+ *   symptoms: 'Persistent headaches'
+ * });
+ * ```
+ */
 export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);

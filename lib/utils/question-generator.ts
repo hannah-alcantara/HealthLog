@@ -2,9 +2,15 @@ import type { Condition, Medication, Allergy } from '@/lib/schemas/medical-histo
 import type { Symptom } from '@/lib/schemas/symptom';
 
 /**
- * Pattern Analysis Helper Functions
+ * Pattern Analysis Helper Functions for generating context-aware appointment questions.
+ *
+ * These functions analyze symptom history to identify patterns, trends, and
+ * correlations that inform intelligent question generation.
  */
 
+/**
+ * Frequency data for a specific symptom type over a time period.
+ */
 interface SymptomFrequency {
   symptomType: string;
   count: number;
@@ -13,6 +19,9 @@ interface SymptomFrequency {
   lastOccurrence: Date;
 }
 
+/**
+ * Severity trend analysis for a symptom type.
+ */
 interface SeverityTrend {
   symptomType: string;
   trend: 'increasing' | 'decreasing' | 'stable';
@@ -21,13 +30,23 @@ interface SeverityTrend {
   change: number;
 }
 
+/**
+ * Frequency count for a specific trigger.
+ */
 interface TriggerFrequency {
   trigger: string;
   count: number;
 }
 
 /**
- * Analyze symptom frequency over a period
+ * Analyze symptom frequency over a time period.
+ *
+ * Groups symptoms by type and calculates occurrence count, average severity,
+ * and first/last occurrence dates. Results are sorted by frequency (most common first).
+ *
+ * @param symptoms - Array of symptom logs to analyze
+ * @param days - Number of days to look back (default: 30)
+ * @returns Array of symptom frequency data sorted by count descending
  */
 function analyzeSymptomFrequency(symptoms: Symptom[], days: number = 30): SymptomFrequency[] {
   const cutoffDate = new Date();
@@ -59,7 +78,15 @@ function analyzeSymptomFrequency(symptoms: Symptom[], days: number = 30): Sympto
 }
 
 /**
- * Analyze severity trends for symptoms
+ * Analyze severity trends for symptoms over time.
+ *
+ * Compares average severity in the first half vs second half of the time period
+ * to detect increasing, decreasing, or stable trends. Requires at least 2
+ * occurrences of a symptom type to calculate trends.
+ *
+ * @param symptoms - Array of symptom logs to analyze
+ * @param days - Number of days to look back (default: 30)
+ * @returns Array of severity trends (change > 1 = increasing, < -1 = decreasing, else stable)
  */
 function analyzeSeverityTrends(symptoms: Symptom[], days: number = 30): SeverityTrend[] {
   const frequencies = analyzeSymptomFrequency(symptoms, days);
@@ -99,7 +126,13 @@ function analyzeSeverityTrends(symptoms: Symptom[], days: number = 30): Severity
 }
 
 /**
- * Extract and count common triggers
+ * Extract and count common symptom triggers.
+ *
+ * Parses trigger strings (comma or semicolon separated), normalizes to lowercase,
+ * and returns the top 5 most frequently mentioned triggers.
+ *
+ * @param symptoms - Array of symptom logs with optional trigger data
+ * @returns Top 5 triggers sorted by frequency descending
  */
 function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
   const triggerCounts: Record<string, number> = {};
@@ -126,7 +159,13 @@ function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
 }
 
 /**
- * Find most affected body parts
+ * Find the most frequently affected body parts.
+ *
+ * Counts body part occurrences across all symptoms and returns the top 3
+ * most commonly affected areas (normalized to lowercase).
+ *
+ * @param symptoms - Array of symptom logs with optional bodyPart data
+ * @returns Top 3 most affected body parts (lowercase)
  */
 function analyzeMostAffectedBodyParts(symptoms: Symptom[]): string[] {
   const bodyPartCounts: Record<string, number> = {};
@@ -145,7 +184,36 @@ function analyzeMostAffectedBodyParts(symptoms: Symptom[]): string[] {
 }
 
 /**
- * Enhanced question generation with symptom pattern analysis
+ * Generate context-aware appointment questions based on health history.
+ *
+ * Analyzes symptom patterns, medical history, medications, and allergies to
+ * generate intelligent, personalized questions for doctor appointments. Uses
+ * rule-based pattern analysis to identify:
+ * - Recurring symptoms and frequency patterns
+ * - Severity trends (increasing/decreasing)
+ * - Common triggers and affected body parts
+ * - Medication side effects and interactions
+ * - Allergy-related concerns
+ *
+ * @param appointmentSymptoms - Symptoms reported for this specific appointment
+ * @param symptomLogs - Historical symptom logs for pattern analysis
+ * @param conditions - Current medical conditions
+ * @param medications - Current medications
+ * @param allergies - Known allergies
+ * @param daysToAnalyze - Number of days to look back for pattern analysis (default: 30)
+ * @returns Array of up to 10 most relevant questions
+ *
+ * @example
+ * ```ts
+ * const questions = generateAppointmentQuestions(
+ *   'persistent headaches',
+ *   recentSymptoms,
+ *   conditions,
+ *   medications,
+ *   allergies,
+ *   30
+ * );
+ * ```
  */
 export function generateAppointmentQuestions(
   appointmentSymptoms: string | null,

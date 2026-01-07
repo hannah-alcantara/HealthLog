@@ -1,19 +1,52 @@
 import type { Symptom } from '@/lib/schemas/symptom';
 
+/**
+ * Filter criteria for symptom search and display.
+ *
+ * All fields are optional and combined with AND logic.
+ * searchText searches across multiple fields (type, category, body part, notes, triggers).
+ */
 export interface SymptomFilters {
+  /** Text search across symptom fields (case-insensitive) */
   searchText?: string;
+  /** Exact category match (e.g., 'pain', 'digestive') */
   category?: string;
+  /** Minimum severity level (1-10 inclusive) */
   minSeverity?: number;
+  /** Maximum severity level (1-10 inclusive) */
   maxSeverity?: number;
+  /** Filter symptoms after this date (inclusive) */
   startDate?: Date;
+  /** Filter symptoms before this date (inclusive) */
   endDate?: Date;
+  /** Exact body part match (case-insensitive) */
   bodyPart?: string;
 }
 
+/**
+ * Available sort options for symptom lists.
+ */
 export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-asc' | 'type-asc';
 
 /**
- * Filter symptoms based on provided criteria
+ * Filter symptoms based on provided criteria.
+ *
+ * Applies multiple filter criteria using AND logic. All filters are optional.
+ * Text search is case-insensitive and searches across symptomType, category,
+ * bodyPart, notes, and triggers fields.
+ *
+ * @param symptoms - Array of symptoms to filter
+ * @param filters - Filter criteria object
+ * @returns Filtered array of symptoms
+ *
+ * @example
+ * ```ts
+ * const filtered = filterSymptoms(allSymptoms, {
+ *   category: 'pain',
+ *   minSeverity: 7,
+ *   startDate: new Date('2024-01-01')
+ * });
+ * ```
  */
 export function filterSymptoms(symptoms: Symptom[], filters: SymptomFilters): Symptom[] {
   return symptoms.filter((symptom) => {
@@ -70,7 +103,18 @@ export function filterSymptoms(symptoms: Symptom[], filters: SymptomFilters): Sy
 }
 
 /**
- * Sort symptoms based on selected option
+ * Sort symptoms based on selected option.
+ *
+ * Creates a shallow copy of the array before sorting (non-mutating).
+ *
+ * @param symptoms - Array of symptoms to sort
+ * @param sortOption - Sort criteria (date or severity, ascending or descending, or alphabetical by type)
+ * @returns New sorted array of symptoms
+ *
+ * @example
+ * ```ts
+ * const sorted = sortSymptoms(symptoms, 'severity-desc'); // Most severe first
+ * ```
  */
 export function sortSymptoms(symptoms: Symptom[], sortOption: SortOption): Symptom[] {
   const sorted = [...symptoms];
@@ -97,7 +141,13 @@ export function sortSymptoms(symptoms: Symptom[], sortOption: SortOption): Sympt
 }
 
 /**
- * Get unique body parts from symptoms
+ * Get unique body parts from symptoms for filter dropdown.
+ *
+ * Extracts all non-null body parts, deduplicates, and sorts alphabetically.
+ * Useful for populating filter UI dropdowns.
+ *
+ * @param symptoms - Array of symptoms to extract body parts from
+ * @returns Sorted array of unique body part strings
  */
 export function getUniqueBodyParts(symptoms: Symptom[]): string[] {
   const bodyParts = symptoms
@@ -108,7 +158,13 @@ export function getUniqueBodyParts(symptoms: Symptom[]): string[] {
 }
 
 /**
- * Get unique categories from symptoms
+ * Get unique categories from symptoms for filter dropdown.
+ *
+ * Extracts all categories, deduplicates, and sorts alphabetically.
+ * Useful for populating filter UI dropdowns.
+ *
+ * @param symptoms - Array of symptoms to extract categories from
+ * @returns Sorted array of unique category strings
  */
 export function getUniqueCategories(symptoms: Symptom[]): string[] {
   const categories = symptoms.map(s => s.category);

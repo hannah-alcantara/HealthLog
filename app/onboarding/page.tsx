@@ -14,17 +14,13 @@ type Step = 'welcome' | 'conditions' | 'medications' | 'allergies' | 'complete';
 export default function OnboardingPage() {
   const router = useRouter();
   const { status, loading, updateStep, complete, skip } = useOnboarding();
-  const [currentStep, setCurrentStep] = useState<Step>('welcome');
+  const [currentStep, setCurrentStep] = useState<Step>(
+    status?.step || 'welcome'
+  );
 
   useEffect(() => {
-    if (!loading && status) {
-      // If already completed or skipped, redirect to dashboard
-      if (status.completed || status.skipped) {
-        router.replace('/');
-        return;
-      }
-      // Resume from last step
-      setCurrentStep(status.step);
+    if (!loading && status && (status.completed || status.skipped)) {
+      router.replace('/');
     }
   }, [loading, status, router]);
 

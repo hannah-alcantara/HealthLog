@@ -308,7 +308,7 @@ describe('Allergy Schema', () => {
     });
 
     it('should reject invalid severity value', () => {
-      const allergy = { ...validAllergy, severity: 'critical' as any };
+      const allergy = { ...validAllergy, severity: 'critical' as unknown as 'mild' };
       expect(() => allergySchema.parse(allergy)).toThrow();
     });
 
