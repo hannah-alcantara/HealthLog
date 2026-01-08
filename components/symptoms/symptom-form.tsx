@@ -74,9 +74,10 @@ export function SymptomForm({
           {...register('symptomType')}
           placeholder="e.g., Headache, Nausea, Fatigue"
           aria-invalid={!!errors.symptomType}
+          aria-describedby={errors.symptomType ? 'symptomType-error' : undefined}
         />
         {errors.symptomType && (
-          <p className="text-sm text-red-600" role="alert">
+          <p id="symptomType-error" className="text-sm text-red-600" role="alert">
             {errors.symptomType.message}
           </p>
         )}

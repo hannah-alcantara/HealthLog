@@ -304,8 +304,13 @@
 - [eslint.config.mjs](eslint.config.mjs#L16) - Add ignores for coverage/ and contracts/
 
 ### Remaining Work:
-- [ ] T096 Add warning modal about localStorage data loss when clearing browser data (FR-016)
-- [ ] T097 Verify all empty states display correctly with helpful instructions (FR-020)
+- [x] T096 Add warning modal about localStorage data loss when clearing browser data (FR-016) - **COMPLETE**: Dismissible banner on dashboard + prominent warning in onboarding
+- [x] T097 Verify all empty states display correctly with helpful instructions (FR-020) - **VERIFIED**: All sections have clear empty states with CTAs
+  - ✅ Symptoms: "No symptoms logged yet" + "Log Your First Symptom" button
+  - ✅ Filtered symptoms: "No symptoms match your filters" + "Clear Filters" button
+  - ✅ Medical History (Conditions/Medications/Allergies): Each has "No X recorded" + "Add X" CTA
+  - ✅ Appointments: "No appointments recorded" + "Add Appointment" CTA
+  - ⚠️ Documents section not yet implemented (out of scope)
 - [ ] T098 Verify all form validation errors display clearly with ARIA labels (FR-021)
 - [ ] T099 Verify all success/error feedback displays correctly (FR-022, FR-023)
 - [ ] T100 Run quickstart.md validation checklist (verify all acceptance scenarios pass)
