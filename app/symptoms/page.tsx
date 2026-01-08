@@ -16,6 +16,7 @@ import {
   type SymptomFilters,
   type SortOption,
 } from '@/lib/utils/symptom-filters';
+import { toast } from 'sonner';
 
 type DialogState = { type: 'closed' } | { type: 'add' } | { type: 'edit'; symptom: Symptom };
 
@@ -58,12 +59,14 @@ export default function SymptomsPage() {
     try {
       if (dialogState.type === 'edit') {
         await update(dialogState.symptom.id, data);
+        toast.success('Symptom updated successfully');
       } else {
         await create(data);
+        toast.success('Symptom added successfully');
       }
       closeDialog();
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save symptom');
+      toast.error(error instanceof Error ? error.message : 'Failed to save symptom');
     } finally {
       setIsSubmitting(false);
     }
@@ -72,8 +75,9 @@ export default function SymptomsPage() {
   const handleDelete = async (id: string) => {
     try {
       await remove(id);
+      toast.success('Symptom deleted successfully');
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete symptom');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete symptom');
     }
   };
 

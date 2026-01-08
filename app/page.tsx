@@ -14,6 +14,7 @@ import type { Symptom, CreateSymptomInput } from '@/lib/schemas/symptom';
 import { symptomCategoryLabels } from '@/lib/schemas/symptom';
 import Link from 'next/link';
 import { StorageWarningBanner } from '@/components/storage-warning-banner';
+import { toast } from 'sonner';
 
 type DialogState = { type: 'closed' } | { type: 'add' } | { type: 'edit'; symptom: Symptom };
 
@@ -55,12 +56,14 @@ export default function DashboardPage() {
     try {
       if (dialogState.type === 'edit') {
         await update(dialogState.symptom.id, data);
+        toast.success('Symptom updated successfully');
       } else {
         await create(data);
+        toast.success('Symptom added successfully');
       }
       closeDialog();
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save symptom');
+      toast.error(error instanceof Error ? error.message : 'Failed to save symptom');
     } finally {
       setIsSubmitting(false);
     }
@@ -69,8 +72,9 @@ export default function DashboardPage() {
   const handleDelete = async (id: string) => {
     try {
       await remove(id);
+      toast.success('Symptom deleted successfully');
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete symptom');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete symptom');
     }
   };
 
