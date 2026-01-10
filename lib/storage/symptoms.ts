@@ -92,7 +92,6 @@ export const symptomService = {
     total: number;
     averageSeverity: number;
     mostCommonSymptom: string | null;
-    mostCommonCategory: string | null;
   } {
     const symptoms = symptomsStorage.getAll();
 
@@ -101,7 +100,6 @@ export const symptomService = {
         total: 0,
         averageSeverity: 0,
         mostCommonSymptom: null,
-        mostCommonCategory: null,
       };
     }
 
@@ -116,18 +114,10 @@ export const symptomService = {
     });
     const mostCommonSymptom = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-    // Find most common category
-    const categoryCounts: Record<string, number> = {};
-    symptoms.forEach((s) => {
-      categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
-    });
-    const mostCommonCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-
     return {
       total: symptoms.length,
       averageSeverity,
       mostCommonSymptom,
-      mostCommonCategory,
     };
   },
 };

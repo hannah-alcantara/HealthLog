@@ -1,128 +1,99 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { Symptom } from '@/lib/schemas/symptom';
 
 interface CategoryBreakdownChartProps {
   symptoms: Symptom[];
 }
 
-interface TooltipPayload {
-  name: string;
-  value: number;
-  payload: { percentage: number };
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayload[];
-}
-
-interface ChartEntry {
-  name: string;
-  value: number;
+interface TimeOfDayData {
+  label: string;
+  timeRange: string;
+  count: number;
   percentage: number;
 }
 
-interface PieLabelProps {
-  name: string;
-  percentage: number;
-}
-
-// Color palette for categories
-const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(142.1 76.2% 36.3%)', // Green
-  'hsl(47.9 95.8% 53.1%)', // Yellow
-  'hsl(0 84.2% 60.2%)', // Red
-  'hsl(221.2 83.2% 53.3%)', // Blue
-  'hsl(262.1 83.3% 57.8%)', // Purple
-  'hsl(24.6 95% 53.1%)', // Orange
-  'hsl(173 80.4% 40%)', // Teal
+// Time of day periods
+const TIME_PERIODS = [
+  { label: 'Morning', timeRange: '6am-12pm', start: 6, end: 12 },
+  { label: 'Afternoon', timeRange: '12pm-6pm', start: 12, end: 18 },
+  { label: 'Evening', timeRange: '6pm-12am', start: 18, end: 24 },
+  { label: 'Night', timeRange: '12am-6am', start: 0, end: 6 },
 ];
 
-const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
-        className="bg-background border border-border rounded-md p-2 shadow-lg"
-        style={{
-          backgroundColor: 'hsl(var(--background))',
-          border: '1px solid hsl(var(--border))',
-        }}
-      >
-        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-          {payload[0].name}
-        </p>
-        <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-          Count: {payload[0].value}
-        </p>
-        <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-          {payload[0].payload.percentage}%
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
 export function CategoryBreakdownChart({ symptoms }: CategoryBreakdownChartProps) {
-  const chartData = useMemo(() => {
+  const timeOfDayData = useMemo(() => {
     if (symptoms.length === 0) return [];
 
-    // Count symptoms by category
-    const categoryCounts = new Map<string, number>();
-    symptoms.forEach(symptom => {
-      const count = categoryCounts.get(symptom.category) || 0;
-      categoryCounts.set(symptom.category, count + 1);
+    // Count symptoms by time of day
+    const timeCounts = new Map<string, number>();
+    TIME_PERIODS.forEach(period => {
+      timeCounts.set(period.label, 0);
     });
 
-    // Convert to chart data format and sort by count
-    return Array.from(categoryCounts.entries())
-      .map(([category, count]) => ({
-        name: category.charAt(0).toUpperCase() + category.slice(1),
-        value: count,
-        percentage: Math.round((count / symptoms.length) * 100),
-      }))
-      .sort((a, b) => b.value - a.value);
+    symptoms.forEach(symptom => {
+      const date = new Date(symptom.loggedAt);
+      const hour = date.getHours();
+
+      const period = TIME_PERIODS.find(
+        p => hour >= p.start && hour < p.end
+      );
+
+      if (period) {
+        timeCounts.set(period.label, (timeCounts.get(period.label) || 0) + 1);
+      }
+    });
+
+    // Convert to chart data format
+    return TIME_PERIODS.map(period => ({
+      label: period.label,
+      timeRange: period.timeRange,
+      count: timeCounts.get(period.label) || 0,
+      percentage: Math.round(((timeCounts.get(period.label) || 0) / symptoms.length) * 100),
+    }));
   }, [symptoms]);
 
-  if (chartData.length === 0) {
+  if (symptoms.length === 0) {
     return (
       <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400">
-        No category data available
+        No time of day data available
       </div>
     );
   }
 
+  const maxCount = Math.max(...timeOfDayData.map(d => d.count));
+
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={(entry) => `${entry.name} (${Math.round((entry.percent || 0) * 100)}%)`}
-            outerRadius={80}
-            fill="hsl(var(--primary))"
-            dataKey="value"
-          >
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{
-              paddingTop: '20px',
-              fontSize: '12px',
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="w-full space-y-4 py-4">
+      {timeOfDayData.map((period) => {
+        const barWidth = maxCount > 0 ? (period.count / maxCount) * 100 : 0;
+
+        return (
+          <div key={period.label} className="space-y-1">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {period.label} ({period.timeRange}):
+              </span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {period.percentage}%
+              </span>
+            </div>
+            <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 transition-all duration-300 flex items-center px-3"
+                style={{ width: `${barWidth}%` }}
+              >
+                {period.count > 0 && (
+                  <span className="text-white text-xs font-medium">
+                    {period.count} {period.count === 1 ? 'symptom' : 'symptoms'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

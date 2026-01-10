@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { SymptomFilters, SortOption } from '@/lib/utils/symptom-filters';
-import { symptomCategoryLabels } from '@/lib/schemas/symptom';
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import type { SymptomFilters, SortOption } from "@/lib/utils/symptom-filters";
 
 interface SymptomFiltersProps {
   filters: SymptomFilters;
@@ -39,40 +38,38 @@ export function SymptomFiltersComponent({
     onFiltersChange(newFilters);
   };
 
-  const handleCategoryChange = (value: string) => {
-    const newFilters = { ...localFilters, category: value === 'all' ? undefined : value };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
-  const handleSeverityChange = (type: 'min' | 'max', value: string) => {
-    const numValue = value === '' ? undefined : parseInt(value);
+  const handleSeverityChange = (type: "min" | "max", value: string) => {
+    const numValue = value === "" ? undefined : parseInt(value);
     const newFilters = {
       ...localFilters,
-      [type === 'min' ? 'minSeverity' : 'maxSeverity']: numValue,
+      [type === "min" ? "minSeverity" : "maxSeverity"]: numValue,
     };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
-  const handleDateChange = (type: 'start' | 'end', value: string) => {
+  const handleDateChange = (type: "start" | "end", value: string) => {
     const newFilters = {
       ...localFilters,
-      [type === 'start' ? 'startDate' : 'endDate']: value ? new Date(value) : undefined,
+      [type === "start" ? "startDate" : "endDate"]: value
+        ? new Date(value)
+        : undefined,
     };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
   const handleBodyPartChange = (value: string) => {
-    const newFilters = { ...localFilters, bodyPart: value === 'all' ? undefined : value };
+    const newFilters = {
+      ...localFilters,
+      bodyPart: value === "all" ? undefined : value,
+    };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
   const hasActiveFilters =
     localFilters.searchText ||
-    localFilters.category ||
     localFilters.minSeverity !== undefined ||
     localFilters.maxSeverity !== undefined ||
     localFilters.startDate ||
@@ -82,52 +79,52 @@ export function SymptomFiltersComponent({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Filter & Sort</h3>
-          <div className="flex items-center gap-2">
+        <div className='flex items-center justify-between'>
+          <h3 className='text-lg font-semibold'>Filter & Sort</h3>
+          <div className='flex items-center gap-2'>
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={onReset}>
+              <Button variant='outline' size='sm' onClick={onReset}>
                 Clear Filters
               </Button>
             )}
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {isExpanded ? 'Hide Filters' : 'Show Filters'}
+              {isExpanded ? "Hide Filters" : "Show Filters"}
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className='space-y-4'>
         {/* Search and Sort - Always Visible */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="search">Search</Label>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='search'>Search</Label>
             <Input
-              id="search"
-              type="text"
-              placeholder="Search symptoms, notes, triggers..."
-              value={localFilters.searchText || ''}
+              id='search'
+              type='text'
+              placeholder='Search symptoms, notes, triggers...'
+              value={localFilters.searchText || ""}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="sort">Sort By</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='sort'>Sort By</Label>
             <select
-              id="sort"
+              id='sort'
               value={sortOption}
               onChange={(e) => onSortChange(e.target.value as SortOption)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+              className='w-full h-10 px-3 rounded-md border border-input bg-background text-sm'
             >
-              <option value="date-desc">Newest First</option>
-              <option value="date-asc">Oldest First</option>
-              <option value="severity-desc">Highest Severity</option>
-              <option value="severity-asc">Lowest Severity</option>
-              <option value="type-asc">Symptom Name (A-Z)</option>
+              <option value='date-desc'>Newest First</option>
+              <option value='date-asc'>Oldest First</option>
+              <option value='severity-desc'>Highest Severity</option>
+              <option value='severity-asc'>Lowest Severity</option>
+              <option value='type-asc'>Symptom Name (A-Z)</option>
             </select>
           </div>
         </div>
@@ -135,36 +132,19 @@ export function SymptomFiltersComponent({
         {/* Advanced Filters - Collapsible */}
         {isExpanded && (
           <>
-            <div className="border-t pt-4" />
+            <div className='border-t pt-4' />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='bodyPart'>Body Part</Label>
                 <select
-                  id="category"
-                  value={localFilters.category || 'all'}
-                  onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                >
-                  <option value="all">All Categories</option>
-                  {Object.entries(symptomCategoryLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bodyPart">Body Part</Label>
-                <select
-                  id="bodyPart"
-                  value={localFilters.bodyPart || 'all'}
+                  id='bodyPart'
+                  value={localFilters.bodyPart || "all"}
                   onChange={(e) => handleBodyPartChange(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  className='w-full h-10 px-3 rounded-md border border-input bg-background text-sm'
                   disabled={availableBodyParts.length === 0}
                 >
-                  <option value="all">All Body Parts</option>
+                  <option value='all'>All Body Parts</option>
                   {availableBodyParts.map((part) => (
                     <option key={part} value={part}>
                       {part}
@@ -173,50 +153,62 @@ export function SymptomFiltersComponent({
                 </select>
               </div>
 
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Severity Range</Label>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    placeholder="Min"
-                    value={localFilters.minSeverity ?? ''}
-                    onChange={(e) => handleSeverityChange('min', e.target.value)}
-                    className="w-20"
+                    type='number'
+                    min='1'
+                    max='10'
+                    placeholder='Min'
+                    value={localFilters.minSeverity ?? ""}
+                    onChange={(e) =>
+                      handleSeverityChange("min", e.target.value)
+                    }
+                    className='w-20'
                   />
-                  <span className="text-sm text-gray-500">to</span>
+                  <span className='text-sm text-gray-500'>to</span>
                   <Input
-                    type="number"
-                    min="1"
-                    max="10"
-                    placeholder="Max"
-                    value={localFilters.maxSeverity ?? ''}
-                    onChange={(e) => handleSeverityChange('max', e.target.value)}
-                    className="w-20"
+                    type='number'
+                    min='1'
+                    max='10'
+                    placeholder='Max'
+                    value={localFilters.maxSeverity ?? ""}
+                    onChange={(e) =>
+                      handleSeverityChange("max", e.target.value)
+                    }
+                    className='w-20'
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='startDate'>Start Date</Label>
                 <Input
-                  id="startDate"
-                  type="date"
-                  value={localFilters.startDate ? localFilters.startDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleDateChange('start', e.target.value)}
+                  id='startDate'
+                  type='date'
+                  value={
+                    localFilters.startDate
+                      ? localFilters.startDate.toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => handleDateChange("start", e.target.value)}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='endDate'>End Date</Label>
                 <Input
-                  id="endDate"
-                  type="date"
-                  value={localFilters.endDate ? localFilters.endDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleDateChange('end', e.target.value)}
+                  id='endDate'
+                  type='date'
+                  value={
+                    localFilters.endDate
+                      ? localFilters.endDate.toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => handleDateChange("end", e.target.value)}
                 />
               </div>
             </div>

@@ -4,13 +4,11 @@ import type { Symptom } from '@/lib/schemas/symptom';
  * Filter criteria for symptom search and display.
  *
  * All fields are optional and combined with AND logic.
- * searchText searches across multiple fields (type, category, body part, notes, triggers).
+ * searchText searches across multiple fields (type, body part, notes, triggers).
  */
 export interface SymptomFilters {
   /** Text search across symptom fields (case-insensitive) */
   searchText?: string;
-  /** Exact category match (e.g., 'pain', 'digestive') */
-  category?: string;
   /** Minimum severity level (1-10 inclusive) */
   minSeverity?: number;
   /** Maximum severity level (1-10 inclusive) */
@@ -32,7 +30,7 @@ export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-
  * Filter symptoms based on provided criteria.
  *
  * Applies multiple filter criteria using AND logic. All filters are optional.
- * Text search is case-insensitive and searches across symptomType, category,
+ * Text search is case-insensitive and searches across symptomType,
  * bodyPart, notes, and triggers fields.
  *
  * @param symptoms - Array of symptoms to filter
@@ -42,7 +40,6 @@ export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-
  * @example
  * ```ts
  * const filtered = filterSymptoms(allSymptoms, {
- *   category: 'pain',
  *   minSeverity: 7,
  *   startDate: new Date('2024-01-01')
  * });
@@ -50,22 +47,16 @@ export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-
  */
 export function filterSymptoms(symptoms: Symptom[], filters: SymptomFilters): Symptom[] {
   return symptoms.filter((symptom) => {
-    // Search text filter (searches symptomType, category, bodyPart, notes, triggers)
+    // Search text filter (searches symptomType, bodyPart, notes, triggers)
     if (filters.searchText) {
       const searchLower = filters.searchText.toLowerCase();
       const matchesSearch =
         symptom.symptomType.toLowerCase().includes(searchLower) ||
-        symptom.category.toLowerCase().includes(searchLower) ||
         symptom.bodyPart?.toLowerCase().includes(searchLower) ||
         symptom.notes?.toLowerCase().includes(searchLower) ||
         symptom.triggers?.toLowerCase().includes(searchLower);
 
       if (!matchesSearch) return false;
-    }
-
-    // Category filter
-    if (filters.category && symptom.category !== filters.category) {
-      return false;
     }
 
     // Severity range filter
@@ -157,16 +148,3 @@ export function getUniqueBodyParts(symptoms: Symptom[]): string[] {
   return Array.from(new Set(bodyParts)).sort();
 }
 
-/**
- * Get unique categories from symptoms for filter dropdown.
- *
- * Extracts all categories, deduplicates, and sorts alphabetically.
- * Useful for populating filter UI dropdowns.
- *
- * @param symptoms - Array of symptoms to extract categories from
- * @returns Sorted array of unique category strings
- */
-export function getUniqueCategories(symptoms: Symptom[]): string[] {
-  const categories = symptoms.map(s => s.category);
-  return Array.from(new Set(categories)).sort();
-}
