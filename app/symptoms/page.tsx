@@ -166,7 +166,6 @@ export default function SymptomsPage() {
                 dialogState.type === 'edit'
                   ? {
                       symptomType: dialogState.symptom.symptomType,
-                      category: dialogState.symptom.category,
                       severity: dialogState.symptom.severity,
                       bodyPart: dialogState.symptom.bodyPart,
                       triggers: dialogState.symptom.triggers,

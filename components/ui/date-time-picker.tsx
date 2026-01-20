@@ -12,13 +12,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface DateTimePickerProps {
   value?: Date;
   onChange: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  disableFuture?: boolean;
 }
 
 export function DateTimePicker({
@@ -26,6 +26,7 @@ export function DateTimePicker({
   onChange,
   placeholder = 'Pick a date and time',
   disabled,
+  disableFuture = false,
 }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(value);
@@ -52,6 +53,19 @@ export function DateTimePicker({
     const newDate = new Date(date);
     newDate.setHours(hours, minutes, 0, 0);
 
+    // Prevent future date/time if disableFuture is enabled
+    if (disableFuture) {
+      const now = new Date();
+      if (newDate > now) {
+        // Set to current time instead
+        const current = new Date();
+        setSelectedDate(current);
+        setTimeValue(format(current, 'HH:mm'));
+        onChange(current);
+        return;
+      }
+    }
+
     setSelectedDate(newDate);
     onChange(newDate);
   };
@@ -73,6 +87,19 @@ export function DateTimePicker({
     const [hours, minutes] = newTime.split(':').map(Number);
     const newDate = new Date(selectedDate);
     newDate.setHours(hours, minutes, 0, 0);
+
+    // Prevent future date/time if disableFuture is enabled
+    if (disableFuture) {
+      const now = new Date();
+      if (newDate > now) {
+        // Set to current time instead
+        const current = new Date();
+        setSelectedDate(current);
+        setTimeValue(format(current, 'HH:mm'));
+        onChange(current);
+        return;
+      }
+    }
 
     setSelectedDate(newDate);
     onChange(newDate);
@@ -99,6 +126,7 @@ export function DateTimePicker({
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
+            disabled={disableFuture ? { after: new Date() } : undefined}
             initialFocus
           />
         </PopoverContent>

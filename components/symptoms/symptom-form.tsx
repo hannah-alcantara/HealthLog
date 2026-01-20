@@ -90,7 +90,7 @@ export function SymptomForm({
   const [showCustomInput, setShowCustomInput] = React.useState(
     () =>
       defaultValues?.symptomType &&
-      !COMMON_SYMPTOMS.includes(defaultValues.symptomType as any)
+      !(COMMON_SYMPTOMS as readonly string[]).includes(defaultValues.symptomType)
   );
 
   return (
@@ -317,6 +317,7 @@ export function SymptomForm({
                 );
               }}
               placeholder='Select date and time'
+              disableFuture
             />
           )}
         />

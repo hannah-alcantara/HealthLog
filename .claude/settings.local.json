@@ -14,7 +14,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npx jest:*)",
       "Bash(git add:*)",
-      "Bash(yarn lint:*)"
+      "Bash(yarn lint:*)",
+      "Bash(yarn start)"
     ]
   }
 }

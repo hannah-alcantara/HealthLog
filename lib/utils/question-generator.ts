@@ -297,7 +297,10 @@ export function generateAppointmentQuestions(
 
   // MEDICATION SIDE EFFECTS
   if (medications.length > 0 && symptomLogs.length > 0) {
-    const digestiveSymptoms = symptomLogs.filter(s => s.category === 'digestive').length;
+    const digestiveKeywords = ['nausea', 'stomach', 'abdominal', 'digestive', 'diarrhea', 'constipation', 'indigestion'];
+    const digestiveSymptoms = symptomLogs.filter(s =>
+      digestiveKeywords.some(keyword => s.symptomType.toLowerCase().includes(keyword))
+    ).length;
     if (digestiveSymptoms > 0) {
       questions.push(
         `I've had ${digestiveSymptoms} digestive symptoms recently. ` +
@@ -319,7 +322,10 @@ export function generateAppointmentQuestions(
     }
 
     // Check for skin symptoms with allergies
-    const skinSymptoms = symptomLogs.filter(s => s.category === 'skin').length;
+    const skinKeywords = ['rash', 'hives', 'itch', 'skin', 'swelling', 'redness'];
+    const skinSymptoms = symptomLogs.filter(s =>
+      skinKeywords.some(keyword => s.symptomType.toLowerCase().includes(keyword))
+    ).length;
     if (skinSymptoms >= 2) {
       questions.push(
         `I've had ${skinSymptoms} skin-related symptoms. Given my known allergies, ` +

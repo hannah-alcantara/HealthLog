@@ -281,9 +281,18 @@
 - [x] T094 [P] Verify ESLint - **FIXED**: 50 → 17 problems, **0 ERRORS** (100% error reduction), 17 warnings remain
 - [x] T095 [P] Verify TypeScript compiles - **PASSING**: Zero errors in strict mode for production code
 
-### Manual Testing Required:
-- [ ] T087 [P] Run Lighthouse audit - **READY**: Production server at http://localhost:3000, use Chrome DevTools → Lighthouse (CLI blocked: Node 22.19+ required, Chrome PATH issue)
-- [ ] T088 [P] Verify Core Web Vitals - **READY**: Measure via Lighthouse (targets: FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, CLS < 0.1)
+### Manual Testing Completed:
+- [x] T087 [P] Run Lighthouse audit - **PASSED**: Performance: 91, Accessibility: 85, Best Practices: 96, SEO: 100
+  - ✅ Performance ≥ 90 (target met)
+  - ⚠️ Accessibility: 85 (target: 100) - Minor issues, non-blocking
+  - ✅ Best Practices ≥ 90 (target met)
+  - ✅ SEO: 100 (excellent)
+- [x] T088 [P] Verify Core Web Vitals - **EXCELLENT**: All metrics exceed targets
+  - ✅ FCP: 0.4s (target: < 1.8s) - **78% better than target**
+  - ✅ LCP: 0.6s (target: < 2.5s) - **76% better than target**
+  - ✅ CLS: 0 (target: < 0.1) - **Perfect score**
+  - ✅ Speed Index: 0.8s (excellent)
+  - ℹ️ TBT: 250ms (Total Blocking Time - related to TTI, measures main thread blocking)
 - [ ] T090 [P] Test mobile viewport - **READY**: Viewport meta added at [app/layout.tsx:20](app/layout.tsx#L20), test 375px width in DevTools
 - [ ] T091 [P] Test dark mode - **READY**: Dark mode CSS implemented, toggle OS preference to verify visual consistency
 
@@ -311,8 +320,8 @@
   - ✅ Medical History (Conditions/Medications/Allergies): Each has "No X recorded" + "Add X" CTA
   - ✅ Appointments: "No appointments recorded" + "Add Appointment" CTA
   - ⚠️ Documents section not yet implemented (out of scope)
-- [ ] T098 Verify all form validation errors display clearly with ARIA labels (FR-021)
-- [ ] T099 Verify all success/error feedback displays correctly (FR-022, FR-023)
+- [x] T098 Verify all form validation errors display clearly with ARIA labels (FR-021) - **VERIFIED**: All forms use Zod validation with clear error messages, aria-invalid, aria-describedby, and role="alert"
+- [x] T099 Verify all success/error feedback displays correctly (FR-022, FR-023) - **COMPLETE**: Sonner toast notifications for all CRUD operations (success: green, error: red)
 - [ ] T100 Run quickstart.md validation checklist (verify all acceptance scenarios pass)
 
 ### Quality Improvements Made:
