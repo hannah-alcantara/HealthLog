@@ -52,7 +52,7 @@ export default function DashboardPage() {
   // Sort symptoms by date (newest first) and take the 5 most recent
   const recentSymptoms = [...symptoms]
     .sort(
-      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
+      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
     )
     .slice(0, 5);
 
@@ -63,7 +63,7 @@ export default function DashboardPage() {
     .sort(
       (a, b) =>
         new Date(a.appointmentDate).getTime() -
-        new Date(b.appointmentDate).getTime()
+        new Date(b.appointmentDate).getTime(),
     );
   const nextAppointment = upcomingAppointments[0];
 
@@ -92,7 +92,7 @@ export default function DashboardPage() {
       closeDialog();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to save symptom"
+        error instanceof Error ? error.message : "Failed to save symptom",
       );
     } finally {
       setIsSubmitting(false);
@@ -105,7 +105,7 @@ export default function DashboardPage() {
       toast.success("Symptom deleted successfully");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete symptom"
+        error instanceof Error ? error.message : "Failed to delete symptom",
       );
     }
   };
@@ -178,7 +178,6 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-
         </div>
 
         {/* Charts Section */}
@@ -222,7 +221,7 @@ export default function DashboardPage() {
                   <p className='text-gray-600 dark:text-gray-400'>
                     {nextAppointment.doctorName} -{" "}
                     {new Date(
-                      nextAppointment.appointmentDate
+                      nextAppointment.appointmentDate,
                     ).toLocaleDateString()}
                   </p>
                 </div>
@@ -231,8 +230,8 @@ export default function DashboardPage() {
                     {daysUntil === 0
                       ? "Today"
                       : daysUntil === 1
-                      ? "Tomorrow"
-                      : `${daysUntil} days`}
+                        ? "Tomorrow"
+                        : `${daysUntil} days`}
                   </p>
                 </div>
               </div>
@@ -252,15 +251,6 @@ export default function DashboardPage() {
 
         {/* Recent Symptoms */}
         <div className='mb-8'>
-          <div className='flex justify-between items-center mb-4'>
-            <h2 className='text-2xl font-semibold'>Recent Symptoms</h2>
-            {symptoms.length > 5 && (
-              <Link href='/symptoms'>
-                <Button variant='outline'>View All Symptoms</Button>
-              </Link>
-            )}
-          </div>
-
           {symptoms.length === 0 ? (
             <Card>
               <CardContent className='px-6 py-12 text-center'>
@@ -281,6 +271,7 @@ export default function DashboardPage() {
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              showViewAll={symptoms.length > 5}
             />
           )}
         </div>

@@ -1,143 +1,144 @@
 "use client";
 
+import { Pencil, Trash2 } from "lucide-react";
 import type { Symptom } from "@/lib/schemas/symptom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import Link from "next/link";
 
 interface SymptomsListProps {
   symptoms: Symptom[];
   onEdit: (symptom: Symptom) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  showViewAll?: boolean;
+}
+
+function formatDateTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function getSeverityColor(severity: number): string {
+  if (severity <= 3)
+    return "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30";
+  if (severity <= 6)
+    return "text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30";
+  return "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30";
 }
 
 export function SymptomsList({
   symptoms,
   onEdit,
   onDelete,
-  onAdd,
+  showViewAll = false,
 }: SymptomsListProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getSeverityColor = (severity: number) => {
-    if (severity <= 3) return "text-green-600 dark:text-green-400";
-    if (severity <= 6) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
-
-  const getSeverityBg = (severity: number) => {
-    if (severity <= 3) return "bg-green-100 dark:bg-green-900/20";
-    if (severity <= 6) return "bg-yellow-100 dark:bg-yellow-900/20";
-    return "bg-red-100 dark:bg-red-900/20";
-  };
+  if (symptoms.length === 0) {
+    return (
+      <div className='text-center py-12 text-muted-foreground'>
+        No symptoms logged yet. Add your first symptom to get started.
+      </div>
+    );
+  }
 
   return (
-    <div className='space-y-4'>
-      <div className='flex justify-between items-center'>
-        <h2 className='text-xl font-semibold'>Symptom Log</h2>
-        <Button onClick={onAdd}>Log New Symptom</Button>
-      </div>
-
-      {symptoms.length === 0 ? (
-        <Card>
-          <CardContent className='px-6 py-8 text-center text-gray-500'>
-            No symptoms logged yet. Click &quot;Log New Symptom&quot; to get
-            started.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className='space-y-3'>
-          {symptoms.map((symptom) => (
-            <Card key={symptom.id}>
-              <CardHeader>
-                <div className='flex justify-between items-start gap-4'>
-                  <div className='flex-1'>
-                    <div className='flex items-center gap-3 mb-1'>
-                      <h3 className='text-lg font-semibold'>
-                        {symptom.symptomType}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getSeverityBg(
-                          symptom.severity
-                        )} ${getSeverityColor(symptom.severity)}`}
-                      >
-                        Severity: {symptom.severity}/10
-                      </span>
-                    </div>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
-                      {formatDate(symptom.loggedAt)}
-                    </p>
-                  </div>
-                  <div className='flex gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => onEdit(symptom)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this symptom log?"
-                          )
-                        ) {
-                          onDelete(symptom.id);
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className='space-y-2'>
-                {symptom.bodyPart && (
-                  <div className='flex flex-wrap gap-2'>
-                    <span className='px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded text-xs'>
-                      📍 {symptom.bodyPart}
-                    </span>
-                  </div>
-                )}
-
-                {symptom.triggers && (
-                  <div>
-                    <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                      Triggers
-                    </p>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
-                      {symptom.triggers}
-                    </p>
-                  </div>
-                )}
-
-                {symptom.notes && (
-                  <div>
-                    <p className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                      Notes
-                    </p>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
-                      {symptom.notes}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+    <Card className='pb-0'>
+      <CardHeader>
+        <div className='flex justify-between items-start'>
+          <div>
+            <h2 className='text-2xl font-semibold'>Recent Symptoms</h2>
+            <p className='text-sm text-muted-foreground'>
+              Track and monitor your health symptoms
+            </p>
+          </div>
+          {showViewAll && (
+            <Link href='/symptoms'>
+              <Button variant='outline'>View All Symptoms</Button>
+            </Link>
+          )}
         </div>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent className='px-0 border-t'>
+        <Table>
+          <TableHeader className='bg-muted'>
+            <TableRow className='uppercase'>
+              <TableHead>Symptom</TableHead>
+              <TableHead>Date and Time</TableHead>
+              <TableHead>Severity</TableHead>
+              <TableHead>Triggers</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead className='w-[100px]'>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {symptoms.map((symptom) => (
+              <TableRow key={symptom.id}>
+                <TableCell className='font-medium'>
+                  {symptom.symptomType}
+                  {symptom.bodyPart && (
+                    <span className='text-sm text-muted-foreground ml-2'>
+                      ({symptom.bodyPart})
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className='text-sm'>
+                  {formatDateTime(symptom.loggedAt)}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`font-semibold px-2 py-1 rounded-md ${getSeverityColor(symptom.severity)}`}
+                  >
+                    {symptom.severity}/10
+                  </span>
+                </TableCell>
+                <TableCell className='text-sm text-muted-foreground'>
+                  {symptom.triggers || "-"}
+                </TableCell>
+                <TableCell className='text-sm text-muted-foreground max-w-[300px] truncate'>
+                  {symptom.notes || "-"}
+                </TableCell>
+                <TableCell>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => onEdit(symptom)}
+                      className='h-8 w-8'
+                      aria-label='Edit symptom'
+                    >
+                      <Pencil className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => onDelete(symptom.id)}
+                      className='h-8 w-8 text-destructive hover:text-destructive'
+                      aria-label='Delete symptom'
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
