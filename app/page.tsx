@@ -19,6 +19,7 @@ import type { Symptom, CreateSymptomInput } from "@/lib/schemas/symptom";
 import Link from "next/link";
 import { StorageWarningBanner } from "@/components/storage-warning-banner";
 import { toast } from "sonner";
+import { Sparkles, TrendingUp, TriangleAlert } from "lucide-react";
 
 type DialogState =
   | { type: "closed" }
@@ -144,37 +145,77 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-8'>
+          {/* AI Generated Questions */}
           <Card>
             <CardHeader>
-              <p className='text-sm text-gray-600 dark:text-gray-400'>
-                Total Symptoms
-              </p>
+              <div className='flex justify-between items-start'>
+                <p className='text-sm text-muted-foreground'>
+                  AI Generated Questions
+                </p>
+                <div className='p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30'>
+                  <Sparkles className='h-5 w-5 text-purple-600 dark:text-purple-400' />
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className='text-3xl font-bold'>{stats.total}</p>
+            <CardContent className='space-y-3'>
+              <p className='text-3xl font-bold'>
+                {nextAppointment?.generatedQuestions?.length || 0}
+              </p>
+              <Link href='/appointments'>
+                <Button variant='outline' size='sm' className='w-full'>
+                  Prepare for Visit
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
+          {/* Most Frequent */}
           <Card>
             <CardHeader>
-              <p className='text-sm text-gray-600 dark:text-gray-400'>
-                Avg Severity
-              </p>
+              <div className='flex justify-between items-start'>
+                <p className='text-sm text-muted-foreground'>Most Frequent</p>
+                <div className='p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30'>
+                  <TrendingUp className='h-5 w-5 text-blue-600 dark:text-blue-400' />
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <p className='text-3xl font-bold'>{stats.averageSeverity}/10</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <p className='text-sm text-gray-600 dark:text-gray-400'>
-                Most Common
-              </p>
-            </CardHeader>
-            <CardContent>
-              <p className='text-lg font-semibold truncate'>
+            <CardContent className='space-y-1'>
+              <p className='text-2xl font-bold truncate'>
                 {stats.mostCommonSymptom || "N/A"}
+              </p>
+              {stats.mostCommonSymptom && (
+                <p className='text-sm text-muted-foreground'>
+                  Logged{" "}
+                  {
+                    symptoms.filter(
+                      (s) =>
+                        s.symptomType === stats.mostCommonSymptom &&
+                        new Date(s.loggedAt) >=
+                          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                    ).length
+                  }{" "}
+                  times this week
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* High Severity */}
+          <Card>
+            <CardHeader>
+              <div className='flex justify-between items-start'>
+                <p className='text-sm text-muted-foreground'>High Severity</p>
+                <div className='p-2 rounded-lg bg-red-100 dark:bg-red-900/30'>
+                  <TriangleAlert className='h-5 w-5 text-red-600 dark:text-red-400' />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-1'>
+              <p className='text-3xl font-bold'>
+                {symptoms.filter((s) => s.severity >= 7).length}
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Symptoms rated 7+ severity
               </p>
             </CardContent>
           </Card>
