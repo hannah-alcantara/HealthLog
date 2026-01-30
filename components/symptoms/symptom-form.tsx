@@ -164,21 +164,34 @@ export function SymptomForm({
 
         {/* Pain Scale */}
         <div className='relative px-2'>
-          {/* Numbers Row */}
+          {/* Numbers Row - Clickable with Background */}
           <div className='relative flex mb-2'>
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-              <div
+              <button
                 key={num}
-                className='absolute'
+                type='button'
+                onClick={() => setValue("severity", num)}
+                className={`absolute transition-all hover:scale-110 rounded-md px-2 py-1 ${
+                  severity === num
+                    ? "bg-primary/10 dark:bg-primary/20"
+                    : "hover:bg-muted"
+                }`}
                 style={{
                   left: `${(num / 10) * 100}%`,
                   transform: "translateX(-50%)",
                 }}
+                aria-label={`Severity level ${num}`}
               >
-                <span className='text-xs font-semibold text-gray-700 dark:text-gray-300'>
+                <span
+                  className={`text-xs font-semibold transition-colors ${
+                    severity === num
+                      ? "text-primary"
+                      : "text-gray-700 dark:text-gray-300 hover:text-primary"
+                  }`}
+                >
                   {num}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
 

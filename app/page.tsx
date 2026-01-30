@@ -5,8 +5,9 @@ import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
 import { SymptomForm } from "@/components/symptoms/symptom-form";
-import { SymptomFrequencyChart } from "@/components/dashboard/symptom-frequency-chart";
+import { SeverityTrendChart } from "@/components/dashboard/severity-trend-chart";
 import { CategoryBreakdownChart } from "@/components/dashboard/category-breakdown-chart";
+import { SymptomHeatmap } from "@/components/dashboard/symptom-heatmap";
 import {
   Dialog,
   DialogContent,
@@ -224,14 +225,31 @@ export default function DashboardPage() {
         {/* Charts Section */}
         {symptoms.length > 0 && (
           <div className='space-y-6 mb-8'>
-            <h2 className='text-2xl font-semibold'>Symptom Analytics</h2>
+            <h2 className='text-2xl font-semibold'>Symptom Trends Over Time</h2>
+
+            {/* Heatmap */}
+            <Card>
+              <CardHeader>
+                <h3 className='text-lg font-semibold'>Symptom Activity Calendar</h3>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>
+                  Daily symptom count over the past 12 months
+                </p>
+              </CardHeader>
+              <CardContent>
+                <SymptomHeatmap symptoms={symptoms} />
+              </CardContent>
+            </Card>
+
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
               <Card>
                 <CardHeader>
-                  <h3 className='text-lg font-semibold'>Symptom Trends</h3>
+                  <h3 className='text-lg font-semibold'>Severity Trends</h3>
+                  <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    Top 3 most logged symptoms
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  <SymptomFrequencyChart symptoms={symptoms} />
+                  <SeverityTrendChart symptoms={symptoms} />
                 </CardContent>
               </Card>
 

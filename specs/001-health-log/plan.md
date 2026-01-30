@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a healthcare tracking application where users can log and organize their medical information across four main sections: Medical History (conditions, medications, allergies), Appointments (past visits with doctor notes), Documents (uploaded medical files), and Dashboard (recent activity overview). The application uses Next.js 16 with TypeScript, Tailwind CSS 4, shadcn/ui components, and localStorage for data persistence.
+Build a healthcare tracking application where users can log and organize their medical information across four main sections: Symptoms (daily symptom logging with severity tracking), Medical History (conditions, medications, allergies), Appointments (upcoming visits with AI-generated questions), and Dashboard (symptom analytics and recent activity overview). The application uses Next.js 16 with TypeScript, Tailwind CSS 4, shadcn/ui components, and localStorage for data persistence.
 
 ## Technical Context
 
@@ -21,21 +21,26 @@ Build a healthcare tracking application where users can log and organize their m
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### I. Code Quality First
+
 ✅ **PASS** - TypeScript strict mode enforced in tsconfig.json, ESLint configured with Next.js rules, zero `any` types policy established
 
 ### II. Testing Standards (NON-NEGOTIABLE)
+
 ✅ **PASS** - Test coverage thresholds defined (80% utilities, 90% business logic, 100% validation), Jest + RTL + Playwright configured, all acceptance scenarios in spec.md map to integration tests
 
 ### III. User Experience Consistency
+
 ✅ **PASS** - shadcn/ui components provide WCAG 2.1 AA compliance, Tailwind theme variables in globals.css, responsive breakpoints defined (mobile-first 375px minimum)
 
 ### IV. Performance Requirements
+
 ✅ **PASS** - Next.js 16 provides automatic optimization (code splitting, image optimization), performance budgets defined in constitution align with Core Web Vitals, bundle size limits enforced via next.config.js
 
 ### V. Data Integrity & Security
+
 ✅ **PASS** - Zod schemas for all data validation (client + future server-side), file upload validation (type, size), no sensitive data logging, localStorage with proper error boundaries
 
 **Constitution Check Result**: ✅ ALL GATES PASSED
@@ -60,17 +65,19 @@ specs/001-health-log/
 ```text
 app/
 ├── layout.tsx                    # Root layout with Geist fonts and metadata
-├── page.tsx                      # Dashboard (landing page)
-├── globals.css                   # Theme variables and Tailwind base
+├── page.tsx                      # Dashboard with symptom analytics and stats cards
+├── globals.css                   # OKLCH color theme and Tailwind base
+├── symptoms/
+│   └── page.tsx                  # Symptoms list with filtering/sorting
 ├── medical-history/
 │   └── page.tsx                  # Medical History section
 ├── appointments/
-│   └── page.tsx                  # Appointments section
-└── documents/
-    └── page.tsx                  # Documents section
+│   └── page.tsx                  # Appointments with AI question generation
+└── onboarding/
+    └── page.tsx                  # Onboarding flow
 
 components/
-├── ui/                           # shadcn/ui components (installed via CLI)
+├── ui/                           # shadcn/ui components
 │   ├── button.tsx
 │   ├── card.tsx
 │   ├── form.tsx
@@ -78,7 +85,16 @@ components/
 │   ├── label.tsx
 │   ├── dialog.tsx
 │   ├── select.tsx
-│   └── [other shadcn components as needed]
+│   ├── table.tsx                 # Table component for data display
+│   ├── dropdown-menu.tsx         # Dropdown menu component
+│   ├── calendar.tsx
+│   ├── popover.tsx
+│   ├── date-time-picker.tsx      # Custom date/time picker with future date prevention
+│   └── textarea.tsx
+├── symptoms/
+│   ├── symptom-form.tsx          # Form with 0-10 severity selector and pain icons
+│   ├── symptoms-list.tsx         # Table view with severity badges and actions
+│   └── symptom-filters.tsx       # Filtering and sorting controls
 ├── medical-history/
 │   ├── condition-form.tsx
 │   ├── medication-form.tsx
@@ -87,50 +103,50 @@ components/
 ├── appointments/
 │   ├── appointment-form.tsx
 │   └── appointments-list.tsx
-├── documents/
-│   ├── document-upload.tsx
-│   └── documents-list.tsx
 └── dashboard/
-    ├── recent-activity.tsx
-    └── stats-summary.tsx
+    ├── symptom-frequency-chart.tsx  # Heatmap visualization (30/60/90 days)
+    ├── category-breakdown-chart.tsx # Time-of-day distribution chart
+    └── storage-warning-banner.tsx   # localStorage capacity warning
 
 lib/
 ├── storage/
+│   ├── base.ts                   # Base storage service with localStorage wrapper
+│   ├── symptoms.ts               # Symptom CRUD operations
 │   ├── conditions.ts             # Condition CRUD operations
 │   ├── medications.ts            # Medication CRUD operations
 │   ├── allergies.ts              # Allergy CRUD operations
-│   ├── appointments.ts           # Appointment CRUD operations
-│   └── documents.ts              # Document CRUD operations
+│   └── appointments.ts           # Appointment CRUD operations
 ├── schemas/
+│   ├── symptom.ts                # Zod schema + TypeScript interface
 │   ├── condition.ts              # Zod schema + TypeScript interface
 │   ├── medication.ts             # Zod schema + TypeScript interface
 │   ├── allergy.ts                # Zod schema + TypeScript interface
-│   ├── appointment.ts            # Zod schema + TypeScript interface
-│   └── document.ts               # Zod schema + TypeScript interface
+│   └── appointment.ts            # Zod schema + TypeScript interface
 ├── hooks/
+│   ├── use-symptoms.ts           # React hook for symptom state with stats
 │   ├── use-conditions.ts         # React hook for condition state
 │   ├── use-medications.ts        # React hook for medication state
 │   ├── use-allergies.ts          # React hook for allergy state
-│   ├── use-appointments.ts       # React hook for appointment state
-│   └── use-documents.ts          # React hook for document state
+│   └── use-appointments.ts       # React hook for appointment state
 └── utils/
     ├── storage.ts                # Generic localStorage utilities
-    └── file-utils.ts             # File upload/validation utilities
+    ├── symptom-filters.ts        # Symptom filtering and sorting logic
+    └── question-generator.ts     # AI question generation for appointments
 
 __tests__/
 ├── components/                   # Component tests (React Testing Library)
+│   ├── symptoms/
 │   ├── medical-history/
 │   ├── appointments/
-│   ├── documents/
 │   └── dashboard/
 ├── lib/                          # Unit tests for services/utils
 │   ├── storage/
 │   ├── schemas/
 │   └── utils/
 ├── integration/                  # Integration tests (user journeys)
+│   ├── symptoms.test.tsx
 │   ├── medical-history.test.tsx
 │   ├── appointments.test.tsx
-│   ├── documents.test.tsx
 │   └── dashboard.test.tsx
 └── e2e/                          # Playwright E2E tests
     ├── critical-paths.spec.ts

@@ -1,111 +1,281 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
-import type { Symptom } from '@/lib/schemas/symptom';
+import { useMemo } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { format, subDays, eachDayOfInterval } from "date-fns";
+import type { Symptom } from "@/lib/schemas/symptom";
 
 interface SeverityTrendChartProps {
   symptoms: Symptom[];
   days?: number;
 }
 
-export function SeverityTrendChart({ symptoms, days = 30 }: SeverityTrendChartProps) {
+// Three distinct colors for the top 3 symptoms
+const SYMPTOM_COLORS = [
+  "#10b981", // Green
+  "#3b82f6", // Blue
+  "#a855f7", // Purple
+];
+
+export function SeverityTrendChart({
+  symptoms,
+  days = 7,
+}: SeverityTrendChartProps) {
   const chartData = useMemo(() => {
     const endDate = new Date();
-    const startDate = subDays(endDate, days);
+    const startDate = subDays(endDate, days - 1);
 
     // Create array of all dates in range
     const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
 
-    // Calculate daily severity stats
-    const dailyStats = new Map<string, { sum: number; count: number; max: number }>();
-    dateRange.forEach(date => {
-      const dateKey = format(date, 'yyyy-MM-dd');
-      dailyStats.set(dateKey, { sum: 0, count: 0, max: 0 });
-    });
-
-    // Populate with actual symptom data
-    symptoms.forEach(symptom => {
+    // Find top 3 symptoms by frequency (with severity as tiebreaker) in this period
+    const symptomStats = new Map<
+      string,
+      { count: number; maxSeverity: number }
+    >();
+    symptoms.forEach((symptom) => {
       const symptomDate = new Date(symptom.loggedAt);
       if (symptomDate >= startDate && symptomDate <= endDate) {
-        const dateKey = format(symptomDate, 'yyyy-MM-dd');
-        const stats = dailyStats.get(dateKey);
-        if (stats) {
-          stats.sum += symptom.severity;
-          stats.count += 1;
-          stats.max = Math.max(stats.max, symptom.severity);
+        const current = symptomStats.get(symptom.symptomType);
+        if (current) {
+          symptomStats.set(symptom.symptomType, {
+            count: current.count + 1,
+            maxSeverity: Math.max(current.maxSeverity, symptom.severity),
+          });
+        } else {
+          symptomStats.set(symptom.symptomType, {
+            count: 1,
+            maxSeverity: symptom.severity,
+          });
         }
       }
     });
 
-    // Convert to chart data format with averages
-    return Array.from(dailyStats.entries()).map(([date, stats]) => ({
-      date: format(new Date(date), 'MMM dd'),
-      average: stats.count > 0 ? Math.round((stats.sum / stats.count) * 10) / 10 : null,
-      max: stats.count > 0 ? stats.max : null,
-    }));
+    const topSymptoms = Array.from(symptomStats.entries())
+      .sort((a, b) => {
+        // First sort by frequency (count)
+        if (b[1].count !== a[1].count) {
+          return b[1].count - a[1].count;
+        }
+        // If frequency is tied, sort by max severity
+        return b[1].maxSeverity - a[1].maxSeverity;
+      })
+      .slice(0, 3)
+      .map(([type]) => type);
+
+    // Assign colors by position (1st = green, 2nd = blue, 3rd = purple)
+    const symptomColorMap = new Map<string, string>();
+    topSymptoms.forEach((symptom, index) => {
+      symptomColorMap.set(symptom, SYMPTOM_COLORS[index]);
+    });
+
+    // Calculate daily severity stats for each symptom
+    const dailyData = dateRange.map((date) => {
+      const dateKey = format(date, "yyyy-MM-dd");
+      const dataPoint: Record<string, string | number | null> = {
+        date: format(date, "MMM dd"),
+      };
+
+      // Calculate average severity for each top symptom on this day
+      topSymptoms.forEach((symptomType) => {
+        const symptomsOnDay = symptoms.filter((s) => {
+          const sDate = new Date(s.loggedAt);
+          return (
+            format(sDate, "yyyy-MM-dd") === dateKey &&
+            s.symptomType === symptomType
+          );
+        });
+
+        if (symptomsOnDay.length > 0) {
+          const avgSeverity =
+            symptomsOnDay.reduce((sum, s) => sum + s.severity, 0) /
+            symptomsOnDay.length;
+          dataPoint[symptomType] = Math.round(avgSeverity * 10) / 10;
+        } else {
+          dataPoint[symptomType] = 0; // Use 0 for area charts to maintain continuity
+        }
+      });
+
+      return dataPoint;
+    });
+
+    return { data: dailyData, topSymptoms, symptomColorMap };
   }, [symptoms, days]);
 
-  if (chartData.length === 0) {
+  const { data, topSymptoms, symptomColorMap } = chartData;
+
+  if (data.length === 0 || topSymptoms.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400">
-        No severity data available
+      <div className='flex items-center justify-center h-[300px] text-muted-foreground'>
+        No severity data available for the past {days} days
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+    <div className='w-full h-[300px]'>
+      <ResponsiveContainer width='100%' height='100%'>
+        <AreaChart
+          data={data}
+          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+        >
+          <defs>
+            {topSymptoms.map((symptomType) => {
+              // Create a safe ID by removing spaces and special characters
+              const safeId = `gradient-${symptomType.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}`;
+              const color = symptomColorMap.get(symptomType);
+              return (
+                <linearGradient
+                  key={safeId}
+                  id={safeId}
+                  x1='0'
+                  y1='0'
+                  x2='0'
+                  y2='1'
+                >
+                  <stop offset='5%' stopColor={color} stopOpacity={0.3} />
+                  <stop offset='95%' stopColor={color} stopOpacity={0.05} />
+                </linearGradient>
+              );
+            })}
+          </defs>
+          <CartesianGrid
+            strokeDasharray='0'
+            horizontal={true}
+            vertical={true}
+            stroke='#94a3b8'
+            strokeOpacity={0.15}
+          />
           <XAxis
-            dataKey="date"
-            className="text-xs fill-gray-600 dark:fill-gray-400"
-            tick={{ fontSize: 12 }}
-            interval="preserveStartEnd"
+            dataKey='date'
+            className='text-xs'
+            tick={{
+              fontSize: 12,
+              fill: "hsl(var(--muted-foreground))",
+              opacity: 0.5,
+            }}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={10}
           />
           <YAxis
-            className="text-xs fill-gray-600 dark:fill-gray-400"
-            tick={{ fontSize: 12 }}
+            className='text-xs'
+            tick={{
+              fontSize: 12,
+              fill: "hsl(var(--muted-foreground))",
+              opacity: 0.5,
+            }}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={10}
             domain={[0, 10]}
             ticks={[0, 2, 4, 6, 8, 10]}
+            label={{
+              value: "Pain Severity",
+              angle: -90,
+              position: "insideLeft",
+              offset: 10,
+              style: {
+                fontSize: 12,
+                fill: "hsl(var(--muted-foreground))",
+                opacity: 0.5,
+                textAnchor: "middle",
+              },
+            }}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px',
+            content={({ active, payload, label }) => {
+              if (!active || !payload || payload.length === 0) return null;
+
+              return (
+                <div className='rounded-lg border bg-background p-3 shadow-md'>
+                  <p className='text-sm font-medium mb-2'>{label}</p>
+                  <div className='space-y-1'>
+                    {payload.map((entry, index) => {
+                      if (!entry.value || entry.value === 0) return null;
+                      return (
+                        <div
+                          key={index}
+                          className='flex items-center gap-2 text-sm'
+                        >
+                          <div
+                            className='h-2.5 w-2.5 rounded-full'
+                            style={{ backgroundColor: entry.color }}
+                          />
+                          <span className='text-muted-foreground'>
+                            {entry.name}:
+                          </span>
+                          <span className='font-medium'>{entry.value}/10</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
             }}
-            labelStyle={{ color: 'hsl(var(--foreground))' }}
           />
           <Legend
             wrapperStyle={{
-              paddingTop: '10px',
-              fontSize: '12px',
+              paddingTop: "10px",
+              fontSize: "12px",
+              opacity: 0.8,
             }}
+            iconType='circle'
           />
-          <Line
-            type="monotone"
-            dataKey="average"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            name="Average Severity"
-            connectNulls
-          />
-          <Line
-            type="monotone"
-            dataKey="max"
-            stroke="hsl(142.1 76.2% 36.3%)"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            strokeDasharray="5 5"
-            name="Max Severity"
-            connectNulls
-          />
-        </LineChart>
+          {topSymptoms.map((symptomType) => {
+            // Create the same safe ID used in gradient definition
+            const safeId = `gradient-${symptomType.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}`;
+            const color = symptomColorMap.get(symptomType);
+            return (
+              <Area
+                key={symptomType}
+                type='monotone'
+                dataKey={symptomType}
+                stroke={color}
+                fill={`url(#${safeId})`}
+                fillOpacity={1}
+                strokeWidth={2}
+                name={symptomType}
+                dot={(props) => {
+                  if (props.payload[symptomType] === 0) return null;
+                  return (
+                    <circle
+                      cx={props.cx}
+                      cy={props.cy}
+                      r={5}
+                      fill={color}
+                      strokeWidth={2}
+                      stroke='hsl(var(--background))'
+                    />
+                  );
+                }}
+                activeDot={(props) => {
+                  if (props.payload[symptomType] === 0) return null;
+                  return (
+                    <circle
+                      cx={props.cx}
+                      cy={props.cy}
+                      r={7}
+                      fill={color}
+                      strokeWidth={2}
+                      stroke='hsl(var(--background))'
+                    />
+                  );
+                }}
+                isAnimationActive={true}
+              />
+            );
+          })}
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
