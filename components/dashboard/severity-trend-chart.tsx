@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { subDays, eachWeekOfInterval, endOfWeek } from "date-fns";
 import type { Symptom } from "@/lib/schemas/symptom";
 
 interface SeverityTrendChartProps {
@@ -28,14 +28,11 @@ const SYMPTOM_COLORS = [
 
 export function SeverityTrendChart({
   symptoms,
-  days = 7,
+  days = 30,
 }: SeverityTrendChartProps) {
   const chartData = useMemo(() => {
     const endDate = new Date();
     const startDate = subDays(endDate, days - 1);
-
-    // Create array of all dates in range
-    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
 
     // Find top 3 symptoms by frequency (with severity as tiebreaker) in this period
     const symptomStats = new Map<
@@ -78,27 +75,31 @@ export function SeverityTrendChart({
       symptomColorMap.set(symptom, SYMPTOM_COLORS[index]);
     });
 
-    // Calculate daily severity stats for each symptom
-    const dailyData = dateRange.map((date) => {
-      const dateKey = format(date, "yyyy-MM-dd");
+    // Create array of weeks in range
+    const weeks = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 0 });
+
+    // Calculate weekly severity stats for each symptom
+    const weeklyData = weeks.map((weekStart, index) => {
+      const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
       const dataPoint: Record<string, string | number | null> = {
-        date: format(date, "MMM dd"),
+        date: `Week ${index + 1}`,
       };
 
-      // Calculate average severity for each top symptom on this day
+      // Calculate average severity for each top symptom in this week
       topSymptoms.forEach((symptomType) => {
-        const symptomsOnDay = symptoms.filter((s) => {
+        const symptomsInWeek = symptoms.filter((s) => {
           const sDate = new Date(s.loggedAt);
           return (
-            format(sDate, "yyyy-MM-dd") === dateKey &&
+            sDate >= weekStart &&
+            sDate <= weekEnd &&
             s.symptomType === symptomType
           );
         });
 
-        if (symptomsOnDay.length > 0) {
+        if (symptomsInWeek.length > 0) {
           const avgSeverity =
-            symptomsOnDay.reduce((sum, s) => sum + s.severity, 0) /
-            symptomsOnDay.length;
+            symptomsInWeek.reduce((sum, s) => sum + s.severity, 0) /
+            symptomsInWeek.length;
           dataPoint[symptomType] = Math.round(avgSeverity * 10) / 10;
         } else {
           dataPoint[symptomType] = 0; // Use 0 for area charts to maintain continuity
@@ -108,7 +109,7 @@ export function SeverityTrendChart({
       return dataPoint;
     });
 
-    return { data: dailyData, topSymptoms, symptomColorMap };
+    return { data: weeklyData, topSymptoms, symptomColorMap };
   }, [symptoms, days]);
 
   const { data, topSymptoms, symptomColorMap } = chartData;
@@ -116,7 +117,7 @@ export function SeverityTrendChart({
   if (data.length === 0 || topSymptoms.length === 0) {
     return (
       <div className='flex items-center justify-center h-[300px] text-muted-foreground'>
-        No severity data available for the past {days} days
+        No severity data available for the past month
       </div>
     );
   }

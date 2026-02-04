@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Symptom } from "@/lib/schemas/symptom";
 import {
   Table,
@@ -12,6 +12,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
 interface SymptomsListProps {
@@ -68,7 +74,7 @@ export function SymptomsList({
           </div>
           {showViewAll && (
             <Link href='/symptoms'>
-              <Button variant='outline'>View All Symptoms</Button>
+              <Button>View All Symptoms</Button>
             </Link>
           )}
         </div>
@@ -76,13 +82,13 @@ export function SymptomsList({
       <CardContent className='px-0 border-t'>
         <Table>
           <TableHeader className='bg-muted'>
-            <TableRow className='uppercase'>
+            <TableRow>
               <TableHead>Symptom</TableHead>
               <TableHead>Date and Time</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Triggers</TableHead>
               <TableHead>Notes</TableHead>
-              <TableHead className='w-[100px]'>Actions</TableHead>
+              <TableHead className='w-[50px]'></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,26 +119,31 @@ export function SymptomsList({
                   {symptom.notes || "-"}
                 </TableCell>
                 <TableCell>
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => onEdit(symptom)}
-                      className='h-8 w-8'
-                      aria-label='Edit symptom'
-                    >
-                      <Pencil className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => onDelete(symptom.id)}
-                      className='h-8 w-8 text-destructive hover:text-destructive'
-                      aria-label='Delete symptom'
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-8 w-8'
+                        aria-label='Open menu'
+                      >
+                        <MoreVertical className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem onClick={() => onEdit(symptom)}>
+                        <Pencil className='h-4 w-4' />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDelete(symptom.id)}
+                        className='text-destructive focus:text-destructive focus:bg-destructive/10'
+                      >
+                        <Trash2 className='h-4 w-4' />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
