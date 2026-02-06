@@ -1,162 +1,263 @@
 # Implementation Plan: Healthcare Tracking Application
 
-**Branch**: `001-health-log` | **Date**: 2025-12-09 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-health-log` | **Date**: 2026-02-06 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-health-log/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Build a healthcare tracking application where users can log and organize their medical information across four main sections: Symptoms (daily symptom logging with severity tracking), Medical History (conditions, medications, allergies), Appointments (upcoming visits with AI-generated questions), and Dashboard (symptom analytics and recent activity overview). The application uses Next.js 16 with TypeScript, Tailwind CSS 4, shadcn/ui components, and localStorage for data persistence.
+Building a healthcare tracking application with symptom logging, appointment tracking, and dashboard analytics. The application uses **Convex** as the backend-as-a-service for real-time data synchronization, authentication, and cloud storage. The frontend is built with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS 4.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x with React 19, Node.js 20+
-**Primary Dependencies**: Next.js 16 (App Router), Tailwind CSS 4, shadcn/ui, Zod, React Hook Form
-**Storage**: Browser localStorage (5-10MB limit per origin)
-**Testing**: Jest + React Testing Library, Playwright for E2E
-**Target Platform**: Modern browsers (Chrome 60+, Firefox 55+, Safari 11+, Edge 79+)
-**Project Type**: Web application - Next.js App Router architecture
-**Performance Goals**: FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, form feedback < 100ms
-**Constraints**: 200KB JS bundle (gzipped), 50KB CSS bundle, 10MB per-file upload limit
-**Scale/Scope**: Single-user application, ~100 entries per section typical, 4 main sections
+**Language/Version**: TypeScript 5.x with Next.js 16.0.8, React 19.2.1
+
+**Primary Dependencies**:
+  - **Backend**: Convex (real-time BaaS with TypeScript schema, queries, mutations)
+  - **UI Framework**: Next.js 16 App Router, React 19, Tailwind CSS 4
+  - **Validation**: Zod 4.1.13 (client-side schemas)
+  - **Forms**: react-hook-form 7.68.0, @hookform/resolvers 5.2.2
+  - **UI Components**: Radix UI (dialog, dropdown, select, popover), lucide-react (icons)
+  - **Charts**: Recharts 3.6.0 (symptom analytics)
+  - **Date Handling**: date-fns 4.1.0, react-day-picker 9.12.0
+  - **Notifications**: sonner 2.0.7 (toast notifications)
+
+**Storage**: Convex cloud database with real-time synchronization (replaces localStorage)
+
+**Testing**:
+  - **Unit/Integration**: Jest 30.2.0, React Testing Library 16.3.0
+  - **E2E**: Playwright 1.57.0
+  - **Coverage Targets**: 80% utilities, 90% business logic, 100% data validation
+
+**Target Platform**: Web application (responsive mobile-first design, desktop support)
+
+**Project Type**: Web (Next.js full-stack with Convex backend)
+
+**Performance Goals**:
+  - FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, CLS < 0.1
+  - Data entry forms: <100ms feedback with optimistic updates
+  - Charts: <500ms render for 30 days of symptom data
+  - Search/Filter: <300ms for typical datasets
+
+**Constraints**:
+  - WCAG 2.1 AA accessibility compliance
+  - Mobile-first responsive (375px minimum width)
+  - Real-time data sync across devices via Convex
+  - Lighthouse scores: Performance ≥90, Accessibility=100, Best Practices ≥90
+  - Bundle sizes: JS <200KB gzipped, CSS <50KB gzipped
+
+**Scale/Scope**:
+  - Single-user health tracking application
+  - Expected dataset: 100-500 symptom logs per user
+  - 4 main sections: Dashboard, Symptoms, Appointments, (Medical History deferred)
+  - Responsive UI with dark mode support
 
 ## Constitution Check
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-### I. Code Quality First
+### Code Quality Requirements
+- [x] TypeScript strict mode enabled (already configured in tsconfig.json)
+- [x] ESLint configured with Next.js rules (eslint-config-next active)
+- [x] Zero `any` types policy (will be enforced via review)
+- [x] Zod schemas for all data validation (already in use: symptom.ts, appointment.ts)
+- [x] Component interfaces with JSDoc (pattern established)
+- [x] Functions under 50 lines (will be enforced via review)
 
-✅ **PASS** - TypeScript strict mode enforced in tsconfig.json, ESLint configured with Next.js rules, zero `any` types policy established
+### Testing Standards
+- [x] Jest + React Testing Library configured (package.json scripts present)
+- [x] Playwright for E2E testing (installed and configured)
+- [x] Coverage targets defined: 80% utilities, 90% business logic, 100% validation
+- [ ] **ACTION REQUIRED**: Convex-specific testing patterns need research (Phase 0)
 
-### II. Testing Standards (NON-NEGOTIABLE)
+### User Experience Consistency
+- [x] Tailwind CSS 4 with theme variables in globals.css
+- [x] Radix UI component library (accessible by default)
+- [x] Dark mode support via CSS variables
+- [x] Mobile-first responsive design (375px minimum)
+- [x] WCAG 2.1 AA compliance required
 
-✅ **PASS** - Test coverage thresholds defined (80% utilities, 90% business logic, 100% validation), Jest + RTL + Playwright configured, all acceptance scenarios in spec.md map to integration tests
+### Performance Requirements
+- [x] Core Web Vitals targets defined
+- [x] Bundle size limits: JS <200KB, CSS <50KB
+- [x] Performance budgets per feature type
+- [ ] **ACTION REQUIRED**: Convex query optimization patterns need research (Phase 0)
 
-### III. User Experience Consistency
+### Data Integrity & Security
+- [x] Zod validation on client side (already implemented)
+- [ ] **ACTION REQUIRED**: Convex validators for server-side validation (Phase 0)
+- [ ] **ACTION REQUIRED**: Convex authentication strategy (Phase 0)
+- [x] No sensitive data logging (principle documented)
 
-✅ **PASS** - shadcn/ui components provide WCAG 2.1 AA compliance, Tailwind theme variables in globals.css, responsive breakpoints defined (mobile-first 375px minimum)
+### Gate Evaluation (Initial)
 
-### IV. Performance Requirements
+**STATUS**: ✅ PASS with clarifications required in Phase 0
 
-✅ **PASS** - Next.js 16 provides automatic optimization (code splitting, image optimization), performance budgets defined in constitution align with Core Web Vitals, bundle size limits enforced via next.config.js
+**Required Research Items**:
+1. Convex testing patterns and best practices
+2. Convex query optimization for health data
+3. Convex authentication setup (anonymous vs authenticated users)
+4. Convex schema validation approach
+5. Migration strategy from localStorage to Convex
 
-### V. Data Integrity & Security
+---
 
-✅ **PASS** - Zod schemas for all data validation (client + future server-side), file upload validation (type, size), no sensitive data logging, localStorage with proper error boundaries
+### Post-Design Re-evaluation
 
-**Constitution Check Result**: ✅ ALL GATES PASSED
+**All research items from Phase 0 have been resolved. Re-evaluating gates:**
+
+### Code Quality Requirements
+- [x] TypeScript strict mode enabled (already configured in tsconfig.json)
+- [x] ESLint configured with Next.js rules (eslint-config-next active)
+- [x] Zero `any` types policy (enforced via review, minimal usage in Convex type casting)
+- [x] Zod schemas for client-side validation (lib/schemas/symptom.ts, appointment.ts)
+- [x] Convex validators for server-side validation (convex/schema.ts)
+- [x] Component interfaces with JSDoc (pattern established)
+- [x] Functions under 50 lines (will be enforced via review)
+
+### Testing Standards
+- [x] Jest + React Testing Library configured
+- [x] Playwright for E2E testing
+- [x] **Convex Test** framework for backend function testing (resolved)
+- [x] Coverage targets: 80% utilities, 90% business logic, 100% validation
+- [x] Test patterns documented in research.md
+
+### User Experience Consistency
+- [x] Tailwind CSS 4 with theme variables
+- [x] Radix UI component library (accessible)
+- [x] Dark mode support via CSS variables
+- [x] Mobile-first responsive design (375px minimum)
+- [x] WCAG 2.1 AA compliance required
+
+### Performance Requirements
+- [x] Core Web Vitals targets defined
+- [x] Bundle size limits: JS <200KB, CSS <50KB
+- [x] **Convex query optimization patterns documented** (resolved)
+- [x] Reactive queries for zero-polling real-time updates
+- [x] Pagination strategy for large datasets (500+ records)
+
+### Data Integrity & Security
+- [x] Zod validation on client side (lib/schemas/)
+- [x] **Convex validators for server-side validation** (resolved)
+- [x] **Convex anonymous authentication strategy** (resolved)
+- [x] User data ownership enforced via userId field
+- [x] No sensitive data logging
+
+### Final Gate Status
+
+**STATUS**: ✅ PASS
+
+**Key Decisions Made**:
+1. **Testing**: Convex Test for backend (100% coverage), Jest + RTL for frontend (90% coverage)
+2. **Authentication**: Anonymous auth with optional upgrade to authenticated accounts
+3. **Query Optimization**: Indexed queries on (userId, date) with reactive subscriptions
+4. **Validation**: Dual-layer (Zod client + Convex server validators)
+5. **Migration**: Feature flag approach with localStorage → Convex migration utility
+
+**No Constitution Violations**: All requirements met without compromise.
+
+**Ready for Implementation**: All technical unknowns resolved, design artifacts complete.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/001-health-log/
+specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output: Technology decisions and rationale
-├── data-model.md        # Phase 1 output: Entity schemas and storage structure
-├── quickstart.md        # Phase 1 output: Developer setup guide
-├── contracts/           # Phase 1 output: TypeScript interfaces
-│   └── storage-service.ts
-└── tasks.md             # Phase 2 output: NOT created yet (/speckit.tasks command)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
 
 ```text
-app/
-├── layout.tsx                    # Root layout with Geist fonts and metadata
-├── page.tsx                      # Dashboard with symptom analytics and stats cards
-├── globals.css                   # OKLCH color theme and Tailwind base
-├── symptoms/
-│   └── page.tsx                  # Symptoms list with filtering/sorting
-├── medical-history/
-│   └── page.tsx                  # Medical History section
-├── appointments/
-│   └── page.tsx                  # Appointments with AI question generation
-└── onboarding/
-    └── page.tsx                  # Onboarding flow
-
-components/
-├── ui/                           # shadcn/ui components
-│   ├── button.tsx
-│   ├── card.tsx
-│   ├── form.tsx
-│   ├── input.tsx
-│   ├── label.tsx
-│   ├── dialog.tsx
-│   ├── select.tsx
-│   ├── table.tsx                 # Table component for data display
-│   ├── dropdown-menu.tsx         # Dropdown menu component
-│   ├── calendar.tsx
-│   ├── popover.tsx
-│   ├── date-time-picker.tsx      # Custom date/time picker with future date prevention
-│   └── textarea.tsx
-├── symptoms/
-│   ├── symptom-form.tsx          # Form with 0-10 severity selector and pain icons
-│   ├── symptoms-list.tsx         # Table view with severity badges and actions
-│   └── symptom-filters.tsx       # Filtering and sorting controls
-├── medical-history/
-│   ├── condition-form.tsx
-│   ├── medication-form.tsx
-│   ├── allergy-form.tsx
-│   └── medical-history-list.tsx
-├── appointments/
-│   ├── appointment-form.tsx
-│   └── appointments-list.tsx
-└── dashboard/
-    ├── symptom-frequency-chart.tsx  # Heatmap visualization (30/60/90 days)
-    ├── category-breakdown-chart.tsx # Time-of-day distribution chart
-    └── storage-warning-banner.tsx   # localStorage capacity warning
-
-lib/
-├── storage/
-│   ├── base.ts                   # Base storage service with localStorage wrapper
-│   ├── symptoms.ts               # Symptom CRUD operations
-│   ├── conditions.ts             # Condition CRUD operations
-│   ├── medications.ts            # Medication CRUD operations
-│   ├── allergies.ts              # Allergy CRUD operations
-│   └── appointments.ts           # Appointment CRUD operations
-├── schemas/
-│   ├── symptom.ts                # Zod schema + TypeScript interface
-│   ├── condition.ts              # Zod schema + TypeScript interface
-│   ├── medication.ts             # Zod schema + TypeScript interface
-│   ├── allergy.ts                # Zod schema + TypeScript interface
-│   └── appointment.ts            # Zod schema + TypeScript interface
-├── hooks/
-│   ├── use-symptoms.ts           # React hook for symptom state with stats
-│   ├── use-conditions.ts         # React hook for condition state
-│   ├── use-medications.ts        # React hook for medication state
-│   ├── use-allergies.ts          # React hook for allergy state
-│   └── use-appointments.ts       # React hook for appointment state
-└── utils/
-    ├── storage.ts                # Generic localStorage utilities
-    ├── symptom-filters.ts        # Symptom filtering and sorting logic
-    └── question-generator.ts     # AI question generation for appointments
-
-__tests__/
-├── components/                   # Component tests (React Testing Library)
+health-log/
+├── app/                        # Next.js 16 App Router
+│   ├── layout.tsx              # Root layout with fonts and metadata
+│   ├── page.tsx                # Dashboard (landing page)
 │   ├── symptoms/
-│   ├── medical-history/
+│   │   └── page.tsx            # Symptom logging and list view
 │   ├── appointments/
-│   └── dashboard/
-├── lib/                          # Unit tests for services/utils
-│   ├── storage/
-│   ├── schemas/
-│   └── utils/
-├── integration/                  # Integration tests (user journeys)
-│   ├── symptoms.test.tsx
-│   ├── medical-history.test.tsx
-│   ├── appointments.test.tsx
-│   └── dashboard.test.tsx
-└── e2e/                          # Playwright E2E tests
-    ├── critical-paths.spec.ts
-    └── data-persistence.spec.ts
+│   │   └── page.tsx            # Appointment tracking
+│   └── globals.css             # Global styles and CSS variables
+│
+├── components/                 # React components
+│   ├── dashboard/              # Dashboard-specific components
+│   │   ├── symptom-heatmap.tsx
+│   │   ├── severity-trend-chart.tsx
+│   │   └── time-distribution-chart.tsx
+│   ├── symptoms/               # Symptom feature components
+│   │   ├── symptom-form.tsx
+│   │   ├── symptoms-list.tsx
+│   │   └── symptom-filters.tsx
+│   ├── appointments/           # Appointment feature components
+│   │   ├── appointment-form.tsx
+│   │   ├── appointments-list.tsx
+│   │   └── prepare-for-visit.tsx
+│   ├── ui/                     # Reusable UI primitives (Radix-based)
+│   │   ├── button.tsx
+│   │   ├── dialog.tsx
+│   │   ├── form.tsx
+│   │   └── [other UI components]
+│   └── navigation.tsx          # Main app navigation
+│
+├── convex/                     # NEW: Convex backend
+│   ├── schema.ts               # Database schema definitions
+│   ├── symptoms.ts             # Symptom queries and mutations
+│   ├── appointments.ts         # Appointment queries and mutations
+│   ├── _generated/             # Convex auto-generated files
+│   └── tsconfig.json           # Convex TypeScript config
+│
+├── lib/                        # Frontend utilities and hooks
+│   ├── schemas/                # Zod schemas for client-side validation
+│   │   ├── symptom.ts
+│   │   └── appointment.ts
+│   ├── hooks/                  # MODIFIED: React hooks for Convex integration
+│   │   ├── use-symptoms.ts     # Replaces localStorage with Convex queries
+│   │   └── use-appointments.ts # Replaces localStorage with Convex queries
+│   ├── utils/
+│   │   ├── symptom-filters.ts
+│   │   └── question-generator.ts
+│   └── utils.ts                # General utilities
+│
+├── __tests__/                  # Test suites
+│   ├── lib/
+│   │   ├── hooks/              # Hook tests (will be updated for Convex)
+│   │   └── utils/              # Utility function tests
+│   ├── integration/            # Integration tests
+│   └── e2e/                    # Playwright E2E tests
+│
+├── public/                     # Static assets
+├── .specify/                   # SpecKit system files
+├── specs/                      # Feature specifications
+│   └── 001-health-log/
+├── package.json                # Dependencies (will add Convex)
+├── tsconfig.json               # TypeScript config
+├── tailwind.config.ts          # Tailwind CSS config
+├── next.config.ts              # Next.js config
+└── CLAUDE.md                   # Project instructions
 ```
 
-**Structure Decision**: Web application using Next.js App Router architecture. The `app/` directory contains route pages following Next.js 16 file-based routing conventions. The `components/` directory separates shadcn/ui primitives from feature-specific components. The `lib/` directory houses all business logic (storage services, Zod schemas, custom hooks, utilities) to keep components thin and focused on presentation. Tests mirror the source structure with separate directories for component, unit, integration, and E2E tests.
+**Structure Decision**:
+
+This is a **Next.js full-stack web application** with Convex as the backend-as-a-service. The architecture separates:
+
+1. **Frontend** (app/, components/, lib/): Next.js App Router with React Server/Client Components
+2. **Backend** (convex/): Convex schema, queries, and mutations (TypeScript)
+3. **Shared Schemas** (lib/schemas/): Zod schemas for client-side validation that mirror Convex validators
+
+The existing localStorage-based implementation in `lib/storage/` will be **replaced** with Convex hooks in `lib/hooks/`. The current `BaseStorage` class approach will be deprecated in favor of Convex's `useQuery` and `useMutation` React hooks.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-No violations - all constitution gates passed.
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
