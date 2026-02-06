@@ -249,7 +249,9 @@ export default function DashboardPage() {
     <div className='container mx-auto py-8 px-4'>
       <div className='max-w-7xl mx-auto'>
         <div className='flex justify-between items-center mb-6'>
-          <h1 className='text-3xl font-bold'>Symptom Dashboard</h1>
+          <h1 className='text-3xl font-bold'>
+            Good Morning Hannah! How are you feeling today?
+          </h1>
           <Button onClick={handleAdd} size='lg'>
             + Log Symptom
           </Button>
@@ -521,13 +523,15 @@ export default function DashboardPage() {
             if (!open) closeDialog();
           }}
         >
-          <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
-            <DialogHeader>
+          <DialogContent className='max-w-5xl sm:max-w-2xl max-h-[95vh] overflow-y-auto py-8'>
+            <DialogHeader className='px-4'>
               <DialogTitle>
-                {dialogState.type === "edit"
-                  ? "Edit Symptom"
-                  : "Log New Symptom"}
+                {dialogState.type === "edit" ? "Edit Symptom" : "Log a Symptom"}
               </DialogTitle>
+              <p className='text-sm text-muted-foreground'>
+                Capture details of your symptom to generate better questions for
+                your next visit.
+              </p>
             </DialogHeader>
             <SymptomForm
               defaultValues={
@@ -578,7 +582,11 @@ export default function DashboardPage() {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleConfirmDelete} disabled={isDeleting}>
+                <Button
+                  variant='destructive'
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                >
                   {isDeleting ? "Deleting..." : "Delete"}
                 </Button>
               </div>

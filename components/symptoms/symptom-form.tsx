@@ -11,15 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { Laugh, Smile, Meh, Frown, Annoyed, Angry } from "lucide-react";
+import { Search, Laugh, Smile, Meh, Frown, Annoyed, Angry } from "lucide-react";
 
 interface SymptomFormProps {
   defaultValues?: Partial<CreateSymptomInput>;
@@ -34,7 +27,6 @@ const COMMON_SYMPTOMS = [
   "Fatigue",
   "Nausea",
   "Dizziness",
-  "Pain",
   "Fever",
   "Cough",
   "Shortness of Breath",
@@ -51,6 +43,18 @@ const COMMON_SYMPTOMS = [
   "Constipation",
   "Vomiting",
   "Other",
+] as const;
+
+// Common triggers
+const COMMON_TRIGGERS = [
+  "Stress",
+  "Lack of Sleep",
+  "Caffeine",
+  "Alcohol",
+  "Weather Change",
+  "Exercise",
+  "Food",
+  "Medication",
 ] as const;
 
 export function SymptomForm({
@@ -87,295 +91,530 @@ export function SymptomForm({
 
   const severity = watch("severity");
   const symptomType = watch("symptomType");
-  const [showCustomInput, setShowCustomInput] = React.useState(
-    () =>
-      defaultValues?.symptomType &&
-      !(COMMON_SYMPTOMS as readonly string[]).includes(defaultValues.symptomType)
-  );
+  const triggers = watch("triggers");
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [filteredSymptoms, setFilteredSymptoms] = React.useState<string[]>([]);
+  const symptomInputRef = React.useRef<HTMLInputElement>(null);
+  const [selectedTriggers, setSelectedTriggers] = React.useState<string[]>([]);
+  const [showCustomTrigger, setShowCustomTrigger] = React.useState(false);
+  const [customTrigger, setCustomTrigger] = React.useState("");
+
+  // Simple Levenshtein distance for fuzzy matching
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1,
+          );
+        }
+      }
+    }
+
+    return matrix[str2.length][str1.length];
+  };
+
+  const handleSymptomInputChange = (value: string) => {
+    setValue("symptomType", value);
+
+    if (value.trim()) {
+      const searchTerm = value.toLowerCase();
+
+      // Filter and sort by relevance
+      const filtered = COMMON_SYMPTOMS.map((symptom) => {
+        const symptomLower = symptom.toLowerCase();
+        const distance = levenshteinDistance(searchTerm, symptomLower);
+        const startsWithMatch = symptomLower.startsWith(searchTerm);
+        const containsMatch = symptomLower.includes(searchTerm);
+
+        return {
+          symptom,
+          distance,
+          startsWithMatch,
+          containsMatch,
+          // Calculate relevance score (lower is better)
+          score: startsWithMatch
+            ? distance
+            : containsMatch
+              ? distance + 10
+              : distance + 20,
+        };
+      })
+        .filter((item) => item.score <= 15) // Only show reasonably close matches
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 8) // Limit to top 8 suggestions
+        .map((item) => item.symptom);
+
+      setFilteredSymptoms(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setFilteredSymptoms([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setValue("symptomType", suggestion);
+    setShowSuggestions(false);
+    setFilteredSymptoms([]);
+  };
+
+  // Normalize symptom type to match common symptoms (case-insensitive)
+  const normalizeSymptomType = (input: string): string => {
+    const trimmedInput = input.trim();
+    const matchedSymptom = COMMON_SYMPTOMS.find(
+      (symptom) => symptom.toLowerCase() === trimmedInput.toLowerCase()
+    );
+    return matchedSymptom || trimmedInput;
+  };
+
+  // Initialize selected triggers from default values
+  React.useEffect(() => {
+    if (defaultValues?.triggers) {
+      const triggersArray = defaultValues.triggers.split(", ");
+      setSelectedTriggers(triggersArray);
+    }
+  }, [defaultValues?.triggers]);
+
+  // Update form value when selected triggers change
+  React.useEffect(() => {
+    const triggersString =
+      selectedTriggers.length > 0 ? selectedTriggers.join(", ") : null;
+    setValue("triggers", triggersString as any);
+  }, [selectedTriggers, setValue]);
+
+  const handleTriggerToggle = (trigger: string) => {
+    setSelectedTriggers((prev) =>
+      prev.includes(trigger)
+        ? prev.filter((t) => t !== trigger)
+        : [...prev, trigger],
+    );
+  };
+
+  const handleAddCustomTrigger = () => {
+    const trimmedTrigger = customTrigger.trim();
+    if (trimmedTrigger && !selectedTriggers.includes(trimmedTrigger)) {
+      setSelectedTriggers((prev) => [...prev, trimmedTrigger]);
+      setCustomTrigger("");
+      setShowCustomTrigger(false);
+    }
+  };
+
+  const handleRemoveTrigger = (trigger: string) => {
+    setSelectedTriggers((prev) => prev.filter((t) => t !== trigger));
+  };
+
+  const handleFormSubmit = (data: CreateSymptomInput) => {
+    // Normalize symptom type to ensure case-insensitive matching
+    const normalizedData = {
+      ...data,
+      symptomType: normalizeSymptomType(data.symptomType),
+    };
+    onSubmit(normalizedData);
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 px-2'>
-      <div className='space-y-2'>
-        <Label htmlFor='symptomType' className='text-base font-semibold'>
-          Symptom Type *
-        </Label>
-        {!showCustomInput ? (
-          <Select
-            value={symptomType}
-            onValueChange={(value) => {
-              if (value === "Other") {
-                setShowCustomInput(true);
-                setValue("symptomType", "");
-              } else {
-                setValue("symptomType", value);
-              }
-            }}
+    <>
+      <div className='border-t -mx-6' />
+      <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-8 px-4'>
+        {/* Symptom Type */}
+        <div className='space-y-2 relative'>
+          <Label
+            htmlFor='symptomType'
+            className='text-xs font-medium uppercase text-foreground'
           >
-            <SelectTrigger>
-              <SelectValue placeholder='Select symptom type' />
-            </SelectTrigger>
-            <SelectContent>
-              {COMMON_SYMPTOMS.map((symptom) => (
-                <SelectItem key={symptom} value={symptom}>
-                  {symptom}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className='space-y-2'>
+            Symptom Type
+          </Label>
+          <div className='relative'>
             <Input
               id='symptomType'
-              {...register("symptomType")}
-              placeholder='Enter custom symptom type'
+              ref={symptomInputRef}
+              value={symptomType}
+              onChange={(e) => handleSymptomInputChange(e.target.value)}
+              onFocus={() => {
+                if (symptomType.trim()) {
+                  const filtered = COMMON_SYMPTOMS.filter((symptom) =>
+                    symptom.toLowerCase().includes(symptomType.toLowerCase()),
+                  );
+                  setFilteredSymptoms(filtered);
+                  setShowSuggestions(filtered.length > 0);
+                }
+              }}
+              onBlur={() => {
+                // Delay to allow click on suggestion
+                setTimeout(() => setShowSuggestions(false), 200);
+              }}
+              placeholder='e.g., Headache, Chest Tightness'
+              className='h-11 pr-10'
               aria-invalid={!!errors.symptomType}
               aria-describedby={
                 errors.symptomType ? "symptomType-error" : undefined
               }
             />
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => {
-                setShowCustomInput(false);
-                setValue("symptomType", "");
-              }}
+            <Search className='absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none' />
+
+            {/* Suggestions dropdown */}
+            {showSuggestions && filteredSymptoms.length > 0 && (
+              <div className='absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto'>
+                <div className='px-3 py-1.5 text-xs text-muted-foreground border-b bg-muted/50'>
+                  Suggestions
+                </div>
+                {filteredSymptoms.map((symptom) => (
+                  <button
+                    key={symptom}
+                    type='button'
+                    onClick={() => handleSuggestionClick(symptom)}
+                    className='w-full text-left px-3 py-2.5 hover:bg-accent hover:text-accent-foreground transition-colors text-sm border-b last:border-b-0'
+                  >
+                    {symptom}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {errors.symptomType && (
+            <p
+              id='symptomType-error'
+              className='text-sm text-red-600'
+              role='alert'
             >
-              ← Back to list
-            </Button>
-          </div>
-        )}
-        {errors.symptomType && (
-          <p
-            id='symptomType-error'
-            className='text-sm text-red-600'
-            role='alert'
+              {errors.symptomType.message}
+            </p>
+          )}
+        </div>
+
+        {/* Date & Time */}
+        <div className='space-y-2'>
+          <Label
+            htmlFor='loggedAt'
+            className='text-xs font-medium uppercase text-foreground'
           >
-            {errors.symptomType.message}
-          </p>
-        )}
-      </div>
-
-      <div className='space-y-4'>
-        <Label className='text-base font-semibold'>
-          Pain Severity: {severity} / 10 *
-        </Label>
-
-        {/* Pain Scale */}
-        <div className='relative px-2'>
-          {/* Numbers Row - Clickable with Background */}
-          <div className='relative flex mb-2'>
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-              <button
-                key={num}
-                type='button'
-                onClick={() => setValue("severity", num)}
-                className={`absolute transition-all hover:scale-110 rounded-md px-2 py-1 ${
-                  severity === num
-                    ? "bg-primary/10 dark:bg-primary/20"
-                    : "hover:bg-muted"
-                }`}
-                style={{
-                  left: `${(num / 10) * 100}%`,
-                  transform: "translateX(-50%)",
+            Date & Time
+          </Label>
+          <Controller
+            name='loggedAt'
+            control={control}
+            render={({ field }) => (
+              <DateTimePicker
+                value={field.value ? new Date(field.value) : undefined}
+                onChange={(date) => {
+                  field.onChange(
+                    date ? date.toISOString() : new Date().toISOString(),
+                  );
                 }}
-                aria-label={`Severity level ${num}`}
-              >
-                <span
-                  className={`text-xs font-semibold transition-colors ${
-                    severity === num
-                      ? "text-primary"
-                      : "text-gray-700 dark:text-gray-300 hover:text-primary"
-                  }`}
-                >
-                  {num}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Horizontal Line with Vertical Tick Marks */}
-          <div className='relative h-3 mb-4 mt-6'>
-            <div className='absolute top-0 left-0 right-0 h-0.5 bg-gray-300 dark:bg-gray-600' />
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-              <div
-                key={num}
-                className='absolute h-3 w-0.5 bg-gray-300 dark:bg-gray-600'
-                style={{
-                  left: `${(num / 10) * 100}%`,
-                  transform: "translateX(-50%)",
-                }}
+                placeholder='Select date and time'
+                disableFuture
               />
-            ))}
-          </div>
+            )}
+          />
+          {errors.loggedAt && (
+            <p className='text-sm text-red-600' role='alert'>
+              {errors.loggedAt.message}
+            </p>
+          )}
+        </div>
 
-          {/* Pain Icons - positioned at 0, 2, 4, 6, 8, 10 */}
-          <div className='relative h-24'>
-            {[0, 2, 4, 6, 8, 10].map((level) => {
-              let Icon = Laugh;
-              let color = "text-green-600 dark:text-green-500";
-              let label = "No Pain";
+        {/* Pain Level */}
+        <div className='space-y-3'>
+          <Label className='text-xs font-medium uppercase text-foreground'>
+            Pain Level (0-10)
+          </Label>
 
-              if (level === 2) {
-                Icon = Smile;
-                color = "text-green-500 dark:text-green-400";
-                label = "Mild";
-              } else if (level === 4) {
-                Icon = Meh;
-                color = "text-yellow-500 dark:text-yellow-400";
-                label = "Moderate";
-              } else if (level === 6) {
-                Icon = Frown;
-                color = "text-orange-500 dark:text-orange-400";
-                label = "Severe";
-              } else if (level === 8) {
-                Icon = Annoyed;
-                color = "text-red-500 dark:text-red-400";
-                label = "Very Severe";
-              } else if (level === 10) {
-                Icon = Angry;
-                color = "text-red-600 dark:text-red-500";
-                label = "Worst Pain Possible";
+          {/* Pain Scale Buttons */}
+          <div className='flex gap-2'>
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+              let bgColor = "";
+              let hoverColor = "";
+              let textColor = "text-white";
+
+              // Create smooth gradient: each button has unique color from green to red
+              switch (num) {
+                case 0:
+                  bgColor = "bg-green-700";
+                  hoverColor = "hover:bg-green-800";
+                  break;
+                case 1:
+                  bgColor = "bg-green-600";
+                  hoverColor = "hover:bg-green-700";
+                  break;
+                case 2:
+                  bgColor = "bg-green-500";
+                  hoverColor = "hover:bg-green-600";
+                  break;
+                case 3:
+                  bgColor = "bg-lime-500";
+                  hoverColor = "hover:bg-lime-600";
+                  break;
+                case 4:
+                  bgColor = "bg-yellow-400";
+                  hoverColor = "hover:bg-yellow-500";
+                  break;
+                case 5:
+                  bgColor = "bg-yellow-500";
+                  hoverColor = "hover:bg-yellow-600";
+                  break;
+                case 6:
+                  bgColor = "bg-amber-500";
+                  hoverColor = "hover:bg-amber-600";
+                  break;
+                case 7:
+                  bgColor = "bg-orange-500";
+                  hoverColor = "hover:bg-orange-600";
+                  break;
+                case 8:
+                  bgColor = "bg-orange-600";
+                  hoverColor = "hover:bg-orange-700";
+                  break;
+                case 9:
+                  bgColor = "bg-red-500";
+                  hoverColor = "hover:bg-red-600";
+                  break;
+                case 10:
+                  bgColor = "bg-red-600";
+                  hoverColor = "hover:bg-red-700";
+                  break;
               }
 
-              const isSelected = severity === level;
+              const isSelected = severity === num;
 
               return (
                 <button
-                  key={level}
+                  key={num}
                   type='button'
-                  onClick={() => setValue("severity", level)}
-                  className='absolute flex flex-col items-center gap-2 p-2 transition-all hover:scale-110'
-                  style={{
-                    left: `${(level / 10) * 100}%`,
-                    transform: "translateX(-50%)",
-                  }}
-                  aria-label={`${label}: ${level}/10`}
-                  aria-pressed={isSelected}
+                  onClick={() => setValue("severity", num)}
+                  className={`flex-1 h-12 rounded-md font-semibold transition-all ${bgColor} ${textColor} ${hoverColor} ${
+                    isSelected ? "ring-2 ring-offset-2 ring-primary" : ""
+                  }`}
+                  aria-label={`Pain level ${num}`}
                 >
-                  <Icon
-                    className={`w-8 h-8 transition-all ${
-                      isSelected ? `${color} scale-125 drop-shadow-lg` : color
-                    }`}
-                    strokeWidth={isSelected ? 2.5 : 2}
-                  />
-                  <span className='text-[10px] text-center text-gray-600 dark:text-gray-400 max-w-[70px] leading-tight'>
-                    {label}
-                  </span>
+                  {num}
                 </button>
               );
             })}
           </div>
+
+          {/* Labels and face icons under pain scale - centered under 0, 2, 4, 6, 8, 10 */}
+          <div className='flex gap-2'>
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+              let iconColor = "";
+              let Icon = null;
+              let label = "";
+
+              // Match button colors for each level
+              switch (num) {
+                case 0:
+                  iconColor = "text-green-700";
+                  Icon = Laugh;
+                  label = "No Pain";
+                  break;
+                case 2:
+                  iconColor = "text-green-500";
+                  Icon = Smile;
+                  label = "Mild";
+                  break;
+                case 4:
+                  iconColor = "text-yellow-400";
+                  Icon = Meh;
+                  label = "Moderate";
+                  break;
+                case 6:
+                  iconColor = "text-amber-500";
+                  Icon = Frown;
+                  label = "Severe";
+                  break;
+                case 8:
+                  iconColor = "text-orange-600";
+                  Icon = Annoyed;
+                  label = "Very Severe";
+                  break;
+                case 10:
+                  iconColor = "text-red-600";
+                  Icon = Angry;
+                  label = "Worst Pain";
+                  break;
+              }
+
+              return (
+                <div
+                  key={num}
+                  className='flex-1 flex flex-col items-center justify-start pt-1'
+                >
+                  {Icon ? (
+                    <>
+                      <div className='h-6 flex items-center justify-center mb-1'>
+                        <span className='text-[9px] text-muted-foreground uppercase font-medium text-center leading-tight'>
+                          {label}
+                        </span>
+                      </div>
+                      <Icon className={`h-5 w-5 ${iconColor}`} />
+                    </>
+                  ) : (
+                    <div className='h-[calc(1.5rem+1.25rem+0.25rem)]'></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {errors.severity && (
+            <p className='text-sm text-red-600' role='alert'>
+              {errors.severity.message}
+            </p>
+          )}
         </div>
 
-        {errors.severity && (
-          <p className='text-sm text-red-600' role='alert'>
-            {errors.severity.message}
-          </p>
-        )}
-      </div>
-
-      <div className='space-y-2'>
-        <Label htmlFor='bodyPart' className='text-base font-semibold'>
-          Body Part (Optional)
-        </Label>
-        <Input
-          id='bodyPart'
-          {...register("bodyPart", {
-            setValueAs: (v) => (v === "" ? null : v),
-          })}
-          placeholder='e.g., Head, Stomach, Lower back'
-          aria-invalid={!!errors.bodyPart}
-        />
-        {errors.bodyPart && (
-          <p className='text-sm text-red-600' role='alert'>
-            {errors.bodyPart.message}
-          </p>
-        )}
-      </div>
-
-      <div className='space-y-2'>
-        <Label htmlFor='triggers' className='text-base font-semibold'>
-          Triggers (Optional)
-        </Label>
-        <Input
-          id='triggers'
-          {...register("triggers", {
-            setValueAs: (v) => (v === "" ? null : v),
-          })}
-          placeholder='e.g., After eating, Stress, Exercise'
-          aria-invalid={!!errors.triggers}
-        />
-        {errors.triggers && (
-          <p className='text-sm text-red-600' role='alert'>
-            {errors.triggers.message}
-          </p>
-        )}
-      </div>
-
-      <div className='space-y-2'>
-        <Label htmlFor='loggedAt' className='text-base font-semibold'>
-          Date & Time *
-        </Label>
-        <Controller
-          name='loggedAt'
-          control={control}
-          render={({ field }) => (
-            <DateTimePicker
-              value={field.value ? new Date(field.value) : undefined}
-              onChange={(date) => {
-                field.onChange(
-                  date ? date.toISOString() : new Date().toISOString()
-                );
-              }}
-              placeholder='Select date and time'
-              disableFuture
-            />
-          )}
-        />
-        {errors.loggedAt && (
-          <p className='text-sm text-red-600' role='alert'>
-            {errors.loggedAt.message}
-          </p>
-        )}
-      </div>
-
-      <div className='space-y-2'>
-        <Label htmlFor='notes' className='text-base font-semibold'>
-          Notes (Optional)
-        </Label>
-        <Textarea
-          id='notes'
-          {...register("notes", {
-            setValueAs: (v) => (v === "" ? null : v),
-          })}
-          placeholder='Additional details about this symptom...'
-          rows={3}
-          aria-invalid={!!errors.notes}
-        />
-        {errors.notes && (
-          <p className='text-sm text-red-600' role='alert'>
-            {errors.notes.message}
-          </p>
-        )}
-      </div>
-
-      <div className='flex gap-2 justify-end pt-4'>
-        {onCancel && (
-          <Button
-            type='button'
-            variant='outline'
-            onClick={onCancel}
-            disabled={isSubmitting}
+        {/* Notes */}
+        <div className='space-y-2'>
+          <Label
+            htmlFor='notes'
+            className='text-xs font-medium uppercase text-foreground'
           >
-            Cancel
+            Notes
+          </Label>
+          <Textarea
+            id='notes'
+            {...register("notes", {
+              setValueAs: (v) => (v === "" ? null : v),
+            })}
+            placeholder='What makes it better or worse? (e.g., "Worse after eating", "Better when lying down")'
+            rows={4}
+            className='resize'
+            aria-invalid={!!errors.notes}
+          />
+          {errors.notes && (
+            <p className='text-sm text-red-600' role='alert'>
+              {errors.notes.message}
+            </p>
+          )}
+        </div>
+
+        {/* Common Triggers */}
+        <div className='space-y-3'>
+          <Label className='text-xs font-medium uppercase text-muted-foreground'>
+            Common Triggers
+          </Label>
+
+          {/* Common Triggers Buttons */}
+          <div className='flex flex-wrap gap-2'>
+            {COMMON_TRIGGERS.map((trigger) => (
+              <button
+                key={trigger}
+                type='button'
+                onClick={() => handleTriggerToggle(trigger)}
+                className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  selectedTriggers.includes(trigger)
+                    ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 ring-1 ring-border"
+                }`}
+              >
+                {trigger}
+              </button>
+            ))}
+
+            {/* Custom Triggers (not in COMMON_TRIGGERS) */}
+            {selectedTriggers
+              .filter((trigger) => !COMMON_TRIGGERS.includes(trigger as any))
+              .map((trigger) => (
+                <button
+                  key={trigger}
+                  type='button'
+                  onClick={() => handleRemoveTrigger(trigger)}
+                  className='px-3 py-1.5 rounded-xl text-sm font-medium transition-all bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 relative group'
+                >
+                  {trigger}
+                  <span className='ml-1.5 opacity-70 group-hover:opacity-100'>
+                    ×
+                  </span>
+                </button>
+              ))}
+
+            {/* Add New Button / Input Field */}
+            {!showCustomTrigger ? (
+              <button
+                type='button'
+                onClick={() => setShowCustomTrigger(true)}
+                className='px-3 py-1.5 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 transition-all border-2 border-dashed border-primary/90'
+              >
+                + Add New
+              </button>
+            ) : (
+              <div className='flex gap-2 items-center'>
+                <Input
+                  value={customTrigger}
+                  onChange={(e) => setCustomTrigger(e.target.value)}
+                  placeholder='Enter custom trigger'
+                  className='h-8 text-sm min-w-[150px]'
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomTrigger();
+                    } else if (e.key === "Escape") {
+                      setShowCustomTrigger(false);
+                      setCustomTrigger("");
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!customTrigger.trim()) {
+                      setShowCustomTrigger(false);
+                    }
+                  }}
+                />
+                <Button
+                  type='button'
+                  onClick={handleAddCustomTrigger}
+                  size='sm'
+                  className='h-8 px-3'
+                >
+                  Add
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {errors.triggers && (
+            <p className='text-sm text-red-600' role='alert'>
+              {errors.triggers.message}
+            </p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className='flex gap-3 pt-2'>
+          {onCancel && (
+            <Button
+              type='button'
+              variant='outline'
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className='flex-1 h-11'
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            type='submit'
+            disabled={isSubmitting}
+            className='flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white'
+          >
+            {isSubmitting ? "Saving..." : "Save Symptom Log"}
           </Button>
-        )}
-        <Button type='submit' disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Log Symptom"}
-        </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </>
   );
 }
