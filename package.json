@@ -11,7 +11,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "convex:dev": "node node_modules/convex/bin/main.js dev",
+    "convex:deploy": "node node_modules/convex/bin/main.js deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -23,9 +25,10 @@
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.31.7",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.561.0",
-    "next": "16.0.8",
+    "next": "^16.1.6",
     "react": "19.2.1",
     "react-day-picker": "^9.12.0",
     "react-dom": "19.2.1",

@@ -1,26 +1,64 @@
 import { z } from 'zod';
 
 /**
- * Appointment Schema
- * Represents a past medical visit with doctor, date, reason, symptoms, notes, and generated questions
+ * Appointment Zod Schema for client-side validation (Convex)
+ *
+ * Mirrors the Convex schema in convex/schema.ts but adds client-side validation rules.
+ *
+ * Validation Rules:
+ * - date: Unix timestamp (milliseconds), required
+ * - doctorName: 1-200 characters, trimmed, required
+ * - reason: 1-500 characters, trimmed, required
+ * - symptoms: Max 2000 characters, trimmed, optional
+ * - notes: Max 2000 characters, trimmed, optional
+ * - generatedQuestions: Array of strings, optional
  */
 export const appointmentSchema = z.object({
-  id: z.string().uuid(),
-  appointmentDate: z.string().datetime(),
-  doctorName: z.string().min(1, 'Doctor name is required').max(200).trim(),
-  reason: z.string().min(1, 'Reason for visit is required').max(500).trim(),
-  symptoms: z.string().max(2000).nullable(),
-  notes: z.string().max(2000).nullable(),
-  generatedQuestions: z.array(z.string()).nullable(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  date: z
+    .number()
+    .positive('Appointment date must be a valid timestamp'),
+
+  doctorName: z
+    .string()
+    .min(1, 'Doctor name is required')
+    .max(200, 'Doctor name must be 200 characters or less')
+    .trim(),
+
+  reason: z
+    .string()
+    .min(1, 'Reason for visit is required')
+    .max(500, 'Reason must be 500 characters or less')
+    .trim(),
+
+  symptoms: z
+    .string()
+    .max(2000, 'Symptoms must be 2000 characters or less')
+    .trim()
+    .optional(),
+
+  notes: z
+    .string()
+    .max(2000, 'Notes must be 2000 characters or less')
+    .trim()
+    .optional(),
+
+  generatedQuestions: z
+    .array(z.string())
+    .optional(),
 });
 
-export const createAppointmentSchema = appointmentSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+/**
+ * TypeScript type inferred from appointment schema
+ * Use this for form data and component props
+ */
+export type CreateAppointmentInput = z.infer<typeof appointmentSchema>;
 
-export type Appointment = z.infer<typeof appointmentSchema>;
-export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;
+/**
+ * Appointment entity with Convex database fields
+ * Includes Convex-generated fields: _id, _creationTime, userId
+ */
+export interface Appointment extends CreateAppointmentInput {
+  _id: string;
+  _creationTime: number;
+  userId: string;
+}

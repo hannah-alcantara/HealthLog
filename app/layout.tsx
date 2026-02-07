@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { OnboardingGuard } from "@/components/onboarding-guard";
 import { Toaster } from "sonner";
+import { ConvexClientProvider } from "@/components/convex-client-provider";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -29,9 +30,11 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`${manrope.variable} ${robotoMono.variable} antialiased`}>
-        <Navigation />
-        <OnboardingGuard>{children}</OnboardingGuard>
-        <Toaster position='top-right' richColors />
+        <ConvexClientProvider>
+          <Navigation />
+          <OnboardingGuard>{children}</OnboardingGuard>
+          <Toaster position='top-right' richColors />
+        </ConvexClientProvider>
       </body>
     </html>
   );

@@ -1,360 +1,158 @@
-# Tasks: Healthcare Tracking Application
+# Tasks: Healthcare Tracking Application with Convex Backend
 
 **Input**: Design documents from `/specs/001-health-log/`
-**Prerequisites**: plan.md, spec.md, data-model.md, contracts/storage-service.ts, research.md, quickstart.md
-
-**Tests**: Tests are included per constitution requirements (80% coverage utilities, 90% business logic, 100% validation)
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
+**Note**: Tests are not explicitly required in the spec, so test tasks are omitted. Focus is on implementation.
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3, US4)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US4)
 - Include exact file paths in descriptions
 
-## Path Conventions
+---
 
-- **Next.js App Router**: `app/`, `components/`, `lib/`, `__tests__/` at repository root
-- All paths are relative to project root
+## Phase 1: Setup (Convex Backend Infrastructure)
+
+**Purpose**: Initialize Convex backend and configure Next.js integration
+
+- [ ] T001 Install Convex globally and initialize Convex in project with `npx convex dev`
+- [ ] T002 Install Convex client libraries with `yarn add convex @convex-dev/auth`
+- [ ] T003 [P] Create `.env.local` with `NEXT_PUBLIC_CONVEX_URL` from Convex deployment
+- [ ] T004 [P] Update `next.config.ts` to enable Convex compatibility (serverActions if needed)
+- [ ] T005 Create Convex schema in `convex/schema.ts` with symptoms and appointments tables
+- [ ] T006 [P] Create Convex TypeScript config in `convex/tsconfig.json`
+- [ ] T007 Deploy Convex schema with `npx convex deploy` and verify in dashboard
+- [ ] T008 Add ConvexProvider to `app/layout.tsx` wrapping children
 
 ---
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 2: Foundational (Core Convex Functions & Client Setup)
 
-**Purpose**: Project initialization and basic structure
-
-- [x] T001 Install dependencies: zod, react-hook-form, @hookform/resolvers
-- [x] T002 [P] Install shadcn/ui and configure with `npx shadcn-ui@latest init`
-- [x] T003 [P] Install shadcn/ui components: button, card, form, input, label, dialog, select, textarea
-- [x] T004 [P] Install testing dependencies: jest, jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event
-- [x] T005 [P] Install Playwright for E2E tests: @playwright/test
-- [x] T006 Create jest.config.js with Next.js preset and coverage thresholds (80% global, 100% schemas)
-- [x] T007 [P] Create jest.setup.js with localStorage mock and crypto.randomUUID mock
-- [x] T008 [P] Create playwright.config.ts with browser targets and base URL
-- [x] T009 [P] Update package.json scripts: test, test:watch, test:coverage, test:e2e, test:e2e:ui
-- [x] T010 Create directory structure: lib/schemas, lib/storage, lib/hooks, lib/utils, components/ui, components/medical-history, components/appointments, components/documents, components/dashboard, __tests__/components, __tests__/lib, __tests__/integration, __tests__/e2e
-
-**Checkpoint**: ✅ Dependencies installed, test infrastructure configured, directory structure created
-
----
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
+**Purpose**: Core Convex backend functions and Zod schemas that ALL user stories depend on
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T011 Create lib/schemas/medical-history.ts with Zod schemas (Condition, Medication, Allergy)
-- [x] T012 Write unit tests for medical-history schema (__tests__/lib/schemas/medical-history.test.ts, 100% coverage)
-- [x] T013 Create lib/schemas/appointment.ts with Zod schema
-- [x] T014 Write unit tests for appointment schema (__tests__/lib/schemas/appointment.test.ts, 100% coverage)
-- [x] T015 Create lib/schemas/document.ts with Zod schema
-- [x] T016 Write unit tests for document schema (__tests__/lib/schemas/document.test.ts, 100% coverage)
-- [x] T017 Create lib/storage/base.ts with generic CRUD operations (BaseStorage class, error classes, checkStorageAvailable)
-- [x] T018 Write unit tests for base storage (__tests__/lib/storage/base.test.ts, 90%+ coverage)
-- [x] T019 Create lib/storage/medical-history.ts (conditionService, medicationService, allergyService)
-- [x] T020 Create lib/storage/appointments.ts (appointmentService)
-- [x] T021 Create lib/storage/documents.ts (documentService)
-- [x] T022 Write integration tests for all storage modules (__tests__/lib/storage/integration.test.ts, 90%+ coverage)
+- [ ] T009 Create symptom Zod schema in `lib/schemas/symptom.ts` (validation: symptomType 1-200 chars, severity 1-10, bodyPart max 100, triggers max 500, notes max 2000)
+- [ ] T010 [P] Create appointment Zod schema in `lib/schemas/appointment.ts` (validation: date required, doctorName 1-200 chars, reason 1-500 chars, symptoms/notes max 2000)
+- [ ] T011 Create Convex symptom queries in `convex/symptoms.ts` (getAll, getRecent, getByDateRange, getById)
+- [ ] T012 [P] Create Convex symptom mutations in `convex/symptoms.ts` (create, update, remove with ownership verification)
+- [ ] T013 Create Convex appointment queries in `convex/appointments.ts` (getAll, getUpcoming, getByDateRange, getById)
+- [ ] T014 [P] Create Convex appointment mutations in `convex/appointments.ts` (create, update, remove with ownership verification)
+- [ ] T015 Test Convex schema deployment and verify tables appear in Convex dashboard
 
-**Checkpoint**: ✅ Foundation ready - all schemas validated (100% coverage), storage utilities tested (95%+ coverage), user story implementation can now begin in parallel
+**Checkpoint**: Convex backend ready - user story implementation can now begin in parallel
 
 ---
 
-## Phase 3: User Story 1 - Medical History Management (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Symptom Logging (Priority: P1) 🎯 MVP
 
-**Goal**: Users can log and manage their medical conditions, medications, csand allergies with full CRUD operations
+**Goal**: Users can log symptoms with severity, body part, triggers, and notes. Symptoms are stored in Convex and displayed in real-time.
 
-**Independent Test**: Create, view, edit, and delete medical history entries (conditions, medications, allergies). Verify data persists across browser sessions and displays in organized lists.
+**Independent Test**: Create, view, edit, and delete symptom entries. Verify symptoms persist across page reloads and sync in real-time.
 
-### Storage Layer for User Story 1
+### Implementation for User Story 1
 
-- [x] T023-T028 Storage services (completed in Phase 2 - lib/storage/medical-history.ts with conditionService, medicationService, allergyService)
+- [ ] T016 [P] [US1] Update `components/symptoms/symptom-form.tsx` to use Convex `useMutation(api.symptoms.create)` instead of localStorage
+- [ ] T017 [P] [US1] Update `components/symptoms/symptoms-list.tsx` to use Convex `useQuery(api.symptoms.getAll)` for reactive data
+- [ ] T018 [US1] Add optimistic updates to symptom-form.tsx for instant UI feedback on submission
+- [ ] T019 [US1] Update symptom edit functionality to use Convex `update` mutation in symptom-form.tsx
+- [ ] T020 [US1] Update symptom delete functionality to use Convex `remove` mutation in symptoms-list.tsx
+- [ ] T021 [US1] Add loading skeleton to symptoms-list.tsx for when `symptoms === undefined` (Convex loading state)
+- [ ] T022 [US1] Update `app/symptoms/page.tsx` to ensure ConvexProvider context is available
+- [ ] T023 [US1] Add error boundary to symptoms page for Convex connection errors in app/symptoms/page.tsx
+- [ ] T024 [US1] Update symptom filters in `lib/utils/symptom-filters.ts` to work with Convex symptom schema (uses `_id` instead of `id`, `loggedAt` as number)
+- [ ] T025 [US1] Test symptom logging flow: create → appears in list → edit → delete → verify Convex dashboard shows changes
 
-### Hooks Layer for User Story 1
-
-- [x] T029 Create useConditions hook (lib/hooks/use-conditions.ts)
-- [x] T030 Create useMedications hook (lib/hooks/use-medications.ts)
-- [x] T031 Create useAllergies hook (lib/hooks/use-allergies.ts)
-- [x] T032 Write tests for useConditions hook (__tests__/lib/hooks/use-conditions.test.tsx)
-- [x] T033 Write tests for useMedications hook (__tests__/lib/hooks/use-medications.test.tsx)
-- [x] T034 Write tests for useAllergies hook (__tests__/lib/hooks/use-allergies.test.tsx)
-
-### UI Components for User Story 1
-
-- [x] T035 Create ConditionForm component (components/medical-history/condition-form.tsx with React Hook Form + Zod)
-- [x] T036 Create MedicationForm component (components/medical-history/medication-form.tsx)
-- [x] T037 Create AllergyForm component (components/medical-history/allergy-form.tsx with severity dropdown)
-- [x] T038 Create MedicalHistoryList component (components/medical-history/medical-history-list.tsx with tabs and CRUD actions)
-- [ ] T039-T042 Component tests (deferred - components work, tests can be added later)
-
-### Page Integration for User Story 1
-
-- [x] T043 Create Medical History page (app/medical-history/page.tsx - fully integrated with hooks, forms, and dialogs)
-- [x] T044 Write integration tests (__tests__/integration/medical-history.test.tsx - basic user journey tests)
-
-**Checkpoint**: ✅ User Story 1 complete and independently testable - users can manage medical history (conditions, medications, allergies) with full CRUD operations. Build successful.
+**Checkpoint**: At this point, User Story 1 (Symptom Logging) should be fully functional with Convex backend
 
 ---
 
-## Phase 3.5: Symptom Tracking (Priority: P1.5) **[IMPLEMENTED - NOT IN ORIGINAL PLAN]**
+## Phase 4: User Story 2 - Appointment Tracking (Priority: P2)
 
-**Note**: This phase was added after the original plan. Symptom tracking was prioritized to support the appointment question generation feature and provide users with a dedicated symptom logging interface.
+**Goal**: Users can track appointments with date, doctor name, reason, symptoms, notes, and AI-generated questions (placeholder).
 
-**Goal**: Users can log and track symptoms over time with details like severity, category, body part, and triggers
+**Independent Test**: Create appointment records, add symptoms, generate placeholder questions, view chronological history.
 
-**Status**: ✅ COMPLETE
+### Implementation for User Story 2
 
-### Implemented Features:
-- [x] Symptom schema with validation (lib/schemas/symptom.ts)
-- [x] Symptom storage service (lib/storage/symptoms.ts)
-- [x] useSymptoms hook (lib/hooks/use-symptoms.ts)
-- [x] SymptomForm component (components/symptoms/symptom-form.tsx)
-- [x] SymptomsList component with filters (components/symptoms/symptoms-list.tsx)
-- [x] SymptomFilters component (components/symptoms/symptom-filters.tsx)
-- [x] Symptoms page (app/symptoms/page.tsx)
-- [x] Component tests for SymptomForm and SymptomsList
-- [x] Enhanced question generator to analyze symptom patterns (frequency, trends, triggers, body parts)
-- [x] Dashboard integration with symptom visualizations
+- [ ] T026 [P] [US2] Update `components/appointments/appointment-form.tsx` to use Convex `useMutation(api.appointments.create)`
+- [ ] T027 [P] [US2] Update `components/appointments/appointments-list.tsx` to use Convex `useQuery(api.appointments.getAll)`
+- [ ] T028 [US2] Implement appointment edit functionality with Convex `update` mutation in appointment-form.tsx
+- [ ] T029 [US2] Implement appointment delete functionality with Convex `remove` mutation in appointments-list.tsx
+- [ ] T030 [US2] Add symptoms field to appointment form (textarea, optional, max 2000 chars per Zod schema)
+- [ ] T031 [US2] Create placeholder question generator function in `lib/utils/question-generator.ts` (analyzes symptoms, returns string array)
+- [ ] T032 [US2] Implement "Prepare for Next Visit" component in `components/appointments/prepare-for-visit.tsx`
+- [ ] T033 [US2] Add Convex mutation or client-side logic to save generated questions to appointment's `generatedQuestions` field
+- [ ] T034 [US2] Display generated questions in appointment detail view when `generatedQuestions` array is not empty
+- [ ] T035 [US2] Add loading skeleton to appointments-list.tsx for Convex loading state
+- [ ] T036 [US2] Update `app/appointments/page.tsx` to ensure ConvexProvider context is available
+- [ ] T037 [US2] Sort appointments by date (descending) using Convex `.order("desc")` in query
+- [ ] T038 [US2] Test appointment flow: create with symptoms → generate questions → view questions → edit → delete
 
-**Checkpoint**: ✅ Symptom tracking complete - users can log symptoms and see pattern analysis in appointment questions
-
----
-
-## Phase 4: User Story 2 - Appointment History Tracking (Priority: P2)
-
-**Goal**: Users can record past doctor visits with symptoms, generate appointment preparation questions (placeholder logic), and view chronological history
-
-**Independent Test**: Create appointment records with visit details and symptoms, generate preparation questions, view in chronological order, edit notes and questions
-
-### Storage Layer for User Story 2
-
-- [x] T045 [P] [US2] Implement Appointment storage service in lib/storage/appointments.ts (load, create, update, delete, findById, save, loadSorted for chronological order)
-- [x] T046 [P] [US2] Write unit tests for Appointment storage in __tests__/lib/storage/appointments.test.ts (CRUD operations, chronological sorting, symptoms and generatedQuestions fields)
-
-### Hooks Layer for User Story 2
-
-- [x] T047 [P] [US2] Create useAppointments hook in lib/hooks/use-appointments.ts (entities, sortedAppointments, loading, error, create, update, remove, refresh)
-- [x] T048 [P] [US2] Write unit tests for useAppointments hook in __tests__/lib/hooks/use-appointments.test.tsx (state management, sorting, CRUD operations)
-
-### Question Generation Logic for User Story 2
-
-- [x] T049 [P] [US2] Create placeholder question generation function in lib/utils/question-generator.ts (analyzes symptoms, conditions, medications, allergies and returns array of generic questions)
-- [x] T050 [P] [US2] Write unit tests for question generator in __tests__/lib/utils/question-generator.test.ts (various input scenarios, empty symptoms, no medical history)
-
-### UI Components for User Story 2
-
-- [x] T051 [P] [US2] Create AppointmentForm component in components/appointments/appointment-form.tsx (React Hook Form + Zod resolver, date picker, symptoms textarea, notes field)
-- [x] T052 [P] [US2] Create AppointmentsList component in components/appointments/appointments-list.tsx (chronological display, "Prepare for Next Visit" button, generated questions display, edit/delete actions)
-- [x] T053 [P] [US2] Create PrepareForVisit component in components/appointments/prepare-for-visit.tsx (dialog with generated questions, regenerate button)
-- [ ] T054 [P] [US2] Write component tests for AppointmentForm in __tests__/components/appointments/appointment-form.test.tsx (validation, symptoms field, submission) - DEFERRED
-- [ ] T055 [P] [US2] Write component tests for AppointmentsList in __tests__/components/appointments/appointments-list.test.tsx (chronological sorting, questions display) - DEFERRED
-- [ ] T056 [P] [US2] Write component tests for PrepareForVisit in __tests__/components/appointments/prepare-for-visit.test.tsx (question generation, regeneration replaces questions) - DEFERRED
-
-### Page Integration for User Story 2
-
-- [x] T057 [US2] Create Appointments page in app/appointments/page.tsx (integrate useAppointments hook, render AppointmentsList, handle forms and question generation)
-- [x] T058 [US2] Write integration tests for Appointments user journeys in __tests__/integration/appointments.test.tsx (AS-1 through AS-8 from spec.md including question generation - 9 tests passing)
-
-**Checkpoint**: ✅ User Story 2 complete and independently testable - users can track appointments with symptoms and generate preparation questions. Integration tests cover all 8 acceptance scenarios plus validation and empty state.
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
 ---
 
-## Phase 5: Symptom Dashboard with Visualizations (Priority: P4)
+## Phase 5: User Story 4 - Symptom Dashboard (Priority: P4)
 
-**Goal**: Users see symptom-focused dashboard with analytics, visualizations, and quick access to key features
+**Goal**: Dashboard showing symptom analytics (heatmap, severity trends, time distribution), stats cards, and recent symptoms.
 
-**Independent Test**: Log multiple symptoms, view dashboard to see charts, stats, recent symptoms, and upcoming appointments
+**Independent Test**: Log multiple symptoms over time, view dashboard to see charts render correctly with reactive data from Convex.
 
-**Note**: Dashboard evolved from simple stats/activity to symptom-focused analytics with data visualizations
+### Implementation for User Story 4
 
-**Status**: ✅ COMPLETE (Enhanced beyond original plan)
+- [ ] T039 [P] [US4] Create Convex query for dashboard stats in `convex/symptoms.ts` (aggregates: total count, avg severity, most common symptom, top category)
+- [ ] T040 [P] [US4] Update `components/dashboard/symptom-heatmap.tsx` to use Convex `useQuery(api.symptoms.getByDateRange)` for last 30 days
+- [ ] T041 [P] [US4] Update `components/dashboard/severity-trend-chart.tsx` to use Convex reactive query
+- [ ] T042 [P] [US4] Update `components/dashboard/time-distribution-chart.tsx` to use Convex reactive query
+- [ ] T043 [US4] Create stats cards component in `components/dashboard/stats-cards.tsx` using Convex aggregation query
+- [ ] T044 [US4] Update `app/page.tsx` (dashboard) to use Convex queries for recent symptoms and upcoming appointments
+- [ ] T045 [US4] Add loading skeletons to all dashboard charts for Convex loading state
+- [ ] T046 [US4] Implement empty state component for dashboard when no symptoms logged in `components/dashboard/empty-state.tsx`
+- [ ] T047 [US4] Add quick action buttons to dashboard: "Log Symptom", "Schedule Appointment"
+- [ ] T048 [US4] Optimize dashboard queries to limit data (last 30 days for charts, 5 most recent for list)
+- [ ] T049 [US4] Test dashboard updates in real-time: log symptom → verify chart updates without page reload
 
-### Implemented Features:
-
-#### Data Visualization Components:
-- [x] SymptomFrequencyChart component (components/dashboard/symptom-frequency-chart.tsx) - Line chart showing symptom frequency over time
-- [x] CategoryBreakdownChart component (components/dashboard/category-breakdown-chart.tsx) - Pie chart showing symptom distribution by category
-- [x] SeverityTrendChart component (components/dashboard/severity-trend-chart.tsx) - Area chart showing severity trends
-
-#### Dashboard Features:
-- [x] Dashboard page (app/page.tsx) with:
-  - Summary stats (total symptoms, avg severity, most common symptom, top category)
-  - Interactive charts for symptom analysis
-  - 5 most recent symptoms with edit/delete actions
-  - Next upcoming appointment with countdown and quick prepare link
-  - Empty state with "Log Your First Symptom" CTA
-  - Quick add symptom dialog
-
-#### Statistics & Analytics:
-- [x] getStats() method in useSymptoms hook for calculating symptom statistics
-- [x] Integration with useAppointments for upcoming appointment display
-- [x] Real-time updates when symptoms are added/edited/deleted
-
-### Deferred Tests:
-- [ ] T066 [US4] Write integration tests for Dashboard user journeys - DEFERRED
-
-**Checkpoint**: ✅ Dashboard complete with symptom analytics, visualizations, and upcoming appointment tracking
+**Checkpoint**: All core user stories should now be independently functional with Convex real-time sync
 
 ---
 
-## Phase 6: User Story 3 - Document Management (Priority: P3)
+## Phase 6: Migration from localStorage to Convex
 
-**Goal**: Users can upload medical documents (PDF, JPG, PNG), view them in-browser, and delete them with 10MB per-file limit
+**Purpose**: Enable users to migrate existing localStorage data to Convex
 
-**Independent Test**: Upload various document types, view them, delete them, verify file size and type validation, check error messages for quota exceeded
-
-### File Utilities for User Story 3
-
-- [ ] T067 [P] [US3] Create file utility functions in lib/utils/file-utils.ts (fileToBase64, base64ToBlob, validateFile for MIME type and size)
-- [ ] T068 [P] [US3] Write unit tests for file utilities in __tests__/lib/utils/file-utils.test.ts (conversion correctness, validation rules, 10MB limit, MIME types)
-
-### Storage Layer for User Story 3
-
-- [ ] T069 [P] [US3] Implement Document storage service in lib/storage/documents.ts (load, upload, delete, findById, fileToBase64, base64ToBlob, validateFile)
-- [ ] T070 [P] [US3] Write unit tests for Document storage in __tests__/lib/storage/documents.test.ts (upload with base64 encoding, quota exceeded error, file validation)
-
-### Hooks Layer for User Story 3
-
-- [ ] T071 [P] [US3] Create useDocuments hook in lib/hooks/use-documents.ts (documents, loading, error, upload: async (file, description?), remove, getViewUrl, refresh)
-- [ ] T072 [P] [US3] Write unit tests for useDocuments hook in __tests__/lib/hooks/use-documents.test.tsx (upload flow, error states, getViewUrl blob creation)
-
-### UI Components for User Story 3
-
-- [ ] T073 [P] [US3] Create DocumentUpload component in components/documents/document-upload.tsx (file input, description field, validation feedback, upload progress)
-- [ ] T074 [P] [US3] Create DocumentsList component in components/documents/documents-list.tsx (displays documents with filename, upload date, file type icons, view/delete actions)
-- [ ] T075 [P] [US3] Write component tests for DocumentUpload in __tests__/components/documents/document-upload.test.tsx (file selection, validation errors for size/type, upload flow)
-- [ ] T076 [P] [US3] Write component tests for DocumentsList in __tests__/components/documents/documents-list.test.tsx (display, view action creates blob URL, delete confirmation)
-
-### Page Integration for User Story 3
-
-- [ ] T077 [US3] Create Documents page in app/documents/page.tsx (integrate useDocuments hook, render DocumentUpload and DocumentsList, handle view in new tab)
-- [ ] T078 [US3] Write integration tests for Documents user journeys in __tests__/integration/documents.test.tsx (AS-11 through AS-13 from spec.md)
-
-**Checkpoint**: User Story 3 complete and independently testable - users can upload, view, and delete medical documents with proper validation
+- [ ] T050 [P] Create migration utility in `lib/utils/migrate-to-convex.ts` (reads localStorage, calls Convex mutations)
+- [ ] T051 [P] Create migration banner component in `components/migration-banner.tsx` (detects localStorage data, prompts user)
+- [ ] T052 Add migration banner to `app/layout.tsx` (shows when localStorage data exists and Convex is empty)
+- [ ] T053 Implement migration script logic: parse localStorage symptoms → call `api.symptoms.create` for each
+- [ ] T054 Implement migration script logic: parse localStorage appointments → call `api.appointments.create` for each
+- [ ] T055 Add migration success/error handling with toast notifications
+- [ ] T056 Clear localStorage only after successful migration confirmation
+- [ ] T057 Test migration with sample localStorage data (create test data, migrate, verify in Convex dashboard)
 
 ---
 
-## Phase 7: Navigation & Layout
+## Phase 7: Polish & Cross-Cutting Concerns
 
-**Purpose**: Connect all user stories with navigation and verify localStorage warnings
+**Purpose**: Improvements that affect multiple user stories
 
-- [x] T079 Create Navigation component in components/navigation.tsx (links to Dashboard, Medical History, Appointments, Symptoms with active state)
-- [x] T080 Update root layout in app/layout.tsx (add Navigation component, OnboardingGuard component)
-- [ ] T081 [P] Write component tests for Navigation in __tests__/components/navigation.test.tsx (all links present, active states) - DEFERRED
-- [x] T082 Verify navigation between all sections manually (Dashboard → Medical History → Appointments → Symptoms → Dashboard)
-
-**Checkpoint**: All sections connected via navigation, onboarding flow implemented
-
----
-
-## Phase 8: E2E Tests
-
-**Purpose**: Critical path E2E tests for user journeys across the entire application
-
-**Status**: ✅ **TESTS WRITTEN** (Cannot execute due to Turbopack server issue)
-
-- [x] T083 [P] Write E2E test for add condition → view on dashboard → reload persistence in __tests__/e2e/critical-paths.spec.ts
-- [x] T084 [P] Write E2E test for add appointment with symptoms → generate questions → view questions in __tests__/e2e/critical-paths.spec.ts
-- [x] T085 [P] Write E2E test for upload document → view document → delete document in __tests__/e2e/critical-paths.spec.ts (SKIPPED - Documents feature deferred)
-- [x] T086 Write E2E test for data persistence in __tests__/e2e/data-persistence.spec.ts (add entries in all sections → reload → verify all data persists)
-
-**Files Created**:
-- `__tests__/e2e/critical-paths.spec.ts` - 3 critical path tests (1 skipped)
-- `__tests__/e2e/data-persistence.spec.ts` - Data persistence + error handling tests
-
-**Checkpoint**: ✅ E2E tests written and ready. Execution blocked by Turbopack dev server crash (Next.js 16 issue, not codebase issue)
-
----
-
-## Phase 9: Polish & Cross-Cutting Concerns
-
-**Purpose**: Improvements that affect multiple user stories, performance validation, accessibility
-
-**Status**: ⚠️ **PARTIALLY COMPLETE** - See [QUALITY-REPORT.md](./QUALITY-REPORT.md) for details
-
-### Completed Quality Checks:
-- [x] T089 [P] Check bundle sizes - **MEASURED**: 2MB JS (uncompressed), 56KB CSS
-- [x] T092 [P] Run full test suite with coverage - **RESULT**: 49.76% (target: 80%), 230/236 tests passing
-- [x] T093 [P] Add JSDoc comments to complex utility functions and hooks - **COMPLETE**: Added comprehensive JSDoc to hooks, storage classes, and utility functions
-- [x] T094 [P] Verify ESLint - **FIXED**: 50 → 17 problems, **0 ERRORS** (100% error reduction), 17 warnings remain
-- [x] T095 [P] Verify TypeScript compiles - **PASSING**: Zero errors in strict mode for production code
-
-### Manual Testing Completed:
-- [x] T087 [P] Run Lighthouse audit - **PASSED**: Performance: 91, Accessibility: 85, Best Practices: 96, SEO: 100
-  - ✅ Performance ≥ 90 (target met)
-  - ⚠️ Accessibility: 85 (target: 100) - Minor issues, non-blocking
-  - ✅ Best Practices ≥ 90 (target met)
-  - ✅ SEO: 100 (excellent)
-- [x] T088 [P] Verify Core Web Vitals - **EXCELLENT**: All metrics exceed targets
-  - ✅ FCP: 0.4s (target: < 1.8s) - **78% better than target**
-  - ✅ LCP: 0.6s (target: < 2.5s) - **76% better than target**
-  - ✅ CLS: 0 (target: < 0.1) - **Perfect score**
-  - ✅ Speed Index: 0.8s (excellent)
-  - ℹ️ TBT: 250ms (Total Blocking Time - related to TTI, measures main thread blocking)
-- [ ] T090 [P] Test mobile viewport - **READY**: Viewport meta added at [app/layout.tsx:20](app/layout.tsx#L20), test 375px width in DevTools
-- [ ] T091 [P] Test dark mode - **READY**: Dark mode CSS implemented, toggle OS preference to verify visual consistency
-
-### ESLint Fixes Completed (Phase 1-2):
-- ✅ **Phase 1**: Fixed 2 critical React errors (setState in effect, component created during render)
-- ✅ **Phase 2**: Fixed 24 TypeScript `any` type errors across charts, tests, and forms
-- ✅ **Additional**: Fixed 6 React unescaped entities, added ESLint ignores for coverage/contracts
-- **Result**: 50 → 17 problems (31 → 0 errors, 100% error elimination)
-
-**Files Modified**:
-- [app/onboarding/page.tsx](app/onboarding/page.tsx#L17) - Initialize state from status instead of effect
-- [components/dashboard/category-breakdown-chart.tsx](components/dashboard/category-breakdown-chart.tsx#L39) - Move CustomTooltip outside render, add types
-- [components/dashboard/symptom-frequency-chart.tsx](components/dashboard/symptom-frequency-chart.tsx#L12) - Add BarLabelProps type
-- [__tests__/lib/schemas/document.test.ts](/__tests__/lib/schemas/document.test.ts#L92) - Replace `any` with `unknown as` type assertions
-- [__tests__/lib/schemas/medical-history.test.ts](/__tests__/lib/schemas/medical-history.test.ts#L311) - Replace `any` with `unknown as` type assertions
-- [components/symptoms/symptom-form.tsx](components/symptoms/symptom-form.tsx#L89) - Use SymptomCategory type
-- [components/medical-history/medical-history-list.tsx](components/medical-history/medical-history-list.tsx) - Escape quotes with &quot;
-- [eslint.config.mjs](eslint.config.mjs#L16) - Add ignores for coverage/ and contracts/
-
-### Remaining Work:
-- [x] T096 Add warning modal about localStorage data loss when clearing browser data (FR-016) - **COMPLETE**: Dismissible banner on dashboard + prominent warning in onboarding
-- [x] T097 Verify all empty states display correctly with helpful instructions (FR-020) - **VERIFIED**: All sections have clear empty states with CTAs
-  - ✅ Symptoms: "No symptoms logged yet" + "Log Your First Symptom" button
-  - ✅ Filtered symptoms: "No symptoms match your filters" + "Clear Filters" button
-  - ✅ Medical History (Conditions/Medications/Allergies): Each has "No X recorded" + "Add X" CTA
-  - ✅ Appointments: "No appointments recorded" + "Add Appointment" CTA
-  - ⚠️ Documents section not yet implemented (out of scope)
-- [x] T098 Verify all form validation errors display clearly with ARIA labels (FR-021) - **VERIFIED**: All forms use Zod validation with clear error messages, aria-invalid, aria-describedby, and role="alert"
-- [x] T099 Verify all success/error feedback displays correctly (FR-022, FR-023) - **COMPLETE**: Sonner toast notifications for all CRUD operations (success: green, error: red)
-- [ ] T100 Run quickstart.md validation checklist (verify all acceptance scenarios pass)
-
-### Quality Improvements Made:
-- ✅ Fixed `require()` imports in test files (ESLint compliance)
-- ✅ Fixed React unescaped entities in onboarding components
-- ✅ Removed unused variables and mock services
-- ✅ Created comprehensive QUALITY-REPORT.md documenting all metrics
-- ✅ Added symptoms storage test suite (19 tests, has isolation issues to resolve)
-- ✅ **MAJOR FIX**: Resolved Turbopack crash issue (removed `nul` file)
-  - Dev server now stable and runs without crashes
-  - E2E tests now executable (18 tests run, need refinement)
-  - Lighthouse audits now possible
-  - All development tooling functional
-
-### Test Suite Results:
-- **Unit/Integration**: 236 tests, 230 passing (97.5% pass rate), 6 failing
-- **E2E**: 18 tests created, infrastructure working (tests need refinement)
-- **Coverage**: 49.76% (target: 80%)
-  - Well-covered: appointments (100%), base storage (96.82%), medical-history (94.44%)
-  - Needs coverage: symptoms storage, onboarding, dashboard, navigation
-
-### Code Quality Metrics:
-- **ESLint**: 50 problems (down from 64, 22% improvement)
-- **TypeScript**: ✅ 0 errors in strict mode
-- **Build**: ✅ Successful (~23s)
-- **Bundle**: 2MB JS (uncompressed), 56KB CSS
-
-**Checkpoint**: ⚠️ **PARTIAL COMPLETION**
-- ✅ Infrastructure stable (major win - Turbopack fixed)
-- ✅ Core quality metrics measured and documented
-- ⚠️ Test coverage below target (49% vs 80%)
-- ⚠️ ESLint errors remain (31 errors, 19 warnings)
-- ✅ Production ready for beta/MVP, needs improvement for full production
+- [ ] T058 [P] Add error boundaries for Convex connection failures in `app/layout.tsx`
+- [ ] T059 [P] Create Convex connection status indicator component in `components/convex-status.tsx`
+- [ ] T060 Add accessibility improvements: keyboard navigation for symptom/appointment lists
+- [ ] T061 Add ARIA labels and semantic HTML to all forms (symptom-form.tsx, appointment-form.tsx)
+- [ ] T062 Test responsive layout on mobile (375px minimum width) for all pages
+- [ ] T063 [P] Add dark mode support verification for all new Convex-integrated components
+- [ ] T064 Implement confirmation dialogs for delete operations (symptom and appointment)
+- [ ] T065 Add input validation feedback (real-time Zod validation errors displayed)
+- [ ] T066 Performance audit: verify Lighthouse scores meet targets (Performance ≥90, Accessibility=100)
+- [ ] T067 Test Convex query optimization: verify dashboard loads in <1s with 100+ symptoms
+- [ ] T068 Add documentation comments to Convex functions (JSDoc for queries and mutations)
+- [ ] T069 Update CLAUDE.md with Convex workflow instructions (npx convex dev, deployment)
+- [ ] T070 Run quickstart.md validation: follow setup steps, verify all instructions work
 
 ---
 
@@ -364,62 +162,61 @@
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phases 3-6)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P2 → P4 → P3)
-- **Navigation (Phase 7)**: Depends on all user story pages being created (US1, US2, US3, US4)
-- **E2E Tests (Phase 8)**: Depends on all user stories + navigation being complete
-- **Polish (Phase 9)**: Depends on all desired user stories being complete
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User Story 1 (Symptom Logging) - Phase 3
+  - User Story 2 (Appointment Tracking) - Phase 4
+  - User Story 4 (Dashboard) - Phase 5
+  - User stories can proceed in parallel (if staffed) or sequentially by priority
+- **Migration (Phase 6)**: Depends on User Stories 1 and 2 completion
+- **Polish (Phase 7)**: Depends on all user stories being complete
 
 ### User Story Dependencies
 
-- **User Story 1 (P1 - Medical History)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P2 - Appointments)**: Can start after Foundational (Phase 2) - Uses Medical History data for question generation but independently testable
-- **User Story 4 (P4 - Dashboard)**: Can start after Foundational (Phase 2) - Aggregates data from US1 and US2 but displays empty state if no data exists
-- **User Story 3 (P3 - Documents)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - Independent, but may reference symptoms for question generation
+- **User Story 4 (P4)**: Can start after Foundational (Phase 2) - Reads symptoms and appointments but doesn't modify them
 
 ### Within Each User Story
 
-- Tests for schemas/utilities MUST pass before storage layer
-- Storage layer before hooks layer
-- Hooks layer before UI components
-- UI components before page integration
-- Component tests alongside component implementation
-- Integration tests after page integration
+- Zod schemas before Convex mutations (client-side validation happens first)
+- Convex queries before UI components (data layer before presentation)
+- Form components before list components (CRUD operations in logical order)
+- Core functionality before optimizations (working feature before loading states)
 
 ### Parallel Opportunities
 
-- All Setup tasks marked [P] can run in parallel (T002-T005, T007-T009)
-- All Foundational schema creation tasks marked [P] can run in parallel (T013-T017)
-- All Foundational schema test tasks marked [P] can run in parallel (T018-T022)
-- Within User Story 1: Storage services (T023-T025) can run in parallel, their tests (T026-T028) can run in parallel, hooks (T029-T031) can run in parallel, their tests (T032-T034) can run in parallel, forms (T035-T037) can run in parallel, form tests (T039-T041) can run in parallel
-- Once Foundational phase completes, all user stories can start in parallel (US1, US2, US3, US4)
-- Different user stories can be worked on in parallel by different team members
+- **Setup (Phase 1)**: T003 and T004 [P], T006 [P]
+- **Foundational (Phase 2)**: T009 and T010 [P] (different Zod schemas), T012 [P], T014 [P]
+- **User Story 1 (Phase 3)**: T016 and T017 [P] (form and list components)
+- **User Story 2 (Phase 4)**: T026 and T027 [P]
+- **User Story 4 (Phase 5)**: T039, T040, T041, T042 all [P] (different chart components)
+- **Migration (Phase 6)**: T050 and T051 [P]
+- **Polish (Phase 7)**: T058 and T059 [P], T063 [P]
 
 ---
 
-## Parallel Example: User Story 1 (Medical History)
+## Parallel Example: User Story 1
 
 ```bash
-# Storage layer - all can run in parallel:
-Task T023: "Implement Condition storage service in lib/storage/conditions.ts"
-Task T024: "Implement Medication storage service in lib/storage/medications.ts"
-Task T025: "Implement Allergy storage service in lib/storage/allergies.ts"
+# Launch symptom form and list components together:
+Task T016: "Update symptom-form.tsx to use Convex useMutation"
+Task T017: "Update symptoms-list.tsx to use Convex useQuery"
 
-# Storage tests - all can run in parallel (after storage layer):
-Task T026: "Write unit tests for Condition storage in __tests__/lib/storage/conditions.test.ts"
-Task T027: "Write unit tests for Medication storage in __tests__/lib/storage/medications.test.ts"
-Task T028: "Write unit tests for Allergy storage in __tests__/lib/storage/allergies.test.ts"
+# These can run in parallel because they modify different files
+```
 
-# Hooks - all can run in parallel (after storage layer):
-Task T029: "Create useConditions hook in lib/hooks/use-conditions.ts"
-Task T030: "Create useMedications hook in lib/hooks/use-medications.ts"
-Task T031: "Create useAllergies hook in lib/hooks/use-allergies.ts"
+---
 
-# Forms - all can run in parallel (after hooks):
-Task T035: "Create ConditionForm component in components/medical-history/condition-form.tsx"
-Task T036: "Create MedicationForm component in components/medical-history/medication-form.tsx"
-Task T037: "Create AllergyForm component in components/medical-history/allergy-form.tsx"
+## Parallel Example: User Story 4 (Dashboard)
+
+```bash
+# Launch all dashboard chart components together:
+Task T039: "Create Convex query for dashboard stats"
+Task T040: "Update symptom-heatmap.tsx to use Convex query"
+Task T041: "Update severity-trend-chart.tsx to use Convex query"
+Task T042: "Update time-distribution-chart.tsx to use Convex query"
+
+# All modify different files and have no dependencies on each other
 ```
 
 ---
@@ -428,24 +225,20 @@ Task T037: "Create AllergyForm component in components/medical-history/allergy-f
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1 (Medical History Management)
-4. **STOP and VALIDATE**: Test User Story 1 independently (all 5 acceptance scenarios)
-5. Add basic navigation (Dashboard link + Medical History link)
-6. Deploy/demo if ready
-
-**MVP Scope**: 100 tasks total, MVP = T001-T044 + basic navigation (45 tasks)
+1. Complete Phase 1: Setup (Convex initialization)
+2. Complete Phase 2: Foundational (Convex schema + functions)
+3. Complete Phase 3: User Story 1 (Symptom Logging)
+4. **STOP and VALIDATE**: Test symptom logging independently with Convex
+5. Deploy/demo if ready
 
 ### Incremental Delivery
 
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo (Appointments + Question Generation)
-4. Add User Story 4 → Test independently → Deploy/Demo (Dashboard Overview)
-5. Add User Story 3 → Test independently → Deploy/Demo (Document Management)
-6. Add Navigation + E2E + Polish → Final Release
-7. Each story adds value without breaking previous stories
+1. Complete Setup + Foundational → Convex backend ready
+2. Add User Story 1 (Symptom Logging) → Test independently → Deploy/Demo (MVP!)
+3. Add User Story 2 (Appointment Tracking) → Test independently → Deploy/Demo
+4. Add User Story 4 (Dashboard) → Test independently → Deploy/Demo
+5. Add Migration (Phase 6) → Test with sample data → Deploy/Demo
+6. Each story adds value without breaking previous stories
 
 ### Parallel Team Strategy
 
@@ -453,24 +246,52 @@ With multiple developers:
 
 1. Team completes Setup + Foundational together
 2. Once Foundational is done:
-   - Developer A: User Story 1 (Medical History)
-   - Developer B: User Story 2 (Appointments)
+   - Developer A: User Story 1 (Symptom Logging)
+   - Developer B: User Story 2 (Appointment Tracking)
    - Developer C: User Story 4 (Dashboard)
-   - Developer D: User Story 3 (Documents)
 3. Stories complete and integrate independently
-4. Team comes together for Navigation, E2E, and Polish
+4. Team together: Migration + Polish
 
 ---
 
 ## Notes
 
 - [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
+- [Story] label maps task to specific user story (US1, US2, US4)
 - Each user story should be independently completable and testable
-- Verify tests pass before moving to next task
+- Convex queries are reactive - `useQuery` auto-updates UI when data changes
+- Always check `if (data === undefined)` for Convex loading state
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
-- Constitution requirements: 80% coverage utilities, 90% business logic, 100% validation
-- Performance targets: FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, bundle size < 200KB JS
-- Accessibility: WCAG 2.1 AA compliance, keyboard navigation, proper contrast ratios
-- AI question generation uses placeholder logic in this iteration (deferred to future)
+- Run `npx convex dev` in one terminal, `yarn dev` in another during development
+- Monitor Convex dashboard (https://dashboard.convex.dev) for real-time database changes
+
+---
+
+## Convex-Specific Considerations
+
+- **Real-time Updates**: All `useQuery` hooks automatically re-render when data changes (zero polling)
+- **Optimistic Updates**: Use Convex optimistic mutations for instant UI feedback before server confirmation
+- **Error Handling**: Convex mutations throw errors - wrap in try/catch or use error boundaries
+- **Authentication**: Using anonymous auth (`ctx.auth.getUserIdentity()`) - session persists in browser
+- **Schema Changes**: Run `npx convex deploy` after modifying `convex/schema.ts`
+- **Testing**: Use Convex dev deployment for E2E tests, mock Convex hooks for component tests
+- **Migration**: LocalStorage → Convex is one-way (don't clear localStorage until migration succeeds)
+
+---
+
+## Task Count Summary
+
+- **Phase 1 (Setup)**: 8 tasks
+- **Phase 2 (Foundational)**: 7 tasks
+- **Phase 3 (User Story 1)**: 10 tasks
+- **Phase 4 (User Story 2)**: 13 tasks
+- **Phase 5 (User Story 4)**: 11 tasks
+- **Phase 6 (Migration)**: 8 tasks
+- **Phase 7 (Polish)**: 13 tasks
+
+**Total**: 70 tasks
+
+**Parallel Opportunities**: 15 tasks marked [P]
+
+**MVP Scope (User Story 1 only)**: 25 tasks (Phase 1 + Phase 2 + Phase 3)
