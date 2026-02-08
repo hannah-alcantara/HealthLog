@@ -19,8 +19,8 @@ export function AppointmentsList({
   onPrepareForVisit,
   onAdd,
 }: AppointmentsListProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -46,13 +46,13 @@ export function AppointmentsList({
       ) : (
         <div className="space-y-4">
           {appointments.map((appointment) => (
-            <Card key={appointment.id}>
+            <Card key={appointment._id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold">{appointment.doctorName}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(appointment.appointmentDate)}
+                      {formatDate(appointment.date)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -64,7 +64,7 @@ export function AppointmentsList({
                       size="sm"
                       onClick={() => {
                         if (confirm('Are you sure you want to delete this appointment?')) {
-                          onDelete(appointment.id);
+                          onDelete(appointment._id);
                         }
                       }}
                     >

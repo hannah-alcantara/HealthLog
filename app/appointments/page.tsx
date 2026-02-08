@@ -48,7 +48,7 @@ export default function AppointmentsPage() {
     setIsSubmitting(true);
     try {
       if (dialogState.type === 'edit') {
-        await update(dialogState.appointment.id, data);
+        await update(dialogState.appointment._id, data);
       } else {
         await create(data);
       }
@@ -65,7 +65,7 @@ export default function AppointmentsPage() {
 
     setIsSubmitting(true);
     try {
-      await update(dialogState.appointment.id, { generatedQuestions: questions });
+      await update(dialogState.appointment._id, { generatedQuestions: questions });
       closeDialog();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to save questions');
@@ -124,7 +124,7 @@ export default function AppointmentsPage() {
             defaultValues={
               dialogState.type === 'edit'
                 ? {
-                    appointmentDate: dialogState.appointment.appointmentDate,
+                    date: dialogState.appointment.date,
                     doctorName: dialogState.appointment.doctorName,
                     reason: dialogState.appointment.reason,
                     symptoms: dialogState.appointment.symptoms,

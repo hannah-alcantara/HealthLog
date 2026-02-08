@@ -1,108 +1,85 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { appointmentService } from '@/lib/storage/appointments';
+import { useCallback } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { useAuth } from '@clerk/nextjs';
+import { api } from '@/convex/_generated/api';
 import type { Appointment, CreateAppointmentInput } from '@/lib/schemas/appointment';
+import type { Id } from '@/convex/_generated/dataModel';
 
 /**
- * React hook for managing appointment data with localStorage persistence.
+ * React hook for managing appointment data with Convex real-time sync.
  *
  * Provides CRUD operations for appointments with automatic state management,
- * error handling, and loading states. Appointments are automatically sorted
- * by date (newest first) after creation and updates.
+ * real-time updates, and error handling. Appointments are automatically sorted
+ * by date from the backend.
  *
  * @returns Object containing appointments array, CRUD methods, and state flags
  *
  * @example
  * ```tsx
- * const { appointments, create, update, remove, loading, error } = useAppointments();
+ * const { appointments, create, update, remove, loading } = useAppointments();
  *
  * // Create new appointment
  * await create({
- *   doctor: 'Dr. Smith',
- *   appointmentDate: '2024-01-15',
+ *   doctorName: 'Dr. Smith',
+ *   date: Date.now(),
+ *   reason: 'Check-up',
  *   symptoms: 'Persistent headaches'
  * });
  * ```
  */
 export function useAppointments() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
 
-  const loadAppointments = useCallback(() => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = appointmentService.getAllSorted();
-      setAppointments(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load appointments');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Only query when in browser AND auth is loaded AND user is signed in
+  const isBrowser = typeof window !== 'undefined';
+  const shouldQuery = isBrowser && isAuthLoaded && isSignedIn;
 
-  useEffect(() => {
-    loadAppointments();
-  }, [loadAppointments]);
-
-  const create = useCallback(async (input: CreateAppointmentInput): Promise<Appointment> => {
-    try {
-      setError(null);
-      const newAppointment = appointmentService.create(input);
-      setAppointments((prev) => [newAppointment, ...prev]); // Add to beginning (newest first)
-      return newAppointment;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create appointment';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, []);
-
-  const update = useCallback(
-    async (id: string, input: Partial<CreateAppointmentInput>): Promise<Appointment> => {
-      try {
-        setError(null);
-        const updatedAppointment = appointmentService.update(id, input);
-        setAppointments((prev) =>
-          prev.map((appointment) =>
-            appointment.id === id ? updatedAppointment : appointment
-          )
-        );
-        // Re-sort after update in case appointmentDate changed
-        const sorted = appointmentService.getAllSorted();
-        setAppointments(sorted);
-        return updatedAppointment;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update appointment';
-        setError(errorMessage);
-        throw new Error(errorMessage);
-      }
-    },
-    []
+  const appointments = useQuery(
+    api.appointments.getAll,
+    shouldQuery ? {} : 'skip'
   );
 
-  const remove = useCallback(async (id: string): Promise<void> => {
-    try {
-      setError(null);
-      appointmentService.delete(id);
-      setAppointments((prev) => prev.filter((appointment) => appointment.id !== id));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete appointment';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, []);
+  const loading = !isAuthLoaded || appointments === undefined;
+
+  // Mutations
+  const createMutation = useMutation(api.appointments.create);
+  const updateMutation = useMutation(api.appointments.update);
+  const removeMutation = useMutation(api.appointments.remove);
+
+  const create = useCallback(
+    async (input: CreateAppointmentInput): Promise<void> => {
+      await createMutation(input);
+    },
+    [createMutation]
+  );
+
+  const update = useCallback(
+    async (id: string, input: Partial<CreateAppointmentInput>): Promise<void> => {
+      await updateMutation({
+        id: id as Id<'appointments'>,
+        ...input,
+      });
+    },
+    [updateMutation]
+  );
+
+  const remove = useCallback(
+    async (id: string): Promise<void> => {
+      await removeMutation({ id: id as Id<'appointments'> });
+    },
+    [removeMutation]
+  );
 
   const refresh = useCallback(() => {
-    loadAppointments();
-  }, [loadAppointments]);
+    // Convex handles real-time updates automatically
+  }, []);
 
   return {
-    appointments,
+    appointments: appointments ?? [],
     loading,
-    error,
+    error: null, // Convex handles errors via mutations throwing
     create,
     update,
     remove,

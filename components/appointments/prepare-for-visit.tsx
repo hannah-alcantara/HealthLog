@@ -39,7 +39,7 @@ export function PrepareForVisit({
     // Simulate a brief loading state for better UX
     setTimeout(() => {
       const generated = generateAppointmentQuestions(
-        appointment.symptoms,
+        appointment.symptoms ?? null,
         symptomLogs,
         conditions,
         medications,

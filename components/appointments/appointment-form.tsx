@@ -2,7 +2,7 @@
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createAppointmentSchema, type CreateAppointmentInput } from '@/lib/schemas/appointment';
+import { appointmentSchema, type CreateAppointmentInput } from '@/lib/schemas/appointment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,37 +28,37 @@ export function AppointmentForm({
     control,
     formState: { errors },
   } = useForm<CreateAppointmentInput>({
-    resolver: zodResolver(createAppointmentSchema),
+    resolver: zodResolver(appointmentSchema),
     defaultValues: defaultValues || {
-      appointmentDate: new Date().toISOString(),
+      date: Date.now(),
       doctorName: '',
       reason: '',
-      symptoms: null,
-      notes: null,
-      generatedQuestions: null,
+      symptoms: undefined,
+      notes: undefined,
+      generatedQuestions: undefined,
     },
   });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="appointmentDate">Appointment Date *</Label>
+        <Label htmlFor="date">Appointment Date *</Label>
         <Controller
-          name="appointmentDate"
+          name="date"
           control={control}
           render={({ field }) => (
             <DateTimePicker
               value={field.value ? new Date(field.value) : undefined}
               onChange={(date) => {
-                field.onChange(date ? date.toISOString() : new Date().toISOString());
+                field.onChange(date ? date.getTime() : Date.now());
               }}
               placeholder="Select appointment date and time"
             />
           )}
         />
-        {errors.appointmentDate && (
+        {errors.date && (
           <p className="text-sm text-red-600" role="alert">
-            {errors.appointmentDate.message}
+            {errors.date.message}
           </p>
         )}
       </div>

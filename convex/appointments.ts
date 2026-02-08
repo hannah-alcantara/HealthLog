@@ -5,7 +5,7 @@ import { v } from "convex/values";
  * Appointment Queries and Mutations
  *
  * Backend functions for appointment tracking with Convex.
- * All functions automatically filter by authenticated user.
+ * All functions require authentication and automatically filter by authenticated user.
  */
 
 // ============================================================================
@@ -20,7 +20,9 @@ export const getAll = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view appointments");
+    }
 
     return await ctx.db
       .query("appointments")
@@ -37,7 +39,9 @@ export const getUpcoming = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view appointments");
+    }
 
     const now = Date.now();
 
@@ -64,7 +68,9 @@ export const getByDateRange = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view appointments");
+    }
 
     const appointments = await ctx.db
       .query("appointments")
@@ -89,13 +95,15 @@ export const getById = query({
   args: { id: v.id("appointments") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view appointments");
+    }
 
     const appointment = await ctx.db.get(args.id);
 
     // Verify ownership
     if (!appointment || appointment.userId !== identity.subject) {
-      return null;
+      throw new Error("Appointment not found or unauthorized");
     }
 
     return appointment;

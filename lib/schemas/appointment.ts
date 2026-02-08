@@ -48,6 +48,11 @@ export const appointmentSchema = z.object({
 });
 
 /**
+ * Form schema - same as appointmentSchema, used for form validation
+ */
+export const createAppointmentSchema = appointmentSchema;
+
+/**
  * TypeScript type inferred from appointment schema
  * Use this for form data and component props
  */
