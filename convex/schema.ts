@@ -3,10 +3,10 @@ import { v } from "convex/values";
 
 export default defineSchema({
   symptoms: defineTable({
-    userId: v.id("users"),           // Owner (authenticated or anonymous)
+    userId: v.string(),              // Owner (authenticated or anonymous) - identity.subject
     symptomType: v.string(),         // e.g., "Headache", "Nausea", "Fatigue"
     severity: v.number(),            // 1-10 scale
-    bodyPart: v.optional(v.string()), // e.g., "Head", "Stomach", "Back"
+    
     triggers: v.optional(v.string()), // Possible triggers (freeform text)
     notes: v.optional(v.string()),    // Additional notes
     loggedAt: v.number(),            // Unix timestamp (milliseconds)
@@ -15,7 +15,7 @@ export default defineSchema({
     .index("by_user_and_date", ["userId", "loggedAt"]),
 
   appointments: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),              // Owner (authenticated or anonymous) - identity.subject
     date: v.number(),                // Unix timestamp for appointment date
     doctorName: v.string(),
     reason: v.string(),              // Reason for visit

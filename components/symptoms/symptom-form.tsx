@@ -66,15 +66,16 @@ export function SymptomForm({
   const formDefaultValues = defaultValues
     ? {
         ...defaultValues,
-        loggedAt: defaultValues.loggedAt || new Date().toISOString(),
+        triggers: defaultValues.triggers || "",
+        notes: defaultValues.notes || "",
+        loggedAt: defaultValues.loggedAt || Date.now(),
       }
     : {
         symptomType: "",
         severity: 5,
-        bodyPart: null,
-        triggers: null,
-        notes: null,
-        loggedAt: new Date().toISOString(),
+        triggers: "",
+        notes: "",
+        loggedAt: Date.now(),
       };
 
   const {
@@ -313,7 +314,7 @@ export function SymptomForm({
                 value={field.value ? new Date(field.value) : undefined}
                 onChange={(date) => {
                   field.onChange(
-                    date ? date.toISOString() : new Date().toISOString(),
+                    date ? date.getTime() : Date.now(),
                   );
                 }}
                 placeholder='Select date and time'
@@ -483,7 +484,7 @@ export function SymptomForm({
             htmlFor='notes'
             className='text-xs font-medium uppercase text-foreground'
           >
-            Notes
+            Notes <span className='text-muted-foreground normal-case'>(Optional)</span>
           </Label>
           <Textarea
             id='notes'
@@ -505,7 +506,7 @@ export function SymptomForm({
         {/* Common Triggers */}
         <div className='space-y-3'>
           <Label className='text-xs font-medium uppercase text-muted-foreground'>
-            Common Triggers
+            Common Triggers <span className='normal-case'>(Optional)</span>
           </Label>
 
           {/* Common Triggers Buttons */}

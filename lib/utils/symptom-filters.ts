@@ -4,7 +4,7 @@ import type { Symptom } from '@/lib/schemas/symptom';
  * Filter criteria for symptom search and display.
  *
  * All fields are optional and combined with AND logic.
- * searchText searches across multiple fields (type, body part, notes, triggers).
+ * searchText searches across multiple fields (type, notes, triggers).
  */
 export interface SymptomFilters {
   /** Text search across symptom fields (case-insensitive) */
@@ -17,8 +17,6 @@ export interface SymptomFilters {
   startDate?: Date;
   /** Filter symptoms before this date (inclusive) */
   endDate?: Date;
-  /** Exact body part match (case-insensitive) */
-  bodyPart?: string;
 }
 
 /**
@@ -31,7 +29,7 @@ export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-
  *
  * Applies multiple filter criteria using AND logic. All filters are optional.
  * Text search is case-insensitive and searches across symptomType,
- * bodyPart, notes, and triggers fields.
+ * notes, and triggers fields.
  *
  * @param symptoms - Array of symptoms to filter
  * @param filters - Filter criteria object
@@ -47,12 +45,11 @@ export type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-
  */
 export function filterSymptoms(symptoms: Symptom[], filters: SymptomFilters): Symptom[] {
   return symptoms.filter((symptom) => {
-    // Search text filter (searches symptomType, bodyPart, notes, triggers)
+    // Search text filter (searches symptomType, notes, triggers)
     if (filters.searchText) {
       const searchLower = filters.searchText.toLowerCase();
       const matchesSearch =
         symptom.symptomType.toLowerCase().includes(searchLower) ||
-        symptom.bodyPart?.toLowerCase().includes(searchLower) ||
         symptom.notes?.toLowerCase().includes(searchLower) ||
         symptom.triggers?.toLowerCase().includes(searchLower);
 
@@ -84,11 +81,6 @@ export function filterSymptoms(symptoms: Symptom[], filters: SymptomFilters): Sy
       }
     }
 
-    // Body part filter
-    if (filters.bodyPart && symptom.bodyPart !== filters.bodyPart) {
-      return false;
-    }
-
     return true;
   });
 }
@@ -112,10 +104,11 @@ export function sortSymptoms(symptoms: Symptom[], sortOption: SortOption): Sympt
 
   switch (sortOption) {
     case 'date-desc':
-      return sorted.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+      // loggedAt is a Unix timestamp (number)
+      return sorted.sort((a, b) => b.loggedAt - a.loggedAt);
 
     case 'date-asc':
-      return sorted.sort((a, b) => new Date(a.loggedAt).getTime() - new Date(b.loggedAt).getTime());
+      return sorted.sort((a, b) => a.loggedAt - b.loggedAt);
 
     case 'severity-desc':
       return sorted.sort((a, b) => b.severity - a.severity);
@@ -131,20 +124,4 @@ export function sortSymptoms(symptoms: Symptom[], sortOption: SortOption): Sympt
   }
 }
 
-/**
- * Get unique body parts from symptoms for filter dropdown.
- *
- * Extracts all non-null body parts, deduplicates, and sorts alphabetically.
- * Useful for populating filter UI dropdowns.
- *
- * @param symptoms - Array of symptoms to extract body parts from
- * @returns Sorted array of unique body part strings
- */
-export function getUniqueBodyParts(symptoms: Symptom[]): string[] {
-  const bodyParts = symptoms
-    .map(s => s.bodyPart)
-    .filter((part): part is string => part !== null && part !== undefined);
-
-  return Array.from(new Set(bodyParts)).sort();
-}
 

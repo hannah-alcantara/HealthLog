@@ -13,7 +13,6 @@ interface SymptomFiltersProps {
   sortOption: SortOption;
   onFiltersChange: (filters: SymptomFilters) => void;
   onSortChange: (sort: SortOption) => void;
-  availableBodyParts: string[];
   onReset: () => void;
 }
 
@@ -22,7 +21,6 @@ export function SymptomFiltersComponent({
   sortOption,
   onFiltersChange,
   onSortChange,
-  availableBodyParts,
   onReset,
 }: SymptomFiltersProps) {
   const [localFilters, setLocalFilters] = useState<SymptomFilters>(filters);
@@ -59,22 +57,12 @@ export function SymptomFiltersComponent({
     onFiltersChange(newFilters);
   };
 
-  const handleBodyPartChange = (value: string) => {
-    const newFilters = {
-      ...localFilters,
-      bodyPart: value === "all" ? undefined : value,
-    };
-    setLocalFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
   const hasActiveFilters =
     localFilters.searchText ||
     localFilters.minSeverity !== undefined ||
     localFilters.maxSeverity !== undefined ||
     localFilters.startDate ||
-    localFilters.endDate ||
-    localFilters.bodyPart;
+    localFilters.endDate;
 
   return (
     <Card>
@@ -135,24 +123,6 @@ export function SymptomFiltersComponent({
             <div className='border-t pt-4' />
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='bodyPart'>Body Part</Label>
-                <select
-                  id='bodyPart'
-                  value={localFilters.bodyPart || "all"}
-                  onChange={(e) => handleBodyPartChange(e.target.value)}
-                  className='w-full h-10 px-3 rounded-md border border-input bg-background text-sm'
-                  disabled={availableBodyParts.length === 0}
-                >
-                  <option value='all'>All Body Parts</option>
-                  {availableBodyParts.map((part) => (
-                    <option key={part} value={part}>
-                      {part}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className='space-y-2'>
                 <Label>Severity Range</Label>
                 <div className='flex items-center gap-2'>

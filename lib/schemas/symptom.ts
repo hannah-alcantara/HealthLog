@@ -8,7 +8,6 @@ import { z } from 'zod';
  * Validation Rules:
  * - symptomType: 1-200 characters, trimmed, required
  * - severity: Integer 1-10, required
- * - bodyPart: Max 100 characters, trimmed, optional
  * - triggers: Max 500 characters, trimmed, optional
  * - notes: Max 2000 characters, trimmed, optional
  * - loggedAt: Unix timestamp (milliseconds), required
@@ -26,22 +25,20 @@ export const symptomSchema = z.object({
     .min(1, 'Severity must be at least 1')
     .max(10, 'Severity cannot exceed 10'),
 
-  bodyPart: z
-    .string()
-    .max(100, 'Body part must be 100 characters or less')
-    .trim()
-    .optional(),
-
   triggers: z
     .string()
     .max(500, 'Triggers must be 500 characters or less')
     .trim()
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val)
     .optional(),
 
   notes: z
     .string()
     .max(2000, 'Notes must be 2000 characters or less')
     .trim()
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val)
     .optional(),
 
   loggedAt: z
@@ -50,10 +47,33 @@ export const symptomSchema = z.object({
 });
 
 /**
- * TypeScript type inferred from symptom schema
- * Use this for form data and component props
+ * Form schema - same as symptomSchema, used for form validation
+ * Use this for react-hook-form with date pickers
  */
-export type CreateSymptomInput = z.infer<typeof symptomSchema>;
+export const createSymptomSchema = symptomSchema;
+
+/**
+ * TypeScript type inferred from symptom schema
+ * Use this for Convex mutations
+ */
+export type CreateSymptomInput = {
+  symptomType: string;
+  severity: number;
+  triggers?: string;
+  notes?: string;
+  loggedAt: number;
+};
+
+/**
+ * TypeScript type for form inputs (before transformation)
+ */
+export type CreateSymptomFormInput = {
+  symptomType: string;
+  severity: number;
+  triggers?: string | null;
+  notes?: string | null;
+  loggedAt: string;
+};
 
 /**
  * Symptom entity with Convex database fields

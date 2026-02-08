@@ -158,30 +158,6 @@ function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
     .slice(0, 5); // Top 5 triggers
 }
 
-/**
- * Find the most frequently affected body parts.
- *
- * Counts body part occurrences across all symptoms and returns the top 3
- * most commonly affected areas (normalized to lowercase).
- *
- * @param symptoms - Array of symptom logs with optional bodyPart data
- * @returns Top 3 most affected body parts (lowercase)
- */
-function analyzeMostAffectedBodyParts(symptoms: Symptom[]): string[] {
-  const bodyPartCounts: Record<string, number> = {};
-
-  symptoms.forEach(s => {
-    if (s.bodyPart && s.bodyPart.trim().length > 0) {
-      const normalized = s.bodyPart.toLowerCase().trim();
-      bodyPartCounts[normalized] = (bodyPartCounts[normalized] || 0) + 1;
-    }
-  });
-
-  return Object.entries(bodyPartCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([part]) => part);
-}
 
 /**
  * Generate context-aware appointment questions based on health history.
@@ -191,7 +167,7 @@ function analyzeMostAffectedBodyParts(symptoms: Symptom[]): string[] {
  * rule-based pattern analysis to identify:
  * - Recurring symptoms and frequency patterns
  * - Severity trends (increasing/decreasing)
- * - Common triggers and affected body parts
+ * - Common triggers
  * - Medication side effects and interactions
  * - Allergy-related concerns
  *
@@ -233,7 +209,6 @@ export function generateAppointmentQuestions(
   const frequencies = analyzeSymptomFrequency(symptomLogs, daysToAnalyze);
   const trends = analyzeSeverityTrends(symptomLogs, daysToAnalyze);
   const triggers = analyzeCommonTriggers(symptomLogs);
-  const bodyParts = analyzeMostAffectedBodyParts(symptomLogs);
 
   // FREQUENCY-BASED QUESTIONS (recurring symptoms)
   frequencies.slice(0, 2).forEach(freq => {
@@ -267,14 +242,6 @@ export function generateAppointmentQuestions(
     questions.push(
       `I've noticed my symptoms are often triggered by ${topTriggers}. ` +
       `How can I better manage or prevent these triggers?`
-    );
-  }
-
-  // BODY PART CORRELATION
-  if (bodyParts.length > 0) {
-    const parts = bodyParts.join(', ');
-    questions.push(
-      `Most of my symptoms affect my ${parts}. Could these be related or part of a larger issue?`
     );
   }
 

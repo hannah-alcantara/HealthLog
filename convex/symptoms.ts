@@ -20,7 +20,9 @@ export const getAll = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view symptoms");
+    }
 
     return await ctx.db
       .query("symptoms")
@@ -38,7 +40,9 @@ export const getRecent = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view symptoms");
+    }
 
     return await ctx.db
       .query("symptoms")
@@ -60,7 +64,9 @@ export const getByDateRange = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view symptoms");
+    }
 
     const symptoms = await ctx.db
       .query("symptoms")
@@ -85,13 +91,15 @@ export const getById = query({
   args: { id: v.id("symptoms") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
+    if (!identity) {
+      throw new Error("Unauthorized: You must be signed in to view symptoms");
+    }
 
     const symptom = await ctx.db.get(args.id);
 
     // Verify ownership
     if (!symptom || symptom.userId !== identity.subject) {
-      return null;
+      throw new Error("Symptom not found or unauthorized");
     }
 
     return symptom;
@@ -109,7 +117,7 @@ export const create = mutation({
   args: {
     symptomType: v.string(),
     severity: v.number(),
-    bodyPart: v.optional(v.string()),
+    
     triggers: v.optional(v.string()),
     notes: v.optional(v.string()),
     loggedAt: v.number(),
@@ -135,7 +143,7 @@ export const update = mutation({
     id: v.id("symptoms"),
     symptomType: v.optional(v.string()),
     severity: v.optional(v.number()),
-    bodyPart: v.optional(v.string()),
+    
     triggers: v.optional(v.string()),
     notes: v.optional(v.string()),
     loggedAt: v.optional(v.number()),

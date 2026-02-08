@@ -28,8 +28,8 @@ interface SymptomsListProps {
   showViewAll?: boolean;
 }
 
-function formatDateTime(dateString: string): string {
-  const date = new Date(dateString);
+function formatDateTime(timestamp: number): string {
+  const date = new Date(timestamp);
   return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -93,14 +93,9 @@ export function SymptomsList({
           </TableHeader>
           <TableBody>
             {symptoms.map((symptom) => (
-              <TableRow key={symptom.id}>
+              <TableRow key={symptom._id}>
                 <TableCell className='font-medium'>
                   {symptom.symptomType}
-                  {symptom.bodyPart && (
-                    <span className='text-sm text-muted-foreground ml-2'>
-                      ({symptom.bodyPart})
-                    </span>
-                  )}
                 </TableCell>
                 <TableCell className='text-sm'>
                   {formatDateTime(symptom.loggedAt)}
@@ -136,7 +131,7 @@ export function SymptomsList({
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => onDelete(symptom.id)}
+                        onClick={() => onDelete(symptom._id)}
                         className='text-destructive focus:text-destructive focus:bg-destructive/10'
                       >
                         <Trash2 className='h-4 w-4' />

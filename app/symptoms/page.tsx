@@ -8,11 +8,10 @@ import { SymptomFiltersComponent } from '@/components/symptoms/symptom-filters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { Symptom, CreateSymptomInput } from '@/lib/schemas/symptom';
+import type { Symptom, CreateSymptomInput, CreateSymptomFormInput } from '@/lib/schemas/symptom';
 import {
   filterSymptoms,
   sortSymptoms,
-  getUniqueBodyParts,
   type SymptomFilters,
   type SortOption,
 } from '@/lib/utils/symptom-filters';
@@ -33,9 +32,6 @@ export default function SymptomsPage() {
     const filtered = filterSymptoms(symptoms, filters);
     return sortSymptoms(filtered, sortOption);
   }, [symptoms, filters, sortOption]);
-
-  // Get unique body parts for filter dropdown
-  const availableBodyParts = useMemo(() => getUniqueBodyParts(symptoms), [symptoms]);
 
   const handleResetFilters = () => {
     setFilters({});
@@ -58,7 +54,7 @@ export default function SymptomsPage() {
     setIsSubmitting(true);
     try {
       if (dialogState.type === 'edit') {
-        await update(dialogState.symptom.id, data);
+        await update(dialogState.symptom._id, data);
         toast.success('Symptom updated successfully');
       } else {
         await create(data);
@@ -117,7 +113,6 @@ export default function SymptomsPage() {
             sortOption={sortOption}
             onFiltersChange={setFilters}
             onSortChange={setSortOption}
-            availableBodyParts={availableBodyParts}
             onReset={handleResetFilters}
           />
         </div>
@@ -167,7 +162,6 @@ export default function SymptomsPage() {
                   ? {
                       symptomType: dialogState.symptom.symptomType,
                       severity: dialogState.symptom.severity,
-                      bodyPart: dialogState.symptom.bodyPart,
                       triggers: dialogState.symptom.triggers,
                       notes: dialogState.symptom.notes,
                       loggedAt: dialogState.symptom.loggedAt,
