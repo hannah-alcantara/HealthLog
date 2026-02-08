@@ -2,14 +2,21 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { useOnboarding } from '@/lib/hooks/use-onboarding';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { isSignedIn, isLoaded: isAuthLoaded } = useAuth();
   const { needsOnboarding, loading } = useOnboarding();
 
   useEffect(() => {
+    // Don't check onboarding if auth isn't loaded or user isn't signed in
+    if (!isAuthLoaded || !isSignedIn) {
+      return;
+    }
+
     // Don't redirect if already on onboarding page or still loading
     if (loading || pathname === '/onboarding') {
       return;
@@ -19,7 +26,12 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (needsOnboarding()) {
       router.push('/onboarding');
     }
-  }, [loading, pathname, router, needsOnboarding]);
+  }, [isAuthLoaded, isSignedIn, loading, pathname, router, needsOnboarding]);
+
+  // Don't show loading for unauthenticated users
+  if (!isAuthLoaded || !isSignedIn) {
+    return <>{children}</>;
+  }
 
   // Show loading state while checking onboarding status
   if (loading && pathname !== '/onboarding') {

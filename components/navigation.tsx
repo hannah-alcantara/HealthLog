@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { BandageIcon } from "@/components/icons/BandageIcon";
 
 export function Navigation() {
   const pathname = usePathname();
+  const { isSignedIn, isLoaded } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const links = [
@@ -28,35 +30,54 @@ export function Navigation() {
               <BandageIcon className='w-8 h-8 text-primary' />
               <span className='text-xl font-bold'>HealthLog</span>
             </Link>
-            {/* Desktop Navigation */}
-            <div className='hidden md:flex gap-4'>
-              {links.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                        : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
+            {/* Desktop Navigation - Only show for signed in users */}
+            {isSignedIn && (
+              <div className='hidden md:flex gap-4'>
+                {links.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                          : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <Button
-            variant='outline'
-            size='sm'
-            className='md:hidden'
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label='Open navigation menu'
-          >
+          <div className='flex items-center gap-4'>
+            {/* User Button - Shows user avatar and sign out */}
+            {isLoaded && isSignedIn && <UserButton afterSignOutUrl="/" />}
+
+            {/* Sign in/up buttons for unauthenticated users */}
+            {isLoaded && !isSignedIn && (
+              <div className='flex gap-2'>
+                <Link href="/sign-in">
+                  <Button variant="outline" size="sm">Sign In</Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile Hamburger Button - Only for signed in users */}
+            {isSignedIn && (
+            <Button
+              variant='outline'
+              size='sm'
+              className='md:hidden'
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label='Open navigation menu'
+            >
             <svg
               className='w-6 h-6'
               fill='none'
@@ -68,7 +89,9 @@ export function Navigation() {
             >
               <path d='M4 6h16M4 12h16M4 18h16' />
             </svg>
-          </Button>
+            </Button>
+            )}
+          </div>
         </div>
       </div>
 

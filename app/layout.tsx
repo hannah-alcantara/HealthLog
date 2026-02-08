@@ -5,6 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { OnboardingGuard } from "@/components/onboarding-guard";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -28,14 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={`${manrope.variable} ${robotoMono.variable} antialiased`}>
-        <ConvexClientProvider>
-          <Navigation />
-          <OnboardingGuard>{children}</OnboardingGuard>
-          <Toaster position='top-right' richColors />
-        </ConvexClientProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang='en'>
+        <body className={`${manrope.variable} ${robotoMono.variable} antialiased`}>
+          <ConvexClientProvider>
+            <Navigation />
+            <OnboardingGuard>{children}</OnboardingGuard>
+            <Toaster position='top-right' richColors />
+          </ConvexClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
