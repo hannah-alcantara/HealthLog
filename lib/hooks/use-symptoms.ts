@@ -48,7 +48,17 @@ export function useSymptoms() {
 
   const create = useCallback(
     async (input: CreateSymptomInput): Promise<void> => {
-      await createMutation(input);
+      // Filter out undefined fields to prevent them being sent as null over the network
+      const cleanInput: any = {
+        symptomType: input.symptomType,
+        severity: input.severity,
+        loggedAt: input.loggedAt,
+      };
+
+      if (input.triggers !== undefined) cleanInput.triggers = input.triggers;
+      if (input.notes !== undefined) cleanInput.notes = input.notes;
+
+      await createMutation(cleanInput);
     },
     [createMutation]
   );

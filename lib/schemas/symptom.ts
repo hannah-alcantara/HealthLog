@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Id } from '@/convex/_generated/dataModel';
 
 /**
  * Symptom Zod Schema for client-side validation (Convex)
@@ -27,19 +28,27 @@ export const symptomSchema = z.object({
 
   triggers: z
     .string()
-    .max(500, 'Triggers must be 500 characters or less')
-    .trim()
-    .or(z.literal(''))
-    .transform(val => val === '' ? undefined : val)
-    .optional(),
+    .nullish()
+    .transform(val => {
+      if (!val || val.trim() === '') return undefined;
+      const trimmed = val.trim();
+      if (trimmed.length > 500) {
+        throw new Error('Triggers must be 500 characters or less');
+      }
+      return trimmed;
+    }),
 
   notes: z
     .string()
-    .max(2000, 'Notes must be 2000 characters or less')
-    .trim()
-    .or(z.literal(''))
-    .transform(val => val === '' ? undefined : val)
-    .optional(),
+    .nullish()
+    .transform(val => {
+      if (!val || val.trim() === '') return undefined;
+      const trimmed = val.trim();
+      if (trimmed.length > 2000) {
+        throw new Error('Notes must be 2000 characters or less');
+      }
+      return trimmed;
+    }),
 
   loggedAt: z
     .number()
@@ -53,14 +62,14 @@ export const symptomSchema = z.object({
 export const createSymptomSchema = symptomSchema;
 
 /**
- * TypeScript type inferred from symptom schema
+ * TypeScript type inferred from symptom schema (output after transformation)
  * Use this for Convex mutations
  */
 export type CreateSymptomInput = {
   symptomType: string;
   severity: number;
-  triggers?: string;
-  notes?: string;
+  triggers?: string | undefined;
+  notes?: string | undefined;
   loggedAt: number;
 };
 
@@ -80,7 +89,7 @@ export type CreateSymptomFormInput = {
  * Includes Convex-generated fields: _id, _creationTime, userId
  */
 export interface Symptom extends CreateSymptomInput {
-  _id: string;
+  _id: Id<'symptoms'>;
   _creationTime: number;
   userId: string;
 }
