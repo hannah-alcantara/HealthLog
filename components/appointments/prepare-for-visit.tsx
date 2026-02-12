@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { generateAppointmentQuestions } from '@/lib/utils/question-generator';
+import { useAction } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { toast } from 'sonner';
 import type { Appointment } from '@/lib/schemas/appointment';
 import type { Symptom } from '@/lib/schemas/symptom';
 
 interface PrepareForVisitProps {
   appointment: Appointment;
   symptomLogs: Symptom[];
+  allAppointments: Appointment[];
   onSave: (questions: string[]) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -18,6 +21,7 @@ interface PrepareForVisitProps {
 export function PrepareForVisit({
   appointment,
   symptomLogs,
+  allAppointments,
   onSave,
   onCancel,
   isSubmitting,
@@ -26,18 +30,31 @@ export function PrepareForVisit({
     appointment.generatedQuestions || []
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const generateQuestions = useAction(api.ai.generateAppointmentQuestions);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
-    // Simulate a brief loading state for better UX
-    setTimeout(() => {
-      const generated = generateAppointmentQuestions(
-        appointment.symptoms ?? null,
-        symptomLogs
-      );
+    try {
+      // Find the most recent appointment before this one
+      const previousAppointment = allAppointments
+        .filter((appt) => appt.date < appointment.date && appt._id !== appointment._id)
+        .sort((a, b) => b.date - a.date)[0];
+
+      const generated = await generateQuestions({
+        appointmentSymptoms: appointment.symptoms,
+        appointmentDate: appointment.date,
+        startDate: previousAppointment?.date,
+      });
       setQuestions(generated);
+      toast.success('Questions generated successfully!');
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to generate questions'
+      );
+    } finally {
       setIsGenerating(false);
-    }, 500);
+    }
   };
 
   const handleSave = () => {

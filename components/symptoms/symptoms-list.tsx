@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Symptom } from "@/lib/schemas/symptom";
 import {
@@ -28,16 +29,25 @@ interface SymptomsListProps {
   showViewAll?: boolean;
 }
 
-function formatDateTime(timestamp: number): string {
+function formatDateTime(timestamp: number): React.JSX.Element {
   const date = new Date(timestamp);
-  return date.toLocaleString("en-US", {
+  const dateStr = date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+  });
+  const timeStr = date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   });
+
+  return (
+    <div className='flex flex-col'>
+      <span>{dateStr}</span>
+      <span className='text-xs text-muted-foreground'>{timeStr}</span>
+    </div>
+  );
 }
 
 function getSeverityColor(severity: number): string {
@@ -64,9 +74,9 @@ export function SymptomsList({
 
   return (
     <Card className='pb-0'>
-      <CardHeader>
+      <CardHeader className='px-8'>
         <div className='flex justify-between items-start'>
-          <div>
+          <div className='space-y-1'>
             <h2 className='text-2xl font-semibold'>Recent Symptoms</h2>
             <p className='text-sm text-muted-foreground'>
               Track and monitor your health symptoms
@@ -83,22 +93,22 @@ export function SymptomsList({
         <Table>
           <TableHeader className='bg-muted'>
             <TableRow>
+              <TableHead className='pl-8'>Date and Time</TableHead>
               <TableHead>Symptom</TableHead>
-              <TableHead>Date and Time</TableHead>
               <TableHead>Severity</TableHead>
               <TableHead>Triggers</TableHead>
               <TableHead>Notes</TableHead>
-              <TableHead className='w-[50px]'></TableHead>
+              <TableHead className='w-[50px] pr-6'></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {symptoms.map((symptom) => (
               <TableRow key={symptom._id}>
+                <TableCell className='text-sm pl-8'>
+                  {formatDateTime(symptom.loggedAt)}
+                </TableCell>
                 <TableCell className='font-medium'>
                   {symptom.symptomType}
-                </TableCell>
-                <TableCell className='text-sm'>
-                  {formatDateTime(symptom.loggedAt)}
                 </TableCell>
                 <TableCell>
                   <span
@@ -113,7 +123,7 @@ export function SymptomsList({
                 <TableCell className='text-sm text-muted-foreground max-w-[300px] truncate'>
                   {symptom.notes || "-"}
                 </TableCell>
-                <TableCell>
+                <TableCell className='pr-8'>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button

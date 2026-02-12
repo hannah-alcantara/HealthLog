@@ -6,7 +6,6 @@ import { appointmentSchema, type CreateAppointmentInput } from '@/lib/schemas/ap
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface AppointmentFormProps {
@@ -89,42 +88,6 @@ export function AppointmentForm({
         {errors.reason && (
           <p className="text-sm text-red-600" role="alert">
             {errors.reason.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="symptoms">Symptoms (Optional)</Label>
-        <Textarea
-          id="symptoms"
-          {...register('symptoms', {
-            setValueAs: (v) => (v === '' ? null : v),
-          })}
-          placeholder="Describe any symptoms you're experiencing..."
-          rows={3}
-          aria-invalid={!!errors.symptoms}
-        />
-        {errors.symptoms && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.symptoms.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea
-          id="notes"
-          {...register('notes', {
-            setValueAs: (v) => (v === '' ? null : v),
-          })}
-          placeholder="Add any notes from the appointment..."
-          rows={4}
-          aria-invalid={!!errors.notes}
-        />
-        {errors.notes && (
-          <p className="text-sm text-red-600" role="alert">
-            {errors.notes.message}
           </p>
         )}
       </div>

@@ -146,6 +146,7 @@ export default function AppointmentsPage() {
             <PrepareForVisit
               appointment={dialogState.appointment}
               symptomLogs={symptoms}
+              allAppointments={appointments}
               onSave={handleSaveQuestions}
               onCancel={closeDialog}
               isSubmitting={isSubmitting}
