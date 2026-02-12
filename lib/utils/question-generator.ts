@@ -1,4 +1,3 @@
-import type { Condition, Medication, Allergy } from '@/lib/schemas/medical-history';
 import type { Symptom } from '@/lib/schemas/symptom';
 
 /**
@@ -160,22 +159,16 @@ function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
 
 
 /**
- * Generate context-aware appointment questions based on health history.
+ * Generate context-aware appointment questions based on symptom history.
  *
- * Analyzes symptom patterns, medical history, medications, and allergies to
- * generate intelligent, personalized questions for doctor appointments. Uses
- * rule-based pattern analysis to identify:
+ * Analyzes symptom patterns to generate intelligent, personalized questions
+ * for doctor appointments. Uses rule-based pattern analysis to identify:
  * - Recurring symptoms and frequency patterns
  * - Severity trends (increasing/decreasing)
  * - Common triggers
- * - Medication side effects and interactions
- * - Allergy-related concerns
  *
  * @param appointmentSymptoms - Symptoms reported for this specific appointment
  * @param symptomLogs - Historical symptom logs for pattern analysis
- * @param conditions - Current medical conditions
- * @param medications - Current medications
- * @param allergies - Known allergies
  * @param daysToAnalyze - Number of days to look back for pattern analysis (default: 30)
  * @returns Array of up to 10 most relevant questions
  *
@@ -184,9 +177,6 @@ function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
  * const questions = generateAppointmentQuestions(
  *   'persistent headaches',
  *   recentSymptoms,
- *   conditions,
- *   medications,
- *   allergies,
  *   30
  * );
  * ```
@@ -194,9 +184,6 @@ function analyzeCommonTriggers(symptoms: Symptom[]): TriggerFrequency[] {
 export function generateAppointmentQuestions(
   appointmentSymptoms: string | null,
   symptomLogs: Symptom[] = [],
-  conditions: Condition[] = [],
-  medications: Medication[] = [],
-  allergies: Allergy[] = [],
   daysToAnalyze: number = 30
 ): string[] {
   const questions: string[] = [];
@@ -251,54 +238,6 @@ export function generateAppointmentQuestions(
       `For this visit, I'm experiencing ${appointmentSymptoms.toLowerCase()}. ` +
       `What treatments or lifestyle changes do you recommend?`
     );
-  }
-
-  // CONDITION CORRELATIONS
-  if (conditions.length > 0 && frequencies.length > 0) {
-    const conditionNames = conditions.map(c => c.name).join(', ');
-    questions.push(
-      `Given my conditions (${conditionNames}), could my recurring symptoms be related? ` +
-      `Should we adjust my treatment plan?`
-    );
-  }
-
-  // MEDICATION SIDE EFFECTS
-  if (medications.length > 0 && symptomLogs.length > 0) {
-    const digestiveKeywords = ['nausea', 'stomach', 'abdominal', 'digestive', 'diarrhea', 'constipation', 'indigestion'];
-    const digestiveSymptoms = symptomLogs.filter(s =>
-      digestiveKeywords.some(keyword => s.symptomType.toLowerCase().includes(keyword))
-    ).length;
-    if (digestiveSymptoms > 0) {
-      questions.push(
-        `I've had ${digestiveSymptoms} digestive symptoms recently. ` +
-        `Could any of my medications be causing side effects?`
-      );
-    }
-  }
-
-  // MEDICATION INTERACTIONS
-  if (medications.length > 1) {
-    questions.push('Are there any interactions I should be aware of between my medications?');
-  }
-
-  // ALLERGY CONSIDERATIONS
-  if (allergies.length > 0) {
-    const severeAllergies = allergies.filter(a => a.severity === 'severe');
-    if (severeAllergies.length > 0) {
-      questions.push('Do I need to update my emergency allergy action plan?');
-    }
-
-    // Check for skin symptoms with allergies
-    const skinKeywords = ['rash', 'hives', 'itch', 'skin', 'swelling', 'redness'];
-    const skinSymptoms = symptomLogs.filter(s =>
-      skinKeywords.some(keyword => s.symptomType.toLowerCase().includes(keyword))
-    ).length;
-    if (skinSymptoms >= 2) {
-      questions.push(
-        `I've had ${skinSymptoms} skin-related symptoms. Given my known allergies, ` +
-        `should I be tested for additional sensitivities?`
-      );
-    }
   }
 
   // GENERAL HEALTH

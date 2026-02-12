@@ -4,16 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { generateAppointmentQuestions } from '@/lib/utils/question-generator';
-import type { Condition, Medication, Allergy } from '@/lib/schemas/medical-history';
 import type { Appointment } from '@/lib/schemas/appointment';
 import type { Symptom } from '@/lib/schemas/symptom';
 
 interface PrepareForVisitProps {
   appointment: Appointment;
   symptomLogs: Symptom[];
-  conditions: Condition[];
-  medications: Medication[];
-  allergies: Allergy[];
   onSave: (questions: string[]) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -22,9 +18,6 @@ interface PrepareForVisitProps {
 export function PrepareForVisit({
   appointment,
   symptomLogs,
-  conditions,
-  medications,
-  allergies,
   onSave,
   onCancel,
   isSubmitting,
@@ -40,10 +33,7 @@ export function PrepareForVisit({
     setTimeout(() => {
       const generated = generateAppointmentQuestions(
         appointment.symptoms ?? null,
-        symptomLogs,
-        conditions,
-        medications,
-        allergies
+        symptomLogs
       );
       setQuestions(generated);
       setIsGenerating(false);

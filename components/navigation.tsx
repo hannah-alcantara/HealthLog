@@ -3,26 +3,35 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { BandageIcon } from "@/components/icons/BandageIcon";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Menu, X } from "lucide-react";
 
 export function Navigation() {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const links = [
     { href: "/", label: "Dashboard" },
     { href: "/symptoms", label: "Symptoms" },
     { href: "/appointments", label: "Appointments" },
-    { href: "/medical-history", label: "Medical History" },
   ];
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <nav className='border-b bg-white dark:bg-black'>
+    <nav className='sticky top-0 z-50 border-b bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-black/60'>
       <div className='container mx-auto px-4'>
         <div className='flex h-16 items-center justify-between'>
           <div className='flex items-center gap-6'>
@@ -41,8 +50,8 @@ export function Navigation() {
                       href={link.href}
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
-                          ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                          : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                          ? "text-primary dark:bg-gray-800 dark:text-gray-100"
+                          : "bg-text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                       }`}
                     >
                       {link.label}
@@ -54,110 +63,104 @@ export function Navigation() {
           </div>
 
           <div className='flex items-center gap-4'>
-            {/* User Button - Shows user avatar and sign out */}
-            {isLoaded && isSignedIn && <UserButton afterSignOutUrl="/" />}
+            {/* User Button - Desktop Only */}
+            {isLoaded && isSignedIn && (
+              <div className='hidden md:block'>
+                <UserButton afterSignOutUrl='/' />
+              </div>
+            )}
 
             {/* Sign in/up buttons for unauthenticated users */}
             {isLoaded && !isSignedIn && (
               <div className='flex gap-2'>
-                <Link href="/sign-in">
-                  <Button variant="outline" size="sm">Sign In</Button>
+                <Link href='/sign-in'>
+                  <Button variant='outline' size='sm'>
+                    Sign In
+                  </Button>
                 </Link>
-                <Link href="/sign-up">
-                  <Button size="sm">Sign Up</Button>
+                <Link href='/sign-up'>
+                  <Button size='sm'>Sign Up</Button>
                 </Link>
               </div>
             )}
 
-            {/* Mobile Hamburger Button - Only for signed in users */}
+            {/* Mobile Menu Button - Only for signed in users */}
             {isSignedIn && (
-            <Button
-              variant='outline'
-              size='sm'
-              className='md:hidden'
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label='Open navigation menu'
-            >
-            <svg
-              className='w-6 h-6'
-              fill='none'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path d='M4 6h16M4 12h16M4 18h16' />
-            </svg>
-            </Button>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='md:hidden'
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label='Open navigation menu'
+              >
+                <Menu className='h-5 w-5' />
+              </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
-      {isMobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className='fixed inset-0 bg-black/50 z-40 md:hidden'
-            onClick={closeMobileMenu}
-            aria-hidden='true'
-          />
-
-          {/* Sidebar */}
-          <div className='fixed inset-y-0 right-0 w-64 bg-white dark:bg-black border-l z-50 md:hidden'>
-            <div className='flex flex-col h-full'>
-              {/* Close Button */}
-              <div className='flex justify-between items-center p-4 border-b'>
-                <span className='text-lg font-bold'>Menu</span>
+      {/* Mobile Drawer */}
+      <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <DrawerContent side='right' className='md:hidden'>
+          <div className='flex flex-col h-full'>
+            {/* Header */}
+            <DrawerHeader>
+              <DrawerTitle>Menu</DrawerTitle>
+              <DrawerClose asChild>
                 <Button
-                  variant='outline'
+                  variant='ghost'
                   size='sm'
-                  onClick={closeMobileMenu}
                   aria-label='Close navigation menu'
                 >
-                  <svg
-                    className='w-6 h-6'
-                    fill='none'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path d='M6 18L18 6M6 6l12 12' />
-                  </svg>
+                  <X className='h-5 w-5' />
                 </Button>
-              </div>
+              </DrawerClose>
+            </DrawerHeader>
 
-              {/* Navigation Links */}
-              <nav className='flex-1 p-4'>
-                <ul className='space-y-2'>
-                  {links.map((link) => {
-                    const isActive = pathname === link.href;
-                    return (
-                      <li key={link.href}>
-                        <Link
-                          href={link.href}
-                          onClick={closeMobileMenu}
-                          className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                            isActive
-                              ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900"
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </div>
+            {/* Navigation Links */}
+            <nav className='flex-1 p-4 overflow-y-auto'>
+              <ul className='space-y-2'>
+                {links.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        onClick={closeMobileMenu}
+                        className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                          isActive
+                            ? "text-primary dark:bg-gray-800 dark:text-gray-100"
+                            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            {/* User Profile Section */}
+            {isLoaded && isSignedIn && (
+              <DrawerFooter>
+                <div className='flex items-center gap-3'>
+                  <UserButton afterSignOutUrl='/' />
+                  <div className='flex flex-col flex-1 min-w-0'>
+                    <span className='text-sm font-medium truncate'>
+                      {user?.firstName || user?.username || "User"}
+                    </span>
+                    <span className='text-xs text-gray-500 dark:text-gray-400'>
+                      Manage account
+                    </span>
+                  </div>
+                </div>
+              </DrawerFooter>
+            )}
           </div>
-        </>
-      )}
+        </DrawerContent>
+      </Drawer>
     </nav>
   );
 }

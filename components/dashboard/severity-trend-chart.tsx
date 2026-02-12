@@ -21,9 +21,10 @@ interface SeverityTrendChartProps {
 
 // Three distinct colors for the top 3 symptoms
 const SYMPTOM_COLORS = [
-  "#10b981", // Green
-  "#3b82f6", // Blue
   "#a855f7", // Purple
+  "#3b82f6", // Blue
+  "#10b981", // Green
+  // "#f59e0b", //Amber
 ];
 
 export function SeverityTrendChart({
@@ -69,14 +70,17 @@ export function SeverityTrendChart({
       .slice(0, 3)
       .map(([type]) => type);
 
-    // Assign colors by position (1st = green, 2nd = blue, 3rd = purple)
+    // Assign colors by position (1st = blue, 2nd = purple, 3rd = amber)
     const symptomColorMap = new Map<string, string>();
     topSymptoms.forEach((symptom, index) => {
       symptomColorMap.set(symptom, SYMPTOM_COLORS[index]);
     });
 
     // Create array of weeks in range
-    const weeks = eachWeekOfInterval({ start: startDate, end: endDate }, { weekStartsOn: 0 });
+    const weeks = eachWeekOfInterval(
+      { start: startDate, end: endDate },
+      { weekStartsOn: 0 },
+    );
 
     // Calculate weekly severity stats for each symptom
     const weeklyData = weeks.map((weekStart, index) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
@@ -18,9 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Symptom, CreateSymptomInput } from "@/lib/schemas/symptom";
 import Link from "next/link";
-import { StorageWarningBanner } from "@/components/storage-warning-banner";
 import { toast } from "sonner";
-import { Sparkles, TrendingUp, TriangleAlert } from "lucide-react";
+import { Plus, Sparkles, TrendingUp, Zap, TriangleAlert } from "lucide-react";
 
 type DialogState =
   | { type: "closed" }
@@ -32,8 +32,7 @@ type DeleteDialogState =
   | { type: "confirm"; symptomId: string; symptomType: string };
 
 export function Dashboard() {
-  console.log("[Dashboard] Component mounting");
-
+  const { user } = useUser();
   const {
     symptoms,
     loading: symptomsLoading,
@@ -43,8 +42,6 @@ export function Dashboard() {
     getStats,
   } = useSymptoms();
   const { appointments, loading: appointmentsLoading } = useAppointments();
-
-  console.log("[Dashboard] Hooks loaded:", { symptomsLoading, appointmentsLoading });
 
   const [dialogState, setDialogState] = useState<DialogState>({
     type: "closed",
@@ -72,97 +69,11 @@ export function Dashboard() {
     )
     .slice(0, 5);
 
-  // Calculate symptom-free days (last 30 days)
-  const symptomFreeDays = (() => {
-    const last30Days = new Set<string>();
-    const daysWithSymptoms = new Set<string>();
-    const now = new Date();
-
-    // Generate all dates in last 30 days
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      last30Days.add(date.toISOString().split("T")[0]);
-    }
-
-    // Track days with symptoms
-    symptoms.forEach((symptom) => {
-      const symptomDate = new Date(symptom.loggedAt);
-      const daysDiff = Math.floor(
-        (now.getTime() - symptomDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      if (daysDiff < 30) {
-        daysWithSymptoms.add(symptomDate.toISOString().split("T")[0]);
-      }
-    });
-
-    return last30Days.size - daysWithSymptoms.size;
-  })();
-
-  // Calculate current streak (consecutive days without severe symptoms)
-  const currentStreak = (() => {
-    const severeSymptoms = symptoms.filter((s) => s.severity >= 7);
-
-    if (severeSymptoms.length === 0) return 0;
-
-    const sortedSevereSymptoms = [...severeSymptoms].sort(
-      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime(),
-    );
-
-    const now = new Date();
-    const mostRecentSevere = new Date(sortedSevereSymptoms[0].loggedAt);
-    const daysSinceLastSevere = Math.floor(
-      (now.getTime() - mostRecentSevere.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    return daysSinceLastSevere;
-  })();
-
-  // Calculate this week vs last week
-  const weekComparison = (() => {
-    const now = new Date();
-    const thisWeekStart = new Date(now);
-    thisWeekStart.setDate(now.getDate() - now.getDay());
-    thisWeekStart.setHours(0, 0, 0, 0);
-
-    const lastWeekStart = new Date(thisWeekStart);
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-
-    const thisWeekCount = symptoms.filter((s) => {
-      const date = new Date(s.loggedAt);
-      return date >= thisWeekStart;
-    }).length;
-
-    const lastWeekCount = symptoms.filter((s) => {
-      const date = new Date(s.loggedAt);
-      return date >= lastWeekStart && date < thisWeekStart;
-    }).length;
-
-    const diff = thisWeekCount - lastWeekCount;
-    const percentage =
-      lastWeekCount > 0
-        ? Math.round((diff / lastWeekCount) * 100)
-        : thisWeekCount > 0
-          ? 100
-          : 0;
-
-    return {
-      thisWeek: thisWeekCount,
-      lastWeek: lastWeekCount,
-      diff,
-      percentage,
-    };
-  })();
-
   // Find next upcoming appointment
   const now = new Date();
   const upcomingAppointments = appointments
     .filter((apt) => new Date(apt.date) > now)
-    .sort(
-      (a, b) =>
-        new Date(a.date).getTime() -
-        new Date(b.date).getTime(),
-    );
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const nextAppointment = upcomingAppointments[0];
 
   const closeDialog = () => {
@@ -229,6 +140,115 @@ export function Dashboard() {
     }
   };
 
+  // Calculate insights for stat cards
+  const insights = (() => {
+    if (symptoms.length === 0) {
+      return {
+        mostFrequent: null,
+        coOccurring: null,
+        pattern: null,
+      };
+    }
+
+    // 1. Most frequent symptom this month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthSymptoms = symptoms.filter(
+      (s) => s.loggedAt >= monthStart.getTime(),
+    );
+
+    const typeCounts = thisMonthSymptoms.reduce(
+      (acc, s) => {
+        acc[s.symptomType] = (acc[s.symptomType] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const mostFrequentEntry = Object.entries(typeCounts).sort(
+      ([, a], [, b]) => b - a,
+    )[0];
+    const mostFrequent = mostFrequentEntry
+      ? { type: mostFrequentEntry[0], count: mostFrequentEntry[1] }
+      : null;
+
+    // 2. Co-occurring symptom/trigger (most common trigger for most frequent symptom)
+    let coOccurring = null;
+    if (mostFrequent) {
+      const symptomsOfType = symptoms.filter(
+        (s) => s.symptomType === mostFrequent.type && s.triggers,
+      );
+      const triggerCounts = symptomsOfType.reduce(
+        (acc, s) => {
+          const triggers =
+            s.triggers
+              ?.toLowerCase()
+              .split(/[,;]+/)
+              .map((t) => t.trim()) || [];
+          triggers.forEach((trigger) => {
+            if (trigger) acc[trigger] = (acc[trigger] || 0) + 1;
+          });
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      const topTrigger = Object.entries(triggerCounts).sort(
+        ([, a], [, b]) => b - a,
+      )[0];
+      if (topTrigger && topTrigger[1] >= 2) {
+        coOccurring = {
+          symptom: mostFrequent.type,
+          trigger: topTrigger[0],
+          count: topTrigger[1],
+        };
+      }
+    }
+
+    // 3. Pattern alert (day of week for most frequent symptom)
+    let pattern = null;
+    if (mostFrequent) {
+      const symptomsOfType = symptoms.filter(
+        (s) => s.symptomType === mostFrequent.type,
+      );
+
+      // Count symptoms by day of week (0 = Sunday, 6 = Saturday)
+      const dayCounts = symptomsOfType.reduce(
+        (acc, s) => {
+          const day = new Date(s.loggedAt).getDay();
+          acc[day] = (acc[day] || 0) + 1;
+          return acc;
+        },
+        {} as Record<number, number>,
+      );
+
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const sortedDays = Object.entries(dayCounts).sort(
+        ([, a], [, b]) => b - a,
+      );
+
+      if (sortedDays.length > 0 && sortedDays[0][1] >= 2) {
+        const peakDay = parseInt(sortedDays[0][0]);
+        const peakDayName = dayNames[peakDay];
+
+        pattern = {
+          symptom: mostFrequent.type,
+          peakDay: peakDayName + "s",
+        };
+      }
+    }
+
+    return { mostFrequent, coOccurring, pattern };
+  })();
+
   const getDaysUntilAppointment = () => {
     if (!nextAppointment) return null;
     const date = new Date(nextAppointment.date);
@@ -253,15 +273,120 @@ export function Dashboard() {
     <div className='container mx-auto py-8 px-4'>
       <div className='max-w-7xl mx-auto'>
         <div className='flex justify-between items-center mb-6'>
-          <h1 className='text-3xl font-bold'>
-            Good Morning Hannah! How are you feeling today?
+          <h1 className='text-2xl sm:text-3xl font-bold'>
+            Good Morning,{user?.firstName ? ` ${user.firstName}` : ""}! How are
+            you feeling today?
           </h1>
-          <Button onClick={handleAdd} size='lg'>
-            + Log Symptom
+          {/* Desktop Button - Hidden on Mobile */}
+          <Button
+            onClick={handleAdd}
+            size='lg'
+            className='hidden sm:flex items-center gap-2 whitespace-nowrap'
+          >
+            <Plus className='h-5 w-5' />
+            Log Symptom
           </Button>
         </div>
 
-        <StorageWarningBanner />
+        {/* Stats Cards - Health Insights */}
+        {symptoms.length > 0 && (
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-8'>
+            {/* Most Frequent Symptom */}
+            <Card>
+              <CardHeader>
+                <div className='flex justify-between items-start'>
+                  <p className='text-sm text-muted-foreground'>Most Frequent</p>
+                  <div className='p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30'>
+                    <TrendingUp className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className='space-y-1'>
+                {insights.mostFrequent ? (
+                  <>
+                    <p className='text-xl font-bold capitalize'>
+                      {insights.mostFrequent.type}
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      {insights.mostFrequent.count}{" "}
+                      {insights.mostFrequent.count === 1 ? "time" : "times"}{" "}
+                      this month
+                    </p>
+                  </>
+                ) : (
+                  <p className='text-sm text-muted-foreground'>
+                    Not enough data yet
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Co-occurring Trigger */}
+            <Card>
+              <CardHeader>
+                <div className='flex justify-between items-start'>
+                  <p className='text-sm text-muted-foreground'>
+                    Common Trigger
+                  </p>
+                  <div className='p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30'>
+                    <Zap className='h-5 w-5 text-blue-600 dark:text-blue-400' />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className='space-y-1'>
+                {insights.coOccurring ? (
+                  <>
+                    <p className='text-xl font-bold capitalize'>
+                      {insights.coOccurring.trigger}
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      usually causes{" "}
+                      <span className='font-medium'>
+                        {insights.coOccurring.symptom}
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <p className='text-sm text-muted-foreground'>
+                    Add triggers to see patterns
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pattern Alert */}
+            <Card>
+              <CardHeader>
+                <div className='flex justify-between items-start'>
+                  <p className='text-sm text-muted-foreground'>Pattern Alert</p>
+                  <div className='p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30'>
+                    <TriangleAlert className='h-5 w-5 text-purple-600 dark:text-purple-400' />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className='space-y-1'>
+                {insights.pattern ? (
+                  <>
+                    <p className='text-xl font-bold capitalize'>
+                      {insights.pattern.peakDay}
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      is when your{" "}
+                      <span className='font-medium capitalize'>
+                        {insights.pattern.symptom}
+                      </span>{" "}
+                      peak
+                    </p>
+                  </>
+                ) : (
+                  <p className='text-sm text-muted-foreground'>
+                    Track more to see patterns
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Charts Section */}
         {symptoms.length > 0 && (
@@ -353,9 +478,7 @@ export function Dashboard() {
                   <h3 className='text-lg font-semibold'>Next Appointment</h3>
                   <p className='text-gray-600 dark:text-gray-400'>
                     {nextAppointment.doctorName} -{" "}
-                    {new Date(
-                      nextAppointment.date,
-                    ).toLocaleDateString()}
+                    {new Date(nextAppointment.date).toLocaleDateString()}
                   </p>
                 </div>
                 <div className='text-right'>
@@ -393,9 +516,6 @@ export function Dashboard() {
                 <p className='text-gray-400 mb-6'>
                   Start tracking your symptoms to see patterns and insights
                 </p>
-                <Button onClick={handleAdd} size='lg'>
-                  Log Your First Symptom
-                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -407,117 +527,6 @@ export function Dashboard() {
               showViewAll={symptoms.length > 5}
             />
           )}
-        </div>
-
-        {/* Stats Cards */}
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-          {/* Symptom-Free Days */}
-          <Card>
-            <CardHeader>
-              <div className='flex justify-between items-start'>
-                <p className='text-sm text-muted-foreground'>
-                  Symptom-Free Days
-                </p>
-                <div className='p-2 rounded-lg bg-green-100 dark:bg-green-900/30'>
-                  <svg
-                    className='h-5 w-5 text-green-600 dark:text-green-400'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                    />
-                  </svg>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-1'>
-              <p className='text-3xl font-bold'>{symptomFreeDays}</p>
-              <p className='text-sm text-muted-foreground'>
-                out of last 30 days
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Current Streak */}
-          <Card>
-            <CardHeader>
-              <div className='flex justify-between items-start'>
-                <p className='text-sm text-muted-foreground'>Current Streak</p>
-                <div className='p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30'>
-                  <svg
-                    className='h-5 w-5 text-orange-600 dark:text-orange-400'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'
-                    />
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z'
-                    />
-                  </svg>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-1'>
-              <p className='text-3xl font-bold'>{currentStreak}</p>
-              <p className='text-sm text-muted-foreground'>
-                {currentStreak === 1 ? "day" : "days"} since severe symptom
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* This Week vs Last Week */}
-          <Card>
-            <CardHeader>
-              <div className='flex justify-between items-start'>
-                <p className='text-sm text-muted-foreground'>
-                  Symptoms Logged This Week
-                </p>
-                <div
-                  className={`p-2 rounded-lg ${
-                    weekComparison.diff > 0
-                      ? "bg-red-100 dark:bg-red-900/30"
-                      : weekComparison.diff < 0
-                        ? "bg-green-100 dark:bg-green-900/30"
-                        : "bg-gray-100 dark:bg-gray-800"
-                  }`}
-                >
-                  <TrendingUp
-                    className={`h-5 w-5 ${
-                      weekComparison.diff > 0
-                        ? "text-red-600 dark:text-red-400"
-                        : weekComparison.diff < 0
-                          ? "text-green-600 dark:text-green-400 rotate-180"
-                          : "text-gray-600 dark:text-gray-400"
-                    }`}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-1'>
-              <p className='text-3xl font-bold'>{weekComparison.thisWeek}</p>
-              <p className='text-sm text-muted-foreground'>
-                {weekComparison.diff === 0
-                  ? "Same as last week"
-                  : weekComparison.diff > 0
-                    ? `${Math.abs(weekComparison.diff)} more than last week`
-                    : `${Math.abs(weekComparison.diff)} fewer than last week`}
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Add/Edit Symptom Dialog */}
@@ -596,6 +605,16 @@ export function Dashboard() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Floating Action Button (Mobile Only) */}
+        <Button
+          onClick={handleAdd}
+          size='lg'
+          className='sm:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg p-0'
+          aria-label='Log Symptom'
+        >
+          <Plus className='h-6 w-6' />
+        </Button>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Manrope, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
-import { OnboardingGuard } from "@/components/onboarding-guard";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -34,7 +33,7 @@ export default function RootLayout({
         <body className={`${manrope.variable} ${robotoMono.variable} antialiased`}>
           <ConvexClientProvider>
             <Navigation />
-            <OnboardingGuard>{children}</OnboardingGuard>
+            {children}
             <Toaster position='top-right' richColors />
           </ConvexClientProvider>
         </body>

@@ -65,16 +65,15 @@ export function SymptomForm({
 }: SymptomFormProps) {
   const formDefaultValues = defaultValues
     ? {
-        ...defaultValues,
-        triggers: defaultValues.triggers || "",
-        notes: defaultValues.notes || "",
+        symptomType: defaultValues.symptomType || "",
+        severity: defaultValues.severity || 5,
+        triggers: defaultValues.triggers,
+        notes: defaultValues.notes,
         loggedAt: defaultValues.loggedAt || Date.now(),
       }
     : {
         symptomType: "",
         severity: 5,
-        triggers: "",
-        notes: "",
         loggedAt: Date.now(),
       };
 
@@ -86,8 +85,8 @@ export function SymptomForm({
     control,
     formState: { errors },
   } = useForm<CreateSymptomInput>({
-    resolver: zodResolver(createSymptomSchema),
-    defaultValues: formDefaultValues,
+    resolver: zodResolver(createSymptomSchema) as any,
+    defaultValues: formDefaultValues as Partial<CreateSymptomInput>,
   });
 
   const severity = watch("severity");
@@ -225,6 +224,7 @@ export function SymptomForm({
       ...data,
       symptomType: normalizeSymptomType(data.symptomType),
     };
+
     onSubmit(normalizedData);
   };
 
@@ -246,13 +246,19 @@ export function SymptomForm({
               ref={symptomInputRef}
               value={symptomType}
               onChange={(e) => handleSymptomInputChange(e.target.value)}
-              onFocus={() => {
+              onClick={() => {
+                // Show suggestions on click
                 if (symptomType.trim()) {
+                  // If there's text, filter suggestions
                   const filtered = COMMON_SYMPTOMS.filter((symptom) =>
                     symptom.toLowerCase().includes(symptomType.toLowerCase()),
                   );
                   setFilteredSymptoms(filtered);
                   setShowSuggestions(filtered.length > 0);
+                } else {
+                  // If empty, show all common symptoms
+                  setFilteredSymptoms([...COMMON_SYMPTOMS]);
+                  setShowSuggestions(true);
                 }
               }}
               onBlur={() => {

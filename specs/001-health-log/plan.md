@@ -7,7 +7,14 @@
 
 ## Summary
 
-Building a healthcare tracking application with symptom logging, appointment tracking, and dashboard analytics. The application uses **Convex** as the backend-as-a-service for real-time data synchronization, authentication, and cloud storage. The frontend is built with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS 4.
+Building a healthcare tracking application with symptom logging, appointment tracking, and dashboard analytics. The application uses **Convex** as the backend-as-a-service with **Clerk** for authentication, providing real-time data synchronization and cloud storage. The frontend is built with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS 4.
+
+**Core Features**:
+- **Dashboard**: Personalized health insights with frequency patterns, trigger analysis, and day-of-week patterns
+- **Symptom Tracking**: Complete CRUD with analytics (heatmaps, severity trends, time distribution)
+- **Appointment Management**: CRUD with appointment preparation and AI-generated questions based on symptom history
+- **Real-time Sync**: Convex backend with reactive queries for instant updates across devices
+- **Authentication**: Clerk-based user authentication with secure data ownership
 
 ## Technical Context
 
@@ -15,6 +22,7 @@ Building a healthcare tracking application with symptom logging, appointment tra
 
 **Primary Dependencies**:
   - **Backend**: Convex (real-time BaaS with TypeScript schema, queries, mutations)
+  - **Authentication**: Clerk (@clerk/nextjs) - User authentication and session management
   - **UI Framework**: Next.js 16 App Router, React 19, Tailwind CSS 4
   - **Validation**: Zod 4.1.13 (client-side schemas)
   - **Forms**: react-hook-form 7.68.0, @hookform/resolvers 5.2.2
@@ -23,7 +31,7 @@ Building a healthcare tracking application with symptom logging, appointment tra
   - **Date Handling**: date-fns 4.1.0, react-day-picker 9.12.0
   - **Notifications**: sonner 2.0.7 (toast notifications)
 
-**Storage**: Convex cloud database with real-time synchronization (replaces localStorage)
+**Storage**: Convex cloud database with real-time synchronization (localStorage completely removed)
 
 **Testing**:
   - **Unit/Integration**: Jest 30.2.0, React Testing Library 16.3.0
@@ -48,10 +56,11 @@ Building a healthcare tracking application with symptom logging, appointment tra
   - Bundle sizes: JS <200KB gzipped, CSS <50KB gzipped
 
 **Scale/Scope**:
-  - Single-user health tracking application
+  - Single-user health tracking application with Clerk authentication
   - Expected dataset: 100-500 symptom logs per user
-  - 4 main sections: Dashboard, Symptoms, Appointments, (Medical History deferred)
-  - Responsive UI with dark mode support
+  - 3 main sections: Dashboard, Symptoms, Appointments
+  - Responsive mobile-first UI with dark mode support
+  - Cloud-based with Convex real-time synchronization
 
 ## Constitution Check
 
@@ -150,10 +159,11 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 **Key Decisions Made**:
 1. **Testing**: Convex Test for backend (100% coverage), Jest + RTL for frontend (90% coverage)
-2. **Authentication**: Anonymous auth with optional upgrade to authenticated accounts
+2. **Authentication**: Clerk authentication (replaced anonymous auth) with userId-based data ownership
 3. **Query Optimization**: Indexed queries on (userId, date) with reactive subscriptions
 4. **Validation**: Dual-layer (Zod client + Convex server validators)
-5. **Migration**: Feature flag approach with localStorage → Convex migration utility
+5. **Storage**: Convex cloud database only (localStorage completely removed)
+6. **Scope Reduction**: Medical history and onboarding features removed to focus on core symptom/appointment tracking
 
 **No Constitution Violations**: All requirements met without compromise.
 

@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 import { useAppointments } from '@/lib/hooks/use-appointments';
-import { useConditions } from '@/lib/hooks/use-conditions';
-import { useMedications } from '@/lib/hooks/use-medications';
-import { useAllergies } from '@/lib/hooks/use-allergies';
 import { useSymptoms } from '@/lib/hooks/use-symptoms';
 import { AppointmentsList } from '@/components/appointments/appointments-list';
 import { AppointmentForm } from '@/components/appointments/appointment-form';
@@ -20,9 +17,6 @@ type DialogState =
 
 export default function AppointmentsPage() {
   const { appointments, loading, error, create, update, remove } = useAppointments();
-  const { conditions } = useConditions();
-  const { medications } = useMedications();
-  const { allergies } = useAllergies();
   const { symptoms } = useSymptoms();
 
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'closed' });
@@ -152,9 +146,6 @@ export default function AppointmentsPage() {
             <PrepareForVisit
               appointment={dialogState.appointment}
               symptomLogs={symptoms}
-              conditions={conditions}
-              medications={medications}
-              allergies={allergies}
               onSave={handleSaveQuestions}
               onCancel={closeDialog}
               isSubmitting={isSubmitting}
