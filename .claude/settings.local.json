@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(git fetch:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(yarn add:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add button card form input label dialog select textarea --yes)",
+      "Bash(yarn test:*)",
+      "Bash(yarn build)",
+      "Bash(yarn dev)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx jest:*)",
+      "Bash(git add:*)",
+      "Bash(yarn lint:*)",
+      "Bash(yarn start)"
     ]
   }
 }
