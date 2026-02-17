@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { BandageIcon } from "@/components/icons/BandageIcon";
+import { HealthLogIcon } from "@/components/health-log-icon";
 import {
   Drawer,
   DrawerClose,
@@ -36,7 +36,7 @@ export function Navigation() {
         <div className='flex h-16 items-center justify-between'>
           <div className='flex items-center gap-6'>
             <Link href='/' className='flex items-center gap-2'>
-              <BandageIcon className='w-8 h-8 text-primary' />
+              <HealthLogIcon size={22} className="text-primary" />
               <span className='text-xl font-bold'>HealthLog</span>
             </Link>
             {/* Desktop Navigation - Only show for signed in users */}

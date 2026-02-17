@@ -2,88 +2,139 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Activity, Calendar, FileText, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Activity, Sparkles, FileText } from "lucide-react";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-            HealthLog
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
-            Track your health journey with ease
-          </p>
-          <p className="text-lg text-gray-500 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-            Keep all your medical information in one secure place. Track symptoms, manage appointments, and maintain your health records.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link href="/sign-up">
-              <Button size="lg" className="text-lg px-8 py-6">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/sign-in">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                Sign In
+    <div className='min-h-screen'>
+      {/* Hero Section */}
+      <section className='container mx-auto px-4 py-16 md:py-24'>
+        <div className='grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto'>
+          <div className='space-y-6'>
+            <h1 className='text-4xl md:text-5xl lg:text-6xl font-bold leading-tight'>
+              Turn Your Symptom Logs into Smarter Doctor Visits.
+            </h1>
+            <p className='text-lg text-muted-foreground'>
+              HealthLog helps you track your health and uses AI to prepare you
+              with the right questions for your next appointment.
+            </p>
+            <Link href='/sign-up'>
+              <Button size='lg' className='text-base px-8'>
+                Start Logging Your Symptoms
               </Button>
             </Link>
           </div>
+          <div className='relative'>
+            <div className='aspect-square rounded-2xl bg-gradient-to-br from-green-900 via-green-600 to-teal-400 shadow-2xl' />
+          </div>
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-            <Card>
-              <CardHeader>
-                <Activity className="w-12 h-12 mx-auto text-blue-600 dark:text-blue-400" />
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-semibold text-lg mb-2">Track Symptoms</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Log and monitor your symptoms over time
+      {/* How It Works Section */}
+      <section
+        id='how-it-works'
+        className='container mx-auto px-4 py-16 md:py-24'
+      >
+        <div className='max-w-6xl mx-auto'>
+          <h2 className='text-3xl md:text-4xl font-bold mb-4 text-center'>
+            How It Works
+          </h2>
+          <p className='text-center text-muted-foreground mb-12'>
+            A simple, three-step process to get you prepared for your next
+            doctor's visit.
+          </p>
+
+          <div className='grid md:grid-cols-3 gap-8'>
+            <Card className='border-2 hover:border-primary/20 transition-colors'>
+              <CardContent className='pt-6'>
+                <div className='w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-4'>
+                  <Activity className='w-6 h-6 text-primary' />
+                </div>
+                <h3 className='font-bold text-lg mb-2'>
+                  1. Track Your Symptoms Easily
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Quickly log your symptoms and their severity day-by-day in our
+                  secure journal.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <Calendar className="w-12 h-12 mx-auto text-purple-600 dark:text-purple-400" />
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-semibold text-lg mb-2">Appointments</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Manage your doctor visits and medical appointments
+            <Card className='border-2 hover:border-primary/20 transition-colors'>
+              <CardContent className='pt-6'>
+                <div className='w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-4'>
+                  <Sparkles className='w-6 h-6 text-primary' />
+                </div>
+                <h3 className='font-bold text-lg mb-2'>
+                  2. Our AI Identifies Key Patterns
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Our intelligent system analyzes your entries to find relevant
+                  patterns and insights.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <TrendingUp className="w-12 h-12 mx-auto text-green-600 dark:text-green-400" />
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-semibold text-lg mb-2">Insights</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Visualize patterns and trends in your health data
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="w-12 h-12 mx-auto text-orange-600 dark:text-orange-400" />
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-semibold text-lg mb-2">Records</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Store medical history and documents securely
+            <Card className='border-2 hover:border-primary/20 transition-colors'>
+              <CardContent className='pt-6'>
+                <div className='w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mb-4'>
+                  <FileText className='w-6 h-6 text-primary' />
+                </div>
+                <h3 className='font-bold text-lg mb-2'>
+                  3. Receive Personalized Questions
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  Get a clear, concise list of questions to ask your doctor,
+                  tailored to your logs.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <footer className='bg-card border-t py-12'>
+        <div className='container mx-auto px-4'>
+          <div className='max-w-6xl mx-auto'>
+            <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-8'>
+              <div>
+                <div className='flex items-center gap-2 mb-2'>
+                  <span className='text-xl font-bold'>HealthLog</span>
+                </div>
+                <p className='text-sm text-muted-foreground'>
+                  Your data is private and secure. Always.
+                </p>
+                <p className='text-xs text-muted-foreground mt-2'>
+                  © 2026 HealthLog. All rights reserved.
+                </p>
+              </div>
+
+              <div className='flex flex-col sm:flex-row gap-6 sm:gap-8'>
+                <Link
+                  href='#privacy'
+                  className='text-sm hover:text-primary transition-colors'
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href='#terms'
+                  className='text-sm hover:text-primary transition-colors'
+                >
+                  Terms of Service
+                </Link>
+                <Link
+                  href='#contact'
+                  className='text-sm hover:text-primary transition-colors'
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
