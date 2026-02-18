@@ -89,14 +89,14 @@ export function TimeDistributionChart({
                 {period.percentage}%
               </span>
             </div>
-            <div className='relative h-6 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden'>
+            <div className='relative h-6 bg-muted rounded overflow-hidden'>
               <div
                 className='h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-300 flex items-center px-3'
                 style={{ width: `${barWidth}%` }}
               >
                 {period.count > 0 && (
                   <span
-                    className='text-white font-medium'
+                    className='text-white font-medium whitespace-nowrap'
                     style={{ fontSize: 12 }}
                   >
                     {period.count} {period.count === 1 ? "symptom" : "symptoms"}

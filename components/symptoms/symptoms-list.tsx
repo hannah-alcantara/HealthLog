@@ -23,7 +23,6 @@ import Link from "next/link";
 
 interface SymptomsListProps {
   symptoms: Symptom[];
-  onEdit: (symptom: Symptom) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
   showViewAll?: boolean;
@@ -60,7 +59,6 @@ function getSeverityColor(severity: number): string {
 
 export function SymptomsList({
   symptoms,
-  onEdit,
   onDelete,
   showViewAll = false,
 }: SymptomsListProps) {
@@ -108,7 +106,12 @@ export function SymptomsList({
                   {formatDateTime(symptom.loggedAt)}
                 </TableCell>
                 <TableCell className='font-medium'>
-                  {symptom.symptomType}
+                  <Link
+                    href={`/symptoms/${symptom._id}`}
+                    className='hover:text-primary hover:underline transition-colors'
+                  >
+                    {symptom.symptomType}
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <span
@@ -136,9 +139,11 @@ export function SymptomsList({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                      <DropdownMenuItem onClick={() => onEdit(symptom)}>
-                        <Pencil className='h-4 w-4' />
-                        Edit
+                      <DropdownMenuItem asChild>
+                        <Link href={`/symptoms/${symptom._id}`}>
+                          <Pencil className='h-4 w-4' />
+                          Details
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDelete(symptom._id)}

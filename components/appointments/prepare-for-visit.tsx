@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { toast } from 'sonner';
+import { Sparkles } from 'lucide-react';
 import type { Appointment } from '@/lib/schemas/appointment';
 import type { Symptom } from '@/lib/schemas/symptom';
 
@@ -18,24 +20,34 @@ interface PrepareForVisitProps {
   isSubmitting?: boolean;
 }
 
+function questionsToText(questions: string[]): string {
+  return questions.join('\n');
+}
+
+function textToQuestions(text: string): string[] {
+  return text
+    .split('\n')
+    .map((q) => q.trim())
+    .filter((q) => q.length > 0);
+}
+
 export function PrepareForVisit({
   appointment,
-  symptomLogs,
   allAppointments,
   onSave,
   onCancel,
   isSubmitting,
 }: PrepareForVisitProps) {
-  const [questions, setQuestions] = useState<string[]>(
-    appointment.generatedQuestions || []
+  const [text, setText] = useState(
+    questionsToText(appointment.generatedQuestions || [])
   );
   const [isGenerating, setIsGenerating] = useState(false);
+
   const generateQuestions = useAction(api.ai.generateAppointmentQuestions);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      // Find the most recent appointment before this one
       const previousAppointment = allAppointments
         .filter((appt) => appt.date < appointment.date && appt._id !== appointment._id)
         .sort((a, b) => b.date - a.date)[0];
@@ -45,10 +57,9 @@ export function PrepareForVisit({
         appointmentDate: appointment.date,
         startDate: previousAppointment?.date,
       });
-      setQuestions(generated);
-      toast.success('Questions generated successfully!');
+      setText(questionsToText(generated));
+      toast.success('Questions generated!');
     } catch (error) {
-      console.error('Error generating questions:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to generate questions'
       );
@@ -58,8 +69,10 @@ export function PrepareForVisit({
   };
 
   const handleSave = () => {
-    onSave(questions);
+    onSave(textToQuestions(text));
   };
+
+  const questionCount = textToQuestions(text).length;
 
   return (
     <div className="space-y-4">
@@ -68,60 +81,50 @@ export function PrepareForVisit({
       </DialogHeader>
 
       <div className="space-y-4">
-        <div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            Generate questions to ask your doctor based on your symptoms and medical history.
-          </p>
-          {!questions.length && (
-            <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
-              {isGenerating ? 'Generating Questions...' : 'Generate Questions'}
-            </Button>
+        <p className="text-sm text-muted-foreground">
+          Generate questions with AI, then edit freely. Each line is one question.
+        </p>
+
+        <Button
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          variant={text.trim() ? 'outline' : 'default'}
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Sparkles className="h-4 w-4" />
+          {isGenerating
+            ? 'Generating…'
+            : text.trim()
+            ? 'Regenerate with AI'
+            : 'Generate with AI'}
+        </Button>
+
+        <div className="space-y-1.5">
+          {questionCount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {questionCount} {questionCount === 1 ? 'question' : 'questions'}
+            </p>
           )}
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type your questions here, one per line…"
+            className="min-h-[200px] text-sm resize-none"
+          />
         </div>
 
-        {questions.length > 0 && (
-          <>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h4 className="text-sm font-medium">Generated Questions</h4>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? 'Regenerating...' : 'Regenerate'}
-                </Button>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <ol className="list-decimal list-inside space-y-2 text-sm">
-                  {questions.map((question, index) => (
-                    <li key={index} className="text-gray-700 dark:text-gray-300">
-                      {question}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Questions'}
-              </Button>
-            </div>
-          </>
-        )}
-
-        {!questions.length && !isGenerating && (
-          <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={onCancel}>
-              Close
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2 justify-end pt-2">
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={isSubmitting || questionCount === 0}
+          >
+            {isSubmitting ? 'Saving…' : 'Save Questions'}
+          </Button>
+        </div>
       </div>
     </div>
   );

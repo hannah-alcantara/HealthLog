@@ -137,7 +137,7 @@ export function SymptomFiltersComponent({
                     }
                     className='w-20'
                   />
-                  <span className='text-sm text-gray-500'>to</span>
+                  <span className='text-sm text-muted-foreground'>to</span>
                   <Input
                     type='number'
                     min='1'

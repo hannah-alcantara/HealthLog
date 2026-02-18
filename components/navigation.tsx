@@ -50,8 +50,8 @@ export function Navigation() {
                       href={link.href}
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
-                          ? "text-primary dark:bg-gray-800 dark:text-gray-100"
-                          : "bg-text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                          ? "text-primary bg-muted"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
                       {link.label}
@@ -130,8 +130,8 @@ export function Navigation() {
                         onClick={closeMobileMenu}
                         className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                           isActive
-                            ? "text-primary dark:bg-gray-800 dark:text-gray-100"
-                            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900"
+                            ? "text-primary bg-muted"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         }`}
                       >
                         {link.label}
@@ -151,7 +151,7 @@ export function Navigation() {
                     <span className='text-sm font-medium truncate'>
                       {user?.firstName || user?.username || "User"}
                     </span>
-                    <span className='text-xs text-gray-500 dark:text-gray-400'>
+                    <span className='text-xs text-muted-foreground'>
                       Manage account
                     </span>
                   </div>
