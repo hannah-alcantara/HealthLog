@@ -5,7 +5,7 @@ import { useAppointments } from "@/lib/hooks/use-appointments";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { AppointmentsList } from "@/components/appointments/appointments-list";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
-import { PrepareForVisit } from "@/components/appointments/prepare-for-visit";
+import { GenerateQuestions } from "@/components/appointments/generate-questions";
 import {
   Dialog,
   DialogContent,
@@ -16,12 +16,18 @@ import type {
   Appointment,
   CreateAppointmentInput,
 } from "@/lib/schemas/appointment";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type DialogState =
   | { type: "closed" }
   | { type: "add" }
   | { type: "edit"; appointment: Appointment }
   | { type: "prepare"; appointment: Appointment };
+
+type DeleteDialogState =
+  | { type: "closed" }
+  | { type: "confirm"; appointmentId: string; doctorName: string };
 
 export default function AppointmentsPage() {
   const { appointments, loading, error, create, update, remove } =
@@ -32,6 +38,10 @@ export default function AppointmentsPage() {
     type: "closed",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
+    { type: "closed" },
+  );
 
   const closeDialog = () => {
     setDialogState({ type: "closed" });
@@ -54,12 +64,14 @@ export default function AppointmentsPage() {
     try {
       if (dialogState.type === "edit") {
         await update(dialogState.appointment._id, data);
+        toast.success("Appointment updated successfully");
       } else {
         await create(data);
+        toast.success("Appointment added successfully");
       }
       closeDialog();
     } catch (error) {
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Failed to save appointment",
       );
     } finally {
@@ -75,9 +87,10 @@ export default function AppointmentsPage() {
       await update(dialogState.appointment._id, {
         generatedQuestions: questions,
       });
+      toast.success("Questions saved successfully");
       closeDialog();
     } catch (error) {
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Failed to save questions",
       );
     } finally {
@@ -85,13 +98,30 @@ export default function AppointmentsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteRequest = (id: string) => {
+    const appointment = appointments.find((a) => a._id === id);
+    if (appointment) {
+      setDeleteDialogState({
+        type: "confirm",
+        appointmentId: id,
+        doctorName: appointment.doctorName,
+      });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteDialogState.type !== "confirm") return;
+    setIsDeleting(true);
     try {
-      await remove(id);
+      await remove(deleteDialogState.appointmentId);
+      toast.success("Appointment deleted successfully");
+      setDeleteDialogState({ type: "closed" });
     } catch (error) {
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Failed to delete appointment",
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -117,74 +147,114 @@ export default function AppointmentsPage() {
 
   return (
     <div className='container mx-auto py-8 px-4'>
-      <div className='flex justify-between items-center'>
+      <div className='max-w-7xl mx-auto'>
         <h1 className='text-3xl font-bold'>Appointments</h1>
-      </div>
+        <AppointmentsList
+          appointments={appointments}
+          onAdd={handleAdd}
+          onEdit={handleEdit}
+          onDelete={handleDeleteRequest}
+          onGenerateQuestions={handlePrepare}
+        />
 
-      <AppointmentsList
-        appointments={appointments}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onPrepareForVisit={handlePrepare}
-      />
-
-      {/* Add/Edit Appointment Dialog */}
-      <Dialog
-        open={dialogState.type === "add" || dialogState.type === "edit"}
-        onOpenChange={(open) => {
-          if (!open) closeDialog();
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {dialogState.type === "edit"
-                ? "Edit Appointment"
-                : "Add Appointment"}
-            </DialogTitle>
-          </DialogHeader>
-          <AppointmentForm
-            defaultValues={
-              dialogState.type === "edit"
-                ? {
-                    date: dialogState.appointment.date,
-                    doctorName: dialogState.appointment.doctorName,
-                    reason: dialogState.appointment.reason,
-                    symptoms: dialogState.appointment.symptoms,
-                    notes: dialogState.appointment.notes,
-                    generatedQuestions:
-                      dialogState.appointment.generatedQuestions,
-                  }
-                : undefined
-            }
-            onSubmit={handleSubmit}
-            onCancel={closeDialog}
-            isSubmitting={isSubmitting}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Prepare for Visit Dialog */}
-      <Dialog
-        open={dialogState.type === "prepare"}
-        onOpenChange={(open) => {
-          if (!open) closeDialog();
-        }}
-      >
-        <DialogContent>
-          {dialogState.type === "prepare" && (
-            <PrepareForVisit
-              appointment={dialogState.appointment}
-              symptomLogs={symptoms}
-              allAppointments={appointments}
-              onSave={handleSaveQuestions}
+        {/* Add/Edit Appointment Dialog */}
+        <Dialog
+          open={dialogState.type === "add" || dialogState.type === "edit"}
+          onOpenChange={(open) => {
+            if (!open) closeDialog();
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {dialogState.type === "edit"
+                  ? "Edit Appointment"
+                  : "Add Appointment"}
+              </DialogTitle>
+            </DialogHeader>
+            <AppointmentForm
+              defaultValues={
+                dialogState.type === "edit"
+                  ? {
+                      date: dialogState.appointment.date,
+                      doctorName: dialogState.appointment.doctorName,
+                      reason: dialogState.appointment.reason,
+                      symptoms: dialogState.appointment.symptoms,
+                      notes: dialogState.appointment.notes,
+                      generatedQuestions:
+                        dialogState.appointment.generatedQuestions,
+                    }
+                  : undefined
+              }
+              onSubmit={handleSubmit}
               onCancel={closeDialog}
               isSubmitting={isSubmitting}
             />
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+
+        {/* Prepare for Visit Dialog */}
+        <Dialog
+          open={dialogState.type === "prepare"}
+          onOpenChange={(open) => {
+            if (!open) closeDialog();
+          }}
+        >
+          <DialogContent>
+            {dialogState.type === "prepare" && (
+              <GenerateQuestions
+                appointment={dialogState.appointment}
+                symptomLogs={symptoms}
+                allAppointments={appointments}
+                onSave={handleSaveQuestions}
+                onCancel={closeDialog}
+                isSubmitting={isSubmitting}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogState.type === "confirm"}
+          onOpenChange={(open) => {
+            if (!open) setDeleteDialogState({ type: "closed" });
+          }}
+        >
+          <DialogContent className='max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Delete Appointment</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-4'>
+              <p className='text-sm text-muted-foreground'>
+                Are you sure you want to delete the appointment with{" "}
+                <span className='font-semibold text-foreground'>
+                  {deleteDialogState.type === "confirm"
+                    ? deleteDialogState.doctorName
+                    : ""}
+                </span>
+                ? This action cannot be undone.
+              </p>
+              <div className='flex justify-end gap-3'>
+                <Button
+                  variant='outline'
+                  onClick={() => setDeleteDialogState({ type: "closed" })}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant='destructive'
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

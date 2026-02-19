@@ -8,7 +8,7 @@ interface AppointmentsListProps {
   appointments: Appointment[];
   onEdit: (appointment: Appointment) => void;
   onDelete: (id: string) => void;
-  onPrepareForVisit: (appointment: Appointment) => void;
+  onGenerateQuestions: (appointment: Appointment) => void;
   onAdd: () => void;
 }
 
@@ -16,7 +16,7 @@ export function AppointmentsList({
   appointments,
   onEdit,
   onDelete,
-  onPrepareForVisit,
+  onGenerateQuestions,
   onAdd,
 }: AppointmentsListProps) {
   const formatDate = (timestamp: number) => {
@@ -71,15 +71,7 @@ export function AppointmentsList({
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this appointment?",
-                          )
-                        ) {
-                          onDelete(appointment._id);
-                        }
-                      }}
+                      onClick={() => onDelete(appointment._id)}
                     >
                       Delete
                     </Button>
@@ -132,7 +124,7 @@ export function AppointmentsList({
                   <Button
                     variant='outline'
                     size='sm'
-                    onClick={() => onPrepareForVisit(appointment)}
+                    onClick={() => onGenerateQuestions(appointment)}
                   >
                     {appointment.generatedQuestions &&
                     appointment.generatedQuestions.length > 0

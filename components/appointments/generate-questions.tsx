@@ -11,7 +11,7 @@ import { Sparkles } from 'lucide-react';
 import type { Appointment } from '@/lib/schemas/appointment';
 import type { Symptom } from '@/lib/schemas/symptom';
 
-interface PrepareForVisitProps {
+interface GenerateQuestionsProps {
   appointment: Appointment;
   symptomLogs: Symptom[];
   allAppointments: Appointment[];
@@ -31,13 +31,13 @@ function textToQuestions(text: string): string[] {
     .filter((q) => q.length > 0);
 }
 
-export function PrepareForVisit({
+export function GenerateQuestions({
   appointment,
   allAppointments,
   onSave,
   onCancel,
   isSubmitting,
-}: PrepareForVisitProps) {
+}: GenerateQuestionsProps) {
   const [text, setText] = useState(
     questionsToText(appointment.generatedQuestions || [])
   );
@@ -77,7 +77,7 @@ export function PrepareForVisit({
   return (
     <div className="space-y-4">
       <DialogHeader>
-        <DialogTitle>Prepare for Visit</DialogTitle>
+        <DialogTitle>Generate Questions</DialogTitle>
       </DialogHeader>
 
       <div className="space-y-4">
