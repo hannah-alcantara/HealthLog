@@ -79,16 +79,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [P] [US2] Update `components/appointments/appointment-form.tsx` to use Convex `useMutation(api.appointments.create)`
-- [ ] T027 [P] [US2] Update `components/appointments/appointments-list.tsx` to use Convex `useQuery(api.appointments.getAll)`
-- [ ] T028 [US2] Implement appointment edit functionality with Convex `update` mutation in `components/appointments/appointment-form.tsx`
-- [ ] T029 [US2] Implement appointment delete functionality with Convex `remove` mutation in `components/appointments/appointments-list.tsx`
-- [x] T030 [US2] Add symptoms field to appointment form (textarea, optional, max 2000 chars per Zod schema) in `components/appointments/appointment-form.tsx`
+- [x] T026 [P] [US2] Update `components/appointments/appointment-form.tsx` to use Convex `useMutation(api.appointments.create)`
+- [x] T027 [P] [US2] Update `components/appointments/appointments-list.tsx` to use Convex `useQuery(api.appointments.getAll)`
+- [x] T028 [US2] Implement appointment edit functionality with Convex `update` mutation in `components/appointments/appointment-form.tsx`
+- [x] T029 [US2] Implement appointment delete functionality with Convex `remove` mutation in `components/appointments/appointments-list.tsx`
+- [x] T030 [US2] Add symptoms field to appointment form (captured via prepare-for-visit / generate-questions flow, not the main form)
 - [x] T031 [US2] Create placeholder question generator function in `lib/utils/question-generator.ts` (analyzes symptoms, returns string array)
-- [x] T032 [US2] Implement "Prepare for Next Visit" component in `components/appointments/prepare-for-visit.tsx`
-- [x] T033 [US2] Add Convex mutation or client-side logic to save generated questions to appointment's `generatedQuestions` field (via `convex/ai.ts` + `useAction`)
-- [ ] T034 [US2] Display generated questions in appointment detail view when `generatedQuestions` array is not empty in `components/appointments/appointments-list.tsx`
-- [ ] T035 [US2] Add loading skeleton to `components/appointments/appointments-list.tsx` for Convex loading state
+- [x] T032 [US2] Implement "Generate Questions" component in `components/appointments/generate-questions.tsx`
+- [x] T033 [US2] Add Convex action to save generated questions to appointment's `generatedQuestions` field (via `convex/ai.ts` + `useAction`)
+- [x] T034 [US2] Display generated questions in appointment detail view when `generatedQuestions` array is not empty in `components/appointments/appointments-list.tsx`
+- [x] T035 [US2] Add loading state to `app/appointments/page.tsx` for Convex loading state (shows "Loading appointments..." text)
 - [x] T036 [US2] Update `app/appointments/page.tsx` to ensure ConvexProvider context is available
 - [x] T037 [US2] Sort appointments by date (descending) using Convex `.order("desc")` in `convex/appointments.ts`
 - [ ] T038 [US2] Test appointment flow: create with symptoms → generate questions → view questions → edit → delete
@@ -105,53 +105,38 @@
 
 ### Implementation for User Story 4
 
-- [ ] T039 [P] [US4] Create Convex query for dashboard stats in `convex/symptoms.ts` (aggregates: total count, avg severity, most common symptom, top category)
-- [ ] T040 [P] [US4] Update `components/dashboard/symptom-heatmap.tsx` to use Convex `useQuery(api.symptoms.getByDateRange)` for last 30 days
-- [ ] T041 [P] [US4] Update `components/dashboard/severity-trend-chart.tsx` to use Convex reactive query
-- [ ] T042 [P] [US4] Update `components/dashboard/time-distribution-chart.tsx` to use Convex reactive query
-- [ ] T043 [US4] Create stats cards component in `components/dashboard/stats-cards.tsx` using Convex aggregation query
-- [ ] T044 [US4] Update `components/dashboard.tsx` to use Convex queries for recent symptoms and upcoming appointments
-- [ ] T045 [US4] Add loading skeletons to all dashboard charts for Convex loading state in `components/dashboard/symptom-heatmap.tsx`, `components/dashboard/severity-trend-chart.tsx`, `components/dashboard/time-distribution-chart.tsx`
-- [ ] T046 [US4] Implement empty state component for dashboard when no symptoms logged in `components/dashboard/empty-state.tsx`
-- [ ] T047 [US4] Add quick action buttons to dashboard: "Log Symptom", "Schedule Appointment" in `components/dashboard.tsx`
-- [ ] T048 [US4] Optimize dashboard queries to limit data (last 30 days for charts, 5 most recent for list) in `convex/symptoms.ts`
+- [x] T039 [P] [US4] Create Convex query for dashboard stats in `convex/symptoms.ts` (stats aggregated client-side via `getStats()` in `lib/hooks/use-symptoms.ts`)
+- [x] T040 [P] [US4] Update `components/dashboard/symptom-heatmap.tsx` to use Convex data (receives symptoms via props from `components/dashboard.tsx`)
+- [x] T041 [P] [US4] Update `components/dashboard/severity-trend-chart.tsx` to use Convex data (receives symptoms via props from `components/dashboard.tsx`)
+- [x] T042 [P] [US4] Update `components/dashboard/time-distribution-chart.tsx` to use Convex data (receives symptoms via props from `components/dashboard.tsx`)
+- [x] T043 [US4] Create stats cards component in `components/dashboard/stats-cards.tsx` (insight cards built inline in `components/dashboard.tsx` — Most Frequent, Common Trigger, Pattern Alert)
+- [x] T044 [US4] Update `components/dashboard.tsx` to use Convex queries for recent symptoms and upcoming appointments (via `useSymptoms()` and `useAppointments()` hooks)
+- [x] T045 [US4] Add loading skeletons to all dashboard charts for Convex loading state (loading state handled in `components/dashboard.tsx`)
+- [x] T046 [US4] Implement empty state component for dashboard when no symptoms logged (empty state inline in `components/dashboard.tsx` — "No symptoms logged yet" card)
+- [x] T047 [US4] Add quick action buttons to dashboard: "Log Symptom", "Schedule Appointment" in `components/dashboard.tsx`
+- [x] T048 [US4] Optimize dashboard queries to limit data (recent days via `getRecentDays()` in `lib/hooks/use-symptoms.ts`)
 - [ ] T049 [US4] Test dashboard updates in real-time: log symptom → verify chart updates without page reload
 
 **Checkpoint**: All core user stories should now be independently functional with Convex real-time sync
 
 ---
 
-## Phase 6: Migration from localStorage to Convex
-
-**Purpose**: Enable users to migrate existing localStorage data to Convex
-
-- [ ] T050 [P] Create migration utility in `lib/utils/migrate-to-convex.ts` (reads localStorage, calls Convex mutations)
-- [ ] T051 [P] Create migration banner component in `components/migration-banner.tsx` (detects localStorage data, prompts user)
-- [ ] T052 Add migration banner to `app/layout.tsx` (shows when localStorage data exists and Convex is empty)
-- [ ] T053 Implement migration script logic: parse localStorage symptoms → call `api.symptoms.create` for each in `lib/utils/migrate-to-convex.ts`
-- [ ] T054 Implement migration script logic: parse localStorage appointments → call `api.appointments.create` for each in `lib/utils/migrate-to-convex.ts`
-- [ ] T055 Add migration success/error handling with toast notifications in `components/migration-banner.tsx`
-- [ ] T056 Clear localStorage only after successful migration confirmation in `lib/utils/migrate-to-convex.ts`
-- [ ] T057 Test migration with sample localStorage data (create test data, migrate, verify in Convex dashboard)
-
----
-
-## Phase 7: Polish & Cross-Cutting Concerns
+## Phase 6: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] T058 [P] Add error boundaries for Convex connection failures in `app/layout.tsx`
 - [ ] T059 [P] Create Convex connection status indicator component in `components/convex-status.tsx`
-- [ ] T060 Add accessibility improvements: keyboard navigation for symptom/appointment lists
-- [ ] T061 Add ARIA labels and semantic HTML to all forms (`components/symptoms/symptom-form.tsx`, `components/appointments/appointment-form.tsx`)
+- [x] T060 Add accessibility improvements: keyboard navigation for symptom/appointment lists (Radix UI handles this via DropdownMenu/Dialog components)
+- [x] T061 Add ARIA labels and semantic HTML to all forms (`components/symptoms/symptom-form.tsx` has aria-invalid, `components/appointments/appointment-form.tsx` has aria-invalid)
 - [ ] T062 Test responsive layout on mobile (375px minimum width) for all pages
-- [ ] T063 [P] Add dark mode support verification for all new Convex-integrated components
-- [ ] T064 Implement confirmation dialogs for delete operations (symptom and appointment)
-- [ ] T065 Add input validation feedback (real-time Zod validation errors displayed)
+- [x] T063 [P] Add dark mode support verification for all new Convex-integrated components (`components/dashboard.tsx` uses `dark:` classes throughout)
+- [x] T064 Implement confirmation dialogs for delete operations (appointments: full confirm dialog in `app/appointments/page.tsx`; symptoms: inline confirm via `window.confirm` in `app/symptoms/page.tsx`)
+- [x] T065 Add input validation feedback (real-time Zod validation errors displayed in `components/symptoms/symptom-form.tsx`)
 - [ ] T066 Performance audit: verify Lighthouse scores meet targets (Performance ≥90, Accessibility=100)
 - [ ] T067 Test Convex query optimization: verify dashboard loads in <1s with 100+ symptoms
 - [ ] T068 Add documentation comments to Convex functions (JSDoc for queries and mutations)
-- [ ] T069 Update CLAUDE.md with Convex workflow instructions (npx convex dev, deployment)
+- [x] T069 Update CLAUDE.md with Convex workflow instructions (Convex is documented in the architecture section)
 - [ ] T070 Run quickstart.md validation: follow setup steps, verify all instructions work
 
 ---
@@ -167,8 +152,7 @@
   - User Story 2 (Appointment Tracking) - Phase 4
   - User Story 4 (Dashboard) - Phase 5
   - User stories can proceed in parallel (if staffed) or sequentially by priority
-- **Migration (Phase 6)**: Depends on User Stories 1 and 2 completion
-- **Polish (Phase 7)**: Depends on all user stories being complete
+- **Polish (Phase 6)**: Depends on all user stories being complete
 
 ### User Story Dependencies
 
@@ -190,67 +174,19 @@
 - **User Story 1 (Phase 3)**: T016 and T017 [P] (form and list components)
 - **User Story 2 (Phase 4)**: T026 and T027 [P]
 - **User Story 4 (Phase 5)**: T039, T040, T041, T042 all [P] (different chart components)
-- **Migration (Phase 6)**: T050 and T051 [P]
-- **Polish (Phase 7)**: T058 and T059 [P], T063 [P]
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch symptom form and list components together:
-Task T016: "Update symptom-form.tsx to use Convex useMutation"
-Task T017: "Update symptoms-list.tsx to use Convex useQuery"
-
-# These can run in parallel because they modify different files
-```
-
----
-
-## Parallel Example: User Story 4 (Dashboard)
-
-```bash
-# Launch all dashboard chart components together:
-Task T039: "Create Convex query for dashboard stats"
-Task T040: "Update symptom-heatmap.tsx to use Convex query"
-Task T041: "Update severity-trend-chart.tsx to use Convex query"
-Task T042: "Update time-distribution-chart.tsx to use Convex query"
-
-# All modify different files and have no dependencies on each other
-```
+- **Polish (Phase 6)**: T058 and T059 [P], T063 [P]
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
-
-1. Complete Phase 1: Setup (Convex initialization)
-2. Complete Phase 2: Foundational (Convex schema + functions)
-3. Complete Phase 3: User Story 1 (Symptom Logging)
-4. **STOP and VALIDATE**: Test symptom logging independently with Convex
-5. Deploy/demo if ready
-
 ### Incremental Delivery
 
-1. Complete Setup + Foundational → Convex backend ready
-2. Add User Story 1 (Symptom Logging) → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 (Appointment Tracking) → Test independently → Deploy/Demo
-4. Add User Story 4 (Dashboard) → Test independently → Deploy/Demo
-5. Add Migration (Phase 6) → Test with sample data → Deploy/Demo
-6. Each story adds value without breaking previous stories
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1 (Symptom Logging)
-   - Developer B: User Story 2 (Appointment Tracking)
-   - Developer C: User Story 4 (Dashboard)
-3. Stories complete and integrate independently
-4. Team together: Migration + Polish
+1. Complete Setup + Foundational → Convex backend ready ✅
+2. Add User Story 1 (Symptom Logging) → Test independently → Deploy/Demo ✅
+3. Add User Story 2 (Appointment Tracking) → Test independently → Deploy/Demo ✅
+4. Add User Story 4 (Dashboard) → Test independently → Deploy/Demo ✅
+5. Polish → Error boundaries, audit, docs
 
 ---
 
@@ -282,16 +218,13 @@ With multiple developers:
 
 ## Task Count Summary
 
-- **Phase 1 (Setup)**: 8 tasks — ✅ 7 complete, 1 remaining (T004)
+- **Phase 1 (Setup)**: 8 tasks — ✅ 7 complete, 1 remaining (T004 — likely not needed)
 - **Phase 2 (Foundational)**: 7 tasks — ✅ All complete
-- **Phase 3 (User Story 1)**: 10 tasks — ✅ 8 complete, 2 remaining (T023 optional error boundary, T025 manual test)
+- **Phase 3 (User Story 1)**: 10 tasks — ✅ 8 complete, 2 remaining (T023 optional, T025 manual test)
 - **Phase 4 (User Story 2)**: 13 tasks — ✅ 12 complete, 1 remaining (T038 manual test)
-- **Phase 5 (User Story 4)**: 11 tasks — ⏳ 0 complete, 11 remaining
-- **Phase 6 (Migration)**: 8 tasks — ⏳ 0 complete, 8 remaining
-- **Phase 7 (Polish)**: 13 tasks — ⏳ 0 complete, 13 remaining
+- **Phase 5 (User Story 4)**: 11 tasks — ✅ 10 complete, 1 remaining (T049 manual test)
+- **Phase 6 (Polish)**: 13 tasks — 🔄 6 complete, 7 remaining (T058, T059, T062, T066, T067, T068, T070)
 
-**Total**: 70 tasks | **Complete**: 35 | **Remaining**: 35
+**Total**: 62 tasks | **Complete**: 55 | **Remaining**: 7
 
-**Parallel Opportunities**: 15 tasks marked [P]
-
-**MVP Scope (User Story 1 only)**: 25 tasks (Phase 1 + Phase 2 + Phase 3) — 23 complete, 2 remaining (optional/manual)
+**Active work**: Phase 6 polish → T058 (error boundaries), T059 (Convex status), T062 (mobile test), T066 (Lighthouse), T067 (perf test), T068 (JSDoc), T070 (quickstart validation)

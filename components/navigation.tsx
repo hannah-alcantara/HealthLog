@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { HealthLogIcon } from "@/components/health-log-icon";
@@ -14,13 +14,19 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Menu, X } from "lucide-react";
+import { Menu, Plus, X } from "lucide-react";
 
 export function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogSymptom = () => {
+    router.push("/?action=log");
+    closeMobileMenu();
+  };
 
   const links = [
     { href: "/", label: "Dashboard" },
@@ -33,7 +39,7 @@ export function Navigation() {
   return (
     <nav className='sticky top-0 z-50 border-b bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-black/60'>
       <div className='container mx-auto px-4'>
-        <div className='flex h-16 items-center justify-between'>
+        <div className='max-w-7xl mx-auto flex h-16 items-center justify-between'>
           <div className='flex items-center gap-6'>
             <Link href='/' className='flex items-center gap-2'>
               <HealthLogIcon size={22} className="text-primary" />
@@ -63,9 +69,13 @@ export function Navigation() {
           </div>
 
           <div className='flex items-center gap-4'>
-            {/* User Button - Desktop Only */}
+            {/* Log Symptom Button + User Button - Desktop Only */}
             {isLoaded && isSignedIn && (
-              <div className='hidden md:block'>
+              <div className='hidden md:flex items-center gap-3'>
+                <Button size='sm' onClick={handleLogSymptom} className='flex items-center gap-1.5'>
+                  <Plus className='h-4 w-4' />
+                  Log Symptom
+                </Button>
                 <UserButton afterSignOutUrl='/' />
               </div>
             )}

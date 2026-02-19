@@ -10,6 +10,7 @@
 Building a healthcare tracking application with symptom logging, appointment tracking, and dashboard analytics. The application uses **Convex** as the backend-as-a-service with **Clerk** for authentication, providing real-time data synchronization and cloud storage. The frontend is built with Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS 4.
 
 **Core Features**:
+
 - **Dashboard**: Personalized health insights with frequency patterns, trigger analysis, and day-of-week patterns
 - **Symptom Tracking**: Complete CRUD with analytics (heatmaps, severity trends, time distribution)
 - **Appointment Management**: CRUD with appointment preparation and AI-generated questions based on symptom history
@@ -21,52 +22,58 @@ Building a healthcare tracking application with symptom logging, appointment tra
 **Language/Version**: TypeScript 5.x with Next.js 16.0.8, React 19.2.1
 
 **Primary Dependencies**:
-  - **Backend**: Convex (real-time BaaS with TypeScript schema, queries, mutations)
-  - **Authentication**: Clerk (@clerk/nextjs) - User authentication and session management
-  - **UI Framework**: Next.js 16 App Router, React 19, Tailwind CSS 4
-  - **Validation**: Zod 4.1.13 (client-side schemas)
-  - **Forms**: react-hook-form 7.68.0, @hookform/resolvers 5.2.2
-  - **UI Components**: Radix UI (dialog, dropdown, select, popover), lucide-react (icons)
-  - **Charts**: Recharts 3.6.0 (symptom analytics)
-  - **Date Handling**: date-fns 4.1.0, react-day-picker 9.12.0
-  - **Notifications**: sonner 2.0.7 (toast notifications)
+
+- **Backend**: Convex (real-time BaaS with TypeScript schema, queries, mutations)
+- **Authentication**: Clerk (@clerk/nextjs) - User authentication and session management
+- **UI Framework**: Next.js 16 App Router, React 19, Tailwind CSS 4
+- **Validation**: Zod 4.1.13 (client-side schemas)
+- **Forms**: react-hook-form 7.68.0, @hookform/resolvers 5.2.2
+- **UI Components**: Radix UI (dialog, dropdown, select, popover), lucide-react (icons)
+- **Charts**: Recharts 3.6.0 (symptom analytics)
+- **Date Handling**: date-fns 4.1.0, react-day-picker 9.12.0
+- **Notifications**: sonner 2.0.7 (toast notifications)
 
 **Storage**: Convex cloud database with real-time synchronization (localStorage completely removed)
 
 **Testing**:
-  - **Unit/Integration**: Jest 30.2.0, React Testing Library 16.3.0
-  - **E2E**: Playwright 1.57.0
-  - **Coverage Targets**: 80% utilities, 90% business logic, 100% data validation
+
+- **Unit/Integration**: Jest 30.2.0, React Testing Library 16.3.0
+- **E2E**: Playwright 1.57.0
+- **Coverage Targets**: 80% utilities, 90% business logic, 100% data validation
 
 **Target Platform**: Web application (responsive mobile-first design, desktop support)
 
 **Project Type**: Web (Next.js full-stack with Convex backend)
 
 **Performance Goals**:
-  - FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, CLS < 0.1
-  - Data entry forms: <100ms feedback with optimistic updates
-  - Charts: <500ms render for 30 days of symptom data
-  - Search/Filter: <300ms for typical datasets
+
+- FCP < 1.8s, LCP < 2.5s, TTI < 3.5s, CLS < 0.1
+- Data entry forms: <100ms feedback with optimistic updates
+- Charts: <500ms render for 30 days of symptom data
+- Search/Filter: <300ms for typical datasets
 
 **Constraints**:
-  - WCAG 2.1 AA accessibility compliance
-  - Mobile-first responsive (375px minimum width)
-  - Real-time data sync across devices via Convex
-  - Lighthouse scores: Performance ≥90, Accessibility=100, Best Practices ≥90
-  - Bundle sizes: JS <200KB gzipped, CSS <50KB gzipped
+
+- WCAG 2.1 AA accessibility compliance
+- Mobile-first responsive (375px minimum width)
+- Real-time data sync across devices via Convex
+- Lighthouse scores: Performance ≥90, Accessibility=100, Best Practices ≥90
+- Bundle sizes: JS <200KB gzipped, CSS <50KB gzipped
 
 **Scale/Scope**:
-  - Single-user health tracking application with Clerk authentication
-  - Expected dataset: 100-500 symptom logs per user
-  - 3 main sections: Dashboard, Symptoms, Appointments
-  - Responsive mobile-first UI with dark mode support
-  - Cloud-based with Convex real-time synchronization
+
+- Single-user health tracking application with Clerk authentication
+- Expected dataset: 100-500 symptom logs per user
+- 3 main sections: Dashboard, Symptoms, Appointments
+- Responsive mobile-first UI with dark mode support
+- Cloud-based with Convex real-time synchronization
 
 ## Constitution Check
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Code Quality Requirements
+
 - [x] TypeScript strict mode enabled (already configured in tsconfig.json)
 - [x] ESLint configured with Next.js rules (eslint-config-next active)
 - [x] Zero `any` types policy (will be enforced via review)
@@ -75,12 +82,14 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Functions under 50 lines (will be enforced via review)
 
 ### Testing Standards
+
 - [x] Jest + React Testing Library configured (package.json scripts present)
 - [x] Playwright for E2E testing (installed and configured)
 - [x] Coverage targets defined: 80% utilities, 90% business logic, 100% validation
 - [ ] **ACTION REQUIRED**: Convex-specific testing patterns need research (Phase 0)
 
 ### User Experience Consistency
+
 - [x] Tailwind CSS 4 with theme variables in globals.css
 - [x] Radix UI component library (accessible by default)
 - [x] Dark mode support via CSS variables
@@ -88,12 +97,14 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] WCAG 2.1 AA compliance required
 
 ### Performance Requirements
+
 - [x] Core Web Vitals targets defined
 - [x] Bundle size limits: JS <200KB, CSS <50KB
 - [x] Performance budgets per feature type
 - [ ] **ACTION REQUIRED**: Convex query optimization patterns need research (Phase 0)
 
 ### Data Integrity & Security
+
 - [x] Zod validation on client side (already implemented)
 - [ ] **ACTION REQUIRED**: Convex validators for server-side validation (Phase 0)
 - [ ] **ACTION REQUIRED**: Convex authentication strategy (Phase 0)
@@ -104,6 +115,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 **STATUS**: ✅ PASS with clarifications required in Phase 0
 
 **Required Research Items**:
+
 1. Convex testing patterns and best practices
 2. Convex query optimization for health data
 3. Convex authentication setup (anonymous vs authenticated users)
@@ -117,6 +129,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 **All research items from Phase 0 have been resolved. Re-evaluating gates:**
 
 ### Code Quality Requirements
+
 - [x] TypeScript strict mode enabled (already configured in tsconfig.json)
 - [x] ESLint configured with Next.js rules (eslint-config-next active)
 - [x] Zero `any` types policy (enforced via review, minimal usage in Convex type casting)
@@ -126,6 +139,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Functions under 50 lines (will be enforced via review)
 
 ### Testing Standards
+
 - [x] Jest + React Testing Library configured
 - [x] Playwright for E2E testing
 - [x] **Convex Test** framework for backend function testing (resolved)
@@ -133,6 +147,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Test patterns documented in research.md
 
 ### User Experience Consistency
+
 - [x] Tailwind CSS 4 with theme variables
 - [x] Radix UI component library (accessible)
 - [x] Dark mode support via CSS variables
@@ -140,6 +155,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] WCAG 2.1 AA compliance required
 
 ### Performance Requirements
+
 - [x] Core Web Vitals targets defined
 - [x] Bundle size limits: JS <200KB, CSS <50KB
 - [x] **Convex query optimization patterns documented** (resolved)
@@ -147,6 +163,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Pagination strategy for large datasets (500+ records)
 
 ### Data Integrity & Security
+
 - [x] Zod validation on client side (lib/schemas/)
 - [x] **Convex validators for server-side validation** (resolved)
 - [x] **Convex anonymous authentication strategy** (resolved)
@@ -158,11 +175,12 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 **STATUS**: ✅ PASS
 
 **Key Decisions Made**:
+
 1. **Testing**: Convex Test for backend (100% coverage), Jest + RTL for frontend (90% coverage)
 2. **Authentication**: Clerk authentication (replaced anonymous auth) with userId-based data ownership
 3. **Query Optimization**: Indexed queries on (userId, date) with reactive subscriptions
 4. **Validation**: Dual-layer (Zod client + Convex server validators)
-5. **Storage**: Convex cloud database only (localStorage completely removed)
+5. **Storage**: Convex cloud database only
 6. **Scope Reduction**: Medical history and onboarding features removed to focus on core symptom/appointment tracking
 
 **No Constitution Violations**: All requirements met without compromise.
@@ -260,8 +278,6 @@ This is a **Next.js full-stack web application** with Convex as the backend-as-a
 1. **Frontend** (app/, components/, lib/): Next.js App Router with React Server/Client Components
 2. **Backend** (convex/): Convex schema, queries, and mutations (TypeScript)
 3. **Shared Schemas** (lib/schemas/): Zod schemas for client-side validation that mirror Convex validators
-
-The existing localStorage-based implementation in `lib/storage/` will be **replaced** with Convex hooks in `lib/hooks/`. The current `BaseStorage` class approach will be deprecated in favor of Convex's `useQuery` and `useMutation` React hooks.
 
 ## Complexity Tracking
 

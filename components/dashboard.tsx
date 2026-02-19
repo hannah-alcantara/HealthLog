@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
@@ -18,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Symptom, CreateSymptomInput } from "@/lib/schemas/symptom";
-import { StandaloneQuestionGenerator } from "@/components/appointments/standalone-question-generator";
+import { GenerateQuestions } from "@/components/appointments/generate-questions";
 import { toast } from "sonner";
 import { Plus, Sparkles, TrendingUp, Zap, TriangleAlert } from "lucide-react";
 
@@ -33,6 +34,8 @@ type DeleteDialogState =
 
 export function Dashboard() {
   const { user } = useUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     symptoms,
     loading: symptomsLoading,
@@ -54,6 +57,13 @@ export function Dashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showQuestionGenerator, setShowQuestionGenerator] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "log") {
+      setDialogState({ type: "add" });
+      router.replace("/");
+    }
+  }, [searchParams, router]);
 
   const stats = !symptomsLoading
     ? getStats()
@@ -278,15 +288,6 @@ export function Dashboard() {
             Good Morning,{user?.firstName ? ` ${user.firstName}` : ""}! How are
             you feeling today?
           </h1>
-          {/* Desktop Button - Hidden on Mobile */}
-          <Button
-            onClick={handleAdd}
-            size='lg'
-            className='hidden sm:flex items-center gap-2 whitespace-nowrap'
-          >
-            <Plus className='h-5 w-5' />
-            Log Symptom
-          </Button>
         </div>
 
         {/* Stats Cards - Health Insights */}
@@ -455,7 +456,7 @@ export function Dashboard() {
                       <Button
                         variant='secondary'
                         size='sm'
-                        className='w-full'
+                        className='btn-gradient-shift w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-500 text-white border-0 transition-shadow duration-200 hover:shadow-lg hover:shadow-emerald-500/25'
                         onClick={() => setShowQuestionGenerator(true)}
                       >
                         Generate Questions
@@ -623,9 +624,9 @@ export function Dashboard() {
             <DialogHeader>
               <DialogTitle>Generate Questions</DialogTitle>
             </DialogHeader>
-            <StandaloneQuestionGenerator
-              appointments={appointments}
-              onClose={() => setShowQuestionGenerator(false)}
+            <GenerateQuestions
+              allAppointments={appointments}
+              onCancel={() => setShowQuestionGenerator(false)}
             />
           </DialogContent>
         </Dialog>
