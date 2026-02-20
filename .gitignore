@@ -44,4 +44,4 @@ next-env.d.ts
 
 # convex
 .convex/
-convex/_generated/
+# Note: convex/_generated/ is committed to fix Vercel builds
