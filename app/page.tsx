@@ -1,11 +1,27 @@
-import { auth } from "@clerk/nextjs/server";
+"use client";
+
+import { useAuth } from "@clerk/nextjs";
 import { LandingPage } from "@/components/landing-page";
 import { Dashboard } from "@/components/dashboard";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default async function HomePage() {
-  const { userId } = await auth();
+export default function HomePage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
 
-  if (!userId) {
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      // Refresh to ensure server-side auth is synced
+      router.refresh();
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded) {
+    return null; // or a loading spinner
+  }
+
+  if (!isSignedIn) {
     return <LandingPage />;
   }
 

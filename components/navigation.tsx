@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuth, useUser, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser, UserButton, useClerk } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { HealthLogIcon } from "@/components/health-log-icon";
 import {
@@ -22,7 +21,7 @@ export function Navigation() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
-  const userButtonRef = useRef<HTMLDivElement>(null);
+  const { signOut } = useClerk();
 
   const handleLogSymptom = () => {
     router.push("/?action=log");
@@ -152,27 +151,26 @@ export function Navigation() {
 
                     {/* User Profile Section */}
                     {isLoaded && isSignedIn && (
-                      <DrawerFooter>
-                        <button
-                          onClick={() => {
-                            userButtonRef.current
-                              ?.querySelector("button")
-                              ?.click();
-                          }}
-                          className='flex items-center gap-3 w-full p-2 rounded-md hover:bg-muted transition-colors'
-                        >
-                          <div ref={userButtonRef}>
-                            <UserButton />
-                          </div>
+                      <DrawerFooter className='space-y-2'>
+                        <div className='flex items-center gap-3 p-2'>
+                          <UserButton
+                            appearance={{
+                              elements: {
+                                userButtonPopoverCard: "!z-[100] pointer-events-auto",
+                                userButtonPopoverActionButton: "hover:bg-gray-100",
+                              },
+                            }}
+                          />
+
                           <div className='flex flex-col flex-1 min-w-0 text-left'>
                             <span className='text-sm font-medium truncate'>
                               {user?.firstName || user?.username || "User"}
                             </span>
                             <span className='text-xs text-muted-foreground'>
-                              Manage account
+                              {user?.primaryEmailAddress?.emailAddress}
                             </span>
                           </div>
-                        </button>
+                        </div>
                       </DrawerFooter>
                     )}
                   </div>
