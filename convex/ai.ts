@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 
 /**
  * AI Actions using Gemini API
@@ -103,7 +104,7 @@ export const generateAppointmentQuestions = action({
               temperature: 0.7,
               topK: 40,
               topP: 0.95,
-              maxOutputTokens: 1024,
+              maxOutputTokens: 8192,
             },
           }),
         },
@@ -146,7 +147,7 @@ export const generateAppointmentQuestions = action({
  * - Recent notes from symptom logs
  */
 function formatSymptomDataForAI(
-  symptoms: any[],
+  symptoms: Doc<"symptoms">[],
   appointmentSymptoms?: string,
 ): string {
   if (symptoms.length === 0) {
@@ -161,7 +162,7 @@ function formatSymptomDataForAI(
   );
 
   // Group symptoms by type and analyze patterns
-  const symptomGroups: Record<string, any[]> = {};
+  const symptomGroups: Record<string, Doc<"symptoms">[]> = {};
   symptoms.forEach((symptom) => {
     if (!symptomGroups[symptom.symptomType]) {
       symptomGroups[symptom.symptomType] = [];
@@ -221,24 +222,20 @@ function createPrompt(
   symptomSummary: string,
   appointmentSymptoms?: string,
 ): string {
-  return `You are a medical assistant helping a patient prepare questions for their doctor appointment.
+  return `You are helping a patient jot down questions to bring up with their doctor at an upcoming appointment.
 
-Based on the following symptom history, generate 5 specific, actionable questions the patient should ask their doctor. The questions should:
-- Be personalized based on the symptom patterns shown
-- Focus on asking the doctor about potential causes, diagnostic tests, treatments, and management strategies
-- Address recurring symptoms and severity trends
-- Ask about potential triggers and lifestyle modifications
-- Be clear, direct, and open-ended to encourage doctor input
-- Prioritize the most concerning patterns first
+Based on their symptom history below, write 5 questions they could naturally say out loud in the appointment room. The questions should:
+- Sound like something a real person would actually say to their doctor, not a formal medical document
+- Be specific to the patterns in their data (mention the actual symptoms, triggers, or trends)
+- Invite the doctor's opinion rather than suggesting answers
+- Be warm and conversational in tone — short, clear sentences
+- Prioritize the most noticeable or recurring issues first
 
-IMPORTANT: Frame questions to ASK the doctor for their medical opinion and recommendations. Do NOT suggest diagnoses or specific treatments. Instead, ask questions like:
-- "What could be causing..." instead of "Could this be..."
-- "What tests would you recommend..." instead of "Should I get tested for..."
-- "What treatment options..." instead of "Would X medication help..."
+For example, prefer something like "I've been getting headaches a lot lately — do you think stress could be behind it?" over "What is the etiology of my recurring cephalgia?"
 
 ${symptomSummary}
 
-Generate exactly 5 questions, numbered 1-5. Each question should be on its own line starting with the number. Do not include any introductory text or explanations, just the numbered questions.`;
+Write exactly 5 questions, numbered 1-5, one per line. No intro text, no explanations — just the questions.`;
 }
 
 /**

@@ -23,7 +23,6 @@ import Link from "next/link";
 
 interface SymptomsListProps {
   symptoms: Symptom[];
-  onEdit: (symptom: Symptom) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
   showViewAll?: boolean;
@@ -60,7 +59,6 @@ function getSeverityColor(severity: number): string {
 
 export function SymptomsList({
   symptoms,
-  onEdit,
   onDelete,
   showViewAll = false,
 }: SymptomsListProps) {
@@ -74,23 +72,89 @@ export function SymptomsList({
 
   return (
     <Card className='pb-0'>
-      <CardHeader className='px-8'>
+      <CardHeader className='px-4'>
         <div className='flex justify-between items-start'>
           <div className='space-y-1'>
-            <h2 className='text-2xl font-semibold'>Recent Symptoms</h2>
+            <h2 className='text-lg font-semibold'>Recent Symptoms</h2>
             <p className='text-sm text-muted-foreground'>
               Track and monitor your health symptoms
             </p>
           </div>
           {showViewAll && (
             <Link href='/symptoms'>
-              <Button>View All Symptoms</Button>
+              <Button>View All</Button>
             </Link>
           )}
         </div>
       </CardHeader>
       <CardContent className='px-0 border-t'>
-        <Table>
+        {/* Mobile: card list */}
+        <ul className='divide-y sm:hidden'>
+          {symptoms.map((symptom) => (
+            <li
+              key={symptom._id}
+              className='flex items-center justify-between gap-3 px-4 py-3'
+            >
+              <Link
+                href={`/symptoms/${symptom._id}`}
+                className='flex-1 min-w-0'
+              >
+                <p className='font-medium truncate hover:text-primary transition-colors'>
+                  {symptom.symptomType}
+                </p>
+                <p className='text-xs text-muted-foreground mt-0.5'>
+                  {new Date(symptom.loggedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+                {symptom.triggers && (
+                  <p className='text-xs text-muted-foreground truncate mt-0.5'>
+                    {symptom.triggers}
+                  </p>
+                )}
+              </Link>
+              <div className='flex items-center gap-2 flex-shrink-0'>
+                <span
+                  className={`text-xs font-semibold px-2 py-1 rounded-md ${getSeverityColor(symptom.severity)}`}
+                >
+                  {symptom.severity}/10
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8'
+                      aria-label={`Actions for ${symptom.symptomType}`}
+                    >
+                      <MoreVertical className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/symptoms/${symptom._id}`} aria-label={`View details for ${symptom.symptomType}`}>
+                        <Pencil className='h-4 w-4' />
+                        Details
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(symptom._id)}
+                      className='text-destructive focus:text-destructive focus:bg-destructive/10'
+                    >
+                      <Trash2 className='h-4 w-4' />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: table */}
+        <Table className='hidden sm:table'>
           <TableHeader className='bg-muted'>
             <TableRow>
               <TableHead className='pl-8'>Date and Time</TableHead>
@@ -108,7 +172,12 @@ export function SymptomsList({
                   {formatDateTime(symptom.loggedAt)}
                 </TableCell>
                 <TableCell className='font-medium'>
-                  {symptom.symptomType}
+                  <Link
+                    href={`/symptoms/${symptom._id}`}
+                    className='hover:text-primary hover:underline transition-colors'
+                  >
+                    {symptom.symptomType}
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <span
@@ -130,15 +199,17 @@ export function SymptomsList({
                         variant='ghost'
                         size='icon'
                         className='h-8 w-8'
-                        aria-label='Open menu'
+                        aria-label={`Actions for ${symptom.symptomType}`}
                       >
                         <MoreVertical className='h-4 w-4' />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                      <DropdownMenuItem onClick={() => onEdit(symptom)}>
-                        <Pencil className='h-4 w-4' />
-                        Edit
+                      <DropdownMenuItem asChild>
+                        <Link href={`/symptoms/${symptom._id}`} aria-label={`View details for ${symptom.symptomType}`}>
+                          <Pencil className='h-4 w-4' />
+                          Details
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDelete(symptom._id)}

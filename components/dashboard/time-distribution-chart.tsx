@@ -72,31 +72,23 @@ export function TimeDistributionChart({
         const barWidth = maxCount > 0 ? (period.count / maxCount) * 100 : 0;
 
         return (
-          <div key={period.label} className='space-y-1'>
-            <div
-              className='flex justify-between items-center'
-              style={{ fontSize: 12 }}
-            >
-              <span
-                className='font-medium'
-                style={{ color: "hsl(var(--muted-foreground))", opacity: 0.8 }}
-              >
+          <div key={period.label} className='space-y-2'>
+            <div className='flex justify-between items-center text-xs'>
+              <span className='font-medium text-muted-foreground'>
                 {period.label} ({period.timeRange}):
               </span>
-              <span
-                style={{ color: "hsl(var(--muted-foreground))", opacity: 0.5 }}
-              >
+              <span className='text-muted-foreground'>
                 {period.percentage}%
               </span>
             </div>
-            <div className='relative h-6 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden'>
+            <div className='relative h-6 bg-muted rounded overflow-hidden'>
               <div
-                className='h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-300 flex items-center px-3'
+                className='h-full bg-emerald-500 transition-all duration-300 flex items-center px-3'
                 style={{ width: `${barWidth}%` }}
               >
                 {period.count > 0 && (
                   <span
-                    className='text-white font-medium'
+                    className='text-white font-medium whitespace-nowrap'
                     style={{ fontSize: 12 }}
                   >
                     {period.count} {period.count === 1 ? "symptom" : "symptoms"}

@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { subDays, eachWeekOfInterval, endOfWeek } from "date-fns";
+import { subDays, eachWeekOfInterval, endOfWeek, format } from "date-fns";
+
 import type { Symptom } from "@/lib/schemas/symptom";
 
 interface SeverityTrendChartProps {
@@ -83,10 +84,10 @@ export function SeverityTrendChart({
     );
 
     // Calculate weekly severity stats for each symptom
-    const weeklyData = weeks.map((weekStart, index) => {
+    const weeklyData = weeks.map((weekStart) => {
       const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
       const dataPoint: Record<string, string | number | null> = {
-        date: `Week ${index + 1}`,
+        date: format(weekStart, "MMM d"),
       };
 
       // Calculate average severity for each top symptom in this week
@@ -165,8 +166,7 @@ export function SeverityTrendChart({
             className='text-xs'
             tick={{
               fontSize: 12,
-              fill: "hsl(var(--muted-foreground))",
-              opacity: 0.5,
+              fill: "var(--color-muted-foreground)",
             }}
             tickLine={false}
             axisLine={false}
@@ -176,8 +176,7 @@ export function SeverityTrendChart({
             className='text-xs'
             tick={{
               fontSize: 12,
-              fill: "hsl(var(--muted-foreground))",
-              opacity: 0.5,
+              fill: "var(--color-muted-foreground)",
             }}
             tickLine={false}
             axisLine={false}
@@ -191,8 +190,7 @@ export function SeverityTrendChart({
               offset: 10,
               style: {
                 fontSize: 12,
-                fill: "hsl(var(--muted-foreground))",
-                opacity: 0.5,
+                fill: "var(--color-muted-foreground)",
                 textAnchor: "middle",
               },
             }}
@@ -259,7 +257,7 @@ export function SeverityTrendChart({
                       r={5}
                       fill={color}
                       strokeWidth={2}
-                      stroke='hsl(var(--background))'
+                      stroke='var(--color-background)'
                     />
                   );
                 }}
@@ -272,7 +270,7 @@ export function SeverityTrendChart({
                       r={7}
                       fill={color}
                       strokeWidth={2}
-                      stroke='hsl(var(--background))'
+                      stroke='var(--color-background)'
                     />
                   );
                 }}

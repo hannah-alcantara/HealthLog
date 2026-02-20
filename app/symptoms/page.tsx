@@ -3,8 +3,9 @@
 import { useState, useMemo } from "react";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
-import { SymptomForm } from "@/components/symptoms/symptom-form";
-import { SymptomFiltersComponent } from "@/components/symptoms/symptom-filters";
+import dynamic from "next/dynamic";
+const SymptomForm = dynamic(() => import("@/components/symptoms/symptom-form").then(m => ({ default: m.SymptomForm })), { ssr: false });
+const SymptomFiltersComponent = dynamic(() => import("@/components/symptoms/symptom-filters").then(m => ({ default: m.SymptomFiltersComponent })), { ssr: false });
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import type {
   Symptom,
   CreateSymptomInput,
-  CreateSymptomFormInput,
 } from "@/lib/schemas/symptom";
 import {
   filterSymptoms,
@@ -25,7 +25,7 @@ import {
   type SortOption,
 } from "@/lib/utils/symptom-filters";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { ConvexErrorBoundary } from "@/components/convex-error-boundary";
 
 type DialogState =
   | { type: "closed" }
@@ -99,7 +99,7 @@ export default function SymptomsPage() {
   if (loading) {
     return (
       <div className='container mx-auto py-8 px-4'>
-        <p className='text-center text-gray-600 dark:text-gray-400'>
+        <p className='text-center text-muted-foreground'>
           Loading symptoms...
         </p>
       </div>
@@ -112,27 +112,18 @@ export default function SymptomsPage() {
   });
 
   return (
+    <ConvexErrorBoundary>
     <div className='container mx-auto py-8 px-4'>
       <div className='max-w-7xl mx-auto'>
-        <div className='flex justify-between items-center mb-6'>
-          <div>
-            <h1 className='text-3xl font-bold'>All Symptoms</h1>
-            <p className='text-gray-600 dark:text-gray-400 mt-1'>
-              {filteredAndSortedSymptoms.length}{" "}
-              {filteredAndSortedSymptoms.length === 1 ? "symptom" : "symptoms"}
-              {hasActiveFilters &&
-                symptoms.length !== filteredAndSortedSymptoms.length &&
-                ` (${symptoms.length} total)`}
-            </p>
-          </div>
-          <Button
-            onClick={handleAdd}
-            size='lg'
-            className='flex items-center gap-2'
-          >
-            <Plus className='h-5 w-5' />
-            Log Symptom
-          </Button>
+        <div className='mb-6'>
+          <h1 className='text-3xl font-bold'>All Symptoms</h1>
+          <p className='text-muted-foreground mt-1'>
+            {filteredAndSortedSymptoms.length}{" "}
+            {filteredAndSortedSymptoms.length === 1 ? "symptom" : "symptoms"}
+            {hasActiveFilters &&
+              symptoms.length !== filteredAndSortedSymptoms.length &&
+              ` (${symptoms.length} total)`}
+          </p>
         </div>
 
         {/* Filters */}
@@ -150,10 +141,10 @@ export default function SymptomsPage() {
         {symptoms.length === 0 ? (
           <Card>
             <CardContent className='px-6 py-12 text-center'>
-              <p className='text-xl text-gray-500 mb-4'>
+              <p className='text-xl text-muted-foreground mb-4'>
                 No symptoms logged yet
               </p>
-              <p className='text-gray-400 mb-6'>
+              <p className='text-muted-foreground mb-6'>
                 Start tracking your symptoms to see patterns and insights
               </p>
             </CardContent>
@@ -161,10 +152,10 @@ export default function SymptomsPage() {
         ) : filteredAndSortedSymptoms.length === 0 ? (
           <Card>
             <CardContent className='px-6 py-12 text-center'>
-              <p className='text-xl text-gray-500 mb-4'>
+              <p className='text-xl text-muted-foreground mb-4'>
                 No symptoms match your filters
               </p>
-              <p className='text-gray-400 mb-6'>
+              <p className='text-muted-foreground mb-6'>
                 Try adjusting your filter criteria
               </p>
               <Button onClick={handleResetFilters} variant='outline'>
@@ -176,7 +167,6 @@ export default function SymptomsPage() {
           <SymptomsList
             symptoms={filteredAndSortedSymptoms}
             onAdd={handleAdd}
-            onEdit={handleEdit}
             onDelete={handleDelete}
           />
         )}
@@ -216,5 +206,6 @@ export default function SymptomsPage() {
         </Dialog>
       </div>
     </div>
+    </ConvexErrorBoundary>
   );
 }

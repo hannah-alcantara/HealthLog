@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
-import { SymptomForm } from "@/components/symptoms/symptom-form";
-import { SeverityTrendChart } from "@/components/dashboard/severity-trend-chart";
-import { TimeDistributionChart } from "@/components/dashboard/time-distribution-chart";
-import { SymptomHeatmap } from "@/components/dashboard/symptom-heatmap";
+const SymptomForm = dynamic(() => import("@/components/symptoms/symptom-form").then(m => ({ default: m.SymptomForm })), { ssr: false });
+import dynamic from "next/dynamic";
+const SeverityTrendChart = dynamic(() => import("@/components/dashboard/severity-trend-chart").then(m => ({ default: m.SeverityTrendChart })), { ssr: false });
+const TimeDistributionChart = dynamic(() => import("@/components/dashboard/time-distribution-chart").then(m => ({ default: m.TimeDistributionChart })), { ssr: false });
+const SymptomHeatmap = dynamic(() => import("@/components/dashboard/symptom-heatmap").then(m => ({ default: m.SymptomHeatmap })), { ssr: false });
 import {
   Dialog,
   DialogContent,
@@ -18,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Symptom, CreateSymptomInput } from "@/lib/schemas/symptom";
-import Link from "next/link";
+const GenerateQuestions = dynamic(() => import("@/components/appointments/generate-questions").then(m => ({ default: m.GenerateQuestions })), { ssr: false });
 import { toast } from "sonner";
 import { Plus, Sparkles, TrendingUp, Zap, TriangleAlert } from "lucide-react";
 
@@ -33,6 +35,8 @@ type DeleteDialogState =
 
 export function Dashboard() {
   const { user } = useUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     symptoms,
     loading: symptomsLoading,
@@ -53,6 +57,14 @@ export function Dashboard() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showQuestionGenerator, setShowQuestionGenerator] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "log") {
+      setDialogState({ type: "add" });
+      router.replace("/");
+    }
+  }, [searchParams, router]);
 
   const stats = !symptomsLoading
     ? getStats()
@@ -262,7 +274,7 @@ export function Dashboard() {
   if (symptomsLoading || appointmentsLoading) {
     return (
       <div className='container mx-auto py-8 px-4'>
-        <p className='text-center text-gray-600 dark:text-gray-400'>
+        <p className='text-center text-muted-foreground'>
           Loading dashboard...
         </p>
       </div>
@@ -277,15 +289,6 @@ export function Dashboard() {
             Good Morning,{user?.firstName ? ` ${user.firstName}` : ""}! How are
             you feeling today?
           </h1>
-          {/* Desktop Button - Hidden on Mobile */}
-          <Button
-            onClick={handleAdd}
-            size='lg'
-            className='hidden sm:flex items-center gap-2 whitespace-nowrap'
-          >
-            <Plus className='h-5 w-5' />
-            Log Symptom
-          </Button>
         </div>
 
         {/* Stats Cards - Health Insights */}
@@ -394,38 +397,80 @@ export function Dashboard() {
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch'>
               {/* Left Column - AI Questions and Severity Trends */}
               <div className='space-y-6 flex flex-col'>
-                {/* AI Generated Questions */}
-                <Card>
+                {/* Next Appointment Countdown */}
+                <Card className='gap-0'>
                   <CardHeader>
                     <div className='flex justify-between items-start'>
-                      <h3 className='text-lg font-semibold'>
+                      <h2 className='text-lg font-semibold'>
                         Ready for your next appointment?
-                      </h3>
+                      </h2>
                       <div className='p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30'>
                         <Sparkles className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className='space-y-4'>
-                    <p className='text-4xl font-bold'>
-                      {nextAppointment?.generatedQuestions?.length || 0}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      AI Generated Questions
-                    </p>
-                    <Link href='/appointments'>
-                      <Button variant='secondary' size='sm' className='w-full'>
-                        Prepare for Visit
+                  <CardContent className='space-y-1'>
+                    {nextAppointment ? (
+                      <>
+                        <p className='text-3xl font-bold'>
+                          {Math.max(
+                            0,
+                            Math.ceil(
+                              (new Date(nextAppointment.date).getTime() -
+                                Date.now()) /
+                                (1000 * 60 * 60 * 24),
+                            ),
+                          )}{" "}
+                        </p>
+                        <p className='text-sm text-muted-foreground truncate'>
+                          days away with {nextAppointment.doctorName}
+                        </p>
+                        <div className='flex items-center gap-1.5 text-xs pt-1'>
+                          {nextAppointment.generatedQuestions?.length ? (
+                            <>
+                              <span className='h-2 w-2 rounded-full bg-emerald-500 shrink-0' />
+                              <span className='text-muted-foreground'>
+                                {nextAppointment.generatedQuestions.length}{" "}
+                                question
+                                {nextAppointment.generatedQuestions.length !== 1
+                                  ? "s"
+                                  : ""}{" "}
+                                ready
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className='h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0' />
+                              <span className='text-muted-foreground'>
+                                No questions yet
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <p className='text-sm text-muted-foreground'>
+                        No upcoming appointments
+                      </p>
+                    )}
+                    <div className='pt-3'>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        className='btn-gradient-shift w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-500 text-white border-0 transition-shadow duration-200 hover:shadow-lg hover:shadow-emerald-500/25'
+                        onClick={() => setShowQuestionGenerator(true)}
+                      >
+                        Generate Questions
                       </Button>
-                    </Link>
+                    </div>
                   </CardContent>
                 </Card>
 
                 {/* Severity Trends */}
                 <Card className='flex-1'>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>Severity Trends</h3>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    <h2 className='text-lg font-semibold'>Severity Trends</h2>
+                    <p className='text-sm text-muted-foreground'>
                       Top 3 symptoms by week over the past month
                     </p>
                   </CardHeader>
@@ -439,10 +484,10 @@ export function Dashboard() {
               <div className='space-y-6 flex flex-col'>
                 <Card>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>
+                    <h2 className='text-lg font-semibold'>
                       Time of Day Distribution
-                    </h3>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    </h2>
+                    <p className='text-sm text-muted-foreground'>
                       When symptoms occur throughout the day
                     </p>
                   </CardHeader>
@@ -453,10 +498,10 @@ export function Dashboard() {
 
                 <Card>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>
+                    <h2 className='text-lg font-semibold'>
                       Symptom Activity Calendar
-                    </h3>
-                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                    </h2>
+                    <p className='text-sm text-muted-foreground'>
                       Daily symptom count over the past 3 months
                     </p>
                   </CardHeader>
@@ -469,51 +514,15 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Next Appointment Countdown */}
-        {nextAppointment && daysUntil !== null && (
-          <Card className='mb-8 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800'>
-            <CardHeader>
-              <div className='flex justify-between items-start'>
-                <div>
-                  <h3 className='text-lg font-semibold'>Next Appointment</h3>
-                  <p className='text-gray-600 dark:text-gray-400'>
-                    {nextAppointment.doctorName} -{" "}
-                    {new Date(nextAppointment.date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className='text-right'>
-                  <p className='text-3xl font-bold text-blue-600 dark:text-blue-400'>
-                    {daysUntil === 0
-                      ? "Today"
-                      : daysUntil === 1
-                        ? "Tomorrow"
-                        : `${daysUntil} days`}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Link href='/appointments'>
-                <Button variant='outline' className='w-full'>
-                  {nextAppointment.generatedQuestions &&
-                  nextAppointment.generatedQuestions.length > 0
-                    ? "View Prepared Questions"
-                    : "Prepare Questions for Visit"}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Recent Symptoms */}
         <div className='mb-8'>
           {symptoms.length === 0 ? (
             <Card>
               <CardContent className='px-6 py-12 text-center'>
-                <p className='text-xl text-gray-500 mb-4'>
+                <p className='text-xl text-muted-foreground mb-4'>
                   No symptoms logged yet
                 </p>
-                <p className='text-gray-400 mb-6'>
+                <p className='text-muted-foreground mb-6'>
                   Start tracking your symptoms to see patterns and insights
                 </p>
               </CardContent>
@@ -522,7 +531,6 @@ export function Dashboard() {
             <SymptomsList
               symptoms={recentSymptoms}
               onAdd={handleAdd}
-              onEdit={handleEdit}
               onDelete={handleDeleteRequest}
               showViewAll={symptoms.length > 5}
             />
@@ -606,6 +614,24 @@ export function Dashboard() {
           </DialogContent>
         </Dialog>
 
+        {/* Question Generator Dialog */}
+        <Dialog
+          open={showQuestionGenerator}
+          onOpenChange={(open) => {
+            if (!open) setShowQuestionGenerator(false);
+          }}
+        >
+          <DialogContent className='max-w-lg'>
+            <DialogHeader>
+              <DialogTitle>Generate Questions</DialogTitle>
+            </DialogHeader>
+            <GenerateQuestions
+              allAppointments={appointments}
+              onCancel={() => setShowQuestionGenerator(false)}
+            />
+          </DialogContent>
+        </Dialog>
+
         {/* Floating Action Button (Mobile Only) */}
         <Button
           onClick={handleAdd}
@@ -613,7 +639,7 @@ export function Dashboard() {
           className='sm:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg p-0'
           aria-label='Log Symptom'
         >
-          <Plus className='h-6 w-6' />
+          <Plus className='size-6' />
         </Button>
       </div>
     </div>

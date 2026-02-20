@@ -3,18 +3,18 @@
 **Feature**: Healthcare Tracking Application
 **Branch**: `001-health-log`
 **Date**: 2026-02-06
-**Purpose**: Resolve technical unknowns for migrating from localStorage to Convex
+**Purpose**: Resolve technical unknowns for implementing Convex as the data backend
 
 ---
 
 ## Research Questions
 
-1. Convex authentication strategy for health data
+1. Convex authentication strategy for health data (using Clerk)
 2. Convex schema design for symptoms and appointments
 3. Convex query optimization patterns
 4. Convex testing best practices
-5. Migration strategy from localStorage to Convex
-6. Convex real-time subscriptions for dashboard
+5. Convex real-time subscriptions for dashboard
+6. AI integration patterns (Gemini API via Convex actions)
 
 ---
 
@@ -254,80 +254,7 @@ test("should log symptom and see it in dashboard", async ({ page }) => {
 
 ---
 
-## 5. Migration Strategy from localStorage to Convex
-
-### Decision: Dual-write transition with user-initiated migration
-
-**Migration Phases**:
-
-**Phase 1: Install Convex alongside localStorage**
-```bash
-npm install convex @convex-dev/auth
-npx convex dev
-```
-- Deploy schema without touching localStorage code
-- No data migration yet
-
-**Phase 2: Implement Convex hooks with feature flag**
-```typescript
-// lib/hooks/use-symptoms.ts
-const USE_CONVEX = process.env.NEXT_PUBLIC_USE_CONVEX === 'true';
-
-export function useSymptoms() {
-  if (USE_CONVEX) {
-    return useConvexSymptoms(); // New implementation
-  }
-  return useLocalStorageSymptoms(); // Existing implementation
-}
-```
-
-**Phase 3: One-time migration prompt**
-```typescript
-// components/migration-banner.tsx
-export function MigrationBanner() {
-  const hasLocalData = checkLocalStorage();
-  const [migrated, setMigrated] = useState(false);
-
-  async function migrate() {
-    const symptoms = JSON.parse(localStorage.getItem('health-log:symptoms') || '[]');
-    const appointments = JSON.parse(localStorage.getItem('health-log:appointments') || '[]');
-
-    // Batch upload to Convex
-    await Promise.all([
-      ...symptoms.map(s => createSymptom.mutate(s)),
-      ...appointments.map(a => createAppointment.mutate(a)),
-    ]);
-
-    // Clear localStorage after successful migration
-    localStorage.removeItem('health-log:symptoms');
-    localStorage.removeItem('health-log:appointments');
-    setMigrated(true);
-  }
-
-  if (!hasLocalData || migrated) return null;
-
-  return (
-    <Banner>
-      <p>Migrate your local data to cloud storage?</p>
-      <button onClick={migrate}>Migrate Now</button>
-    </Banner>
-  );
-}
-```
-
-**Phase 4: Remove localStorage code**
-- After migration period (e.g., 2 weeks), remove feature flag
-- Delete `lib/storage/` directory
-- Remove localStorage tests
-
-**Rollback Plan**:
-- Keep localStorage code for 2 weeks
-- Feature flag allows instant rollback if Convex issues
-- Export function to download data as JSON backup
-
----
-
-## 6. Convex Real-time Subscriptions for Dashboard
+## 5. Convex Real-time Subscriptions for Dashboard
 
 ### Decision: Use reactive queries with automatic updates
 

@@ -1,11 +1,30 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { useAuth } from '@clerk/nextjs';
 import { api } from '@/convex/_generated/api';
 import type { Symptom, CreateSymptomInput } from '@/lib/schemas/symptom';
 import type { Id } from '@/convex/_generated/dataModel';
+
+/**
+ * React hook for fetching a single symptom by ID.
+ */
+export function useSymptomById(id: string | null) {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const isBrowser = typeof window !== 'undefined';
+  const shouldQuery = isBrowser && isAuthLoaded && isSignedIn && id !== null;
+
+  const symptom = useQuery(
+    api.symptoms.getById,
+    shouldQuery && id ? { id: id as Id<'symptoms'> } : 'skip'
+  );
+
+  return {
+    symptom: symptom ?? null,
+    loading: !isAuthLoaded || (shouldQuery && symptom === undefined),
+  };
+}
 
 /**
  * React hook for managing symptom data with Convex real-time sync.
@@ -49,7 +68,7 @@ export function useSymptoms() {
   const create = useCallback(
     async (input: CreateSymptomInput): Promise<void> => {
       // Filter out undefined fields to prevent them being sent as null over the network
-      const cleanInput: any = {
+      const cleanInput: CreateSymptomInput = {
         symptomType: input.symptomType,
         severity: input.severity,
         loggedAt: input.loggedAt,

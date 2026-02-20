@@ -137,11 +137,11 @@ export function SymptomHeatmap({ symptoms, months = 3 }: SymptomHeatmapProps) {
                 return (
                   <div
                     key={`${weekIndex}-${dayOfWeek}`}
-                    className="rounded-[2px] cursor-pointer group relative"
+                    className={`rounded-[2px] cursor-pointer group relative${day.count === 0 ? ' bg-muted' : ''}`}
                     style={{
                       width: cellWidth,
                       height: cellHeight,
-                      backgroundColor: day.count > 0 ? '#10b981' : '#e5e7eb',
+                      backgroundColor: day.count > 0 ? '#10b981' : undefined,
                       opacity: day.count > 0 ? day.opacity : 1,
                     }}
                     title={`${format(day.date, 'MMM dd, yyyy')}: ${day.count} symptom${day.count !== 1 ? 's' : ''}`}
@@ -165,9 +165,9 @@ export function SymptomHeatmap({ symptoms, months = 3 }: SymptomHeatmapProps) {
         {[0, 0.3, 0.5, 0.7, 1].map((opacity, idx) => (
           <div
             key={idx}
-            className="w-[11px] h-[11px] rounded-[2px]"
+            className={`w-[11px] h-[11px] rounded-[2px]${opacity === 0 ? ' bg-muted' : ''}`}
             style={{
-              backgroundColor: opacity > 0 ? '#10b981' : '#e5e7eb',
+              backgroundColor: opacity > 0 ? '#10b981' : undefined,
               opacity: opacity > 0 ? opacity : 1,
             }}
           />
