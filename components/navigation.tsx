@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
@@ -13,6 +13,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Menu, Plus, X } from "lucide-react";
 
@@ -21,11 +22,10 @@ export function Navigation() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const userButtonRef = useRef<HTMLDivElement>(null);
 
   const handleLogSymptom = () => {
     router.push("/?action=log");
-    closeMobileMenu();
   };
 
   const links = [
@@ -34,15 +34,13 @@ export function Navigation() {
     { href: "/appointments", label: "Appointments" },
   ];
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
-
   return (
     <nav className='sticky top-0 z-50 border-b bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-black/60'>
       <div className='container mx-auto px-4'>
         <div className='max-w-7xl mx-auto flex h-16 items-center justify-between'>
           <div className='flex items-center gap-6'>
             <Link href='/' className='flex items-center gap-2'>
-              <HealthLogIcon size={22} className="text-primary" />
+              <HealthLogIcon size={22} className='text-primary' />
               <span className='text-xl font-bold'>HealthLog</span>
             </Link>
             {/* Desktop Navigation - Only show for signed in users */}
@@ -72,11 +70,15 @@ export function Navigation() {
             {/* Log Symptom Button + User Button - Desktop Only */}
             {isLoaded && isSignedIn && (
               <div className='hidden md:flex items-center gap-3'>
-                <Button size='sm' onClick={handleLogSymptom} className='flex items-center gap-1.5'>
+                <Button
+                  size='sm'
+                  onClick={handleLogSymptom}
+                  className='flex items-center gap-1.5'
+                >
                   <Plus className='h-4 w-4' />
                   Log Symptom
                 </Button>
-                <UserButton afterSignOutUrl='/' />
+                <UserButton />
               </div>
             )}
 
@@ -94,83 +96,92 @@ export function Navigation() {
               </div>
             )}
 
-            {/* Mobile Menu Button - Only for signed in users */}
+            {/* Mobile Menu Drawer - Only for signed in users */}
             {isSignedIn && (
-              <Button
-                variant='ghost'
-                size='sm'
-                className='md:hidden'
-                onClick={() => setIsMobileMenuOpen(true)}
-                aria-label='Open navigation menu'
-              >
-                <Menu className='h-5 w-5' />
-              </Button>
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='md:hidden'
+                    aria-label='Open navigation menu'
+                  >
+                    <Menu className='h-5 w-5' />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent side='right' className='md:hidden'>
+                  <div className='flex flex-col h-full'>
+                    {/* Header */}
+                    <DrawerHeader>
+                      <DrawerTitle>Menu</DrawerTitle>
+                      <DrawerClose asChild>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          aria-label='Close navigation menu'
+                        >
+                          <X className='h-5 w-5' />
+                        </Button>
+                      </DrawerClose>
+                    </DrawerHeader>
+
+                    {/* Navigation Links */}
+                    <nav className='flex-1 p-4 overflow-y-auto'>
+                      <ul className='space-y-2'>
+                        {links.map((link) => {
+                          const isActive = pathname === link.href;
+                          return (
+                            <li key={link.href}>
+                              <DrawerClose asChild>
+                                <Link
+                                  href={link.href}
+                                  className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                                    isActive
+                                      ? "text-primary bg-muted"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  }`}
+                                >
+                                  {link.label}
+                                </Link>
+                              </DrawerClose>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </nav>
+
+                    {/* User Profile Section */}
+                    {isLoaded && isSignedIn && (
+                      <DrawerFooter>
+                        <button
+                          onClick={() => {
+                            userButtonRef.current
+                              ?.querySelector("button")
+                              ?.click();
+                          }}
+                          className='flex items-center gap-3 w-full p-2 rounded-md hover:bg-muted transition-colors'
+                        >
+                          <div ref={userButtonRef}>
+                            <UserButton />
+                          </div>
+                          <div className='flex flex-col flex-1 min-w-0 text-left'>
+                            <span className='text-sm font-medium truncate'>
+                              {user?.firstName || user?.username || "User"}
+                            </span>
+                            <span className='text-xs text-muted-foreground'>
+                              Manage account
+                            </span>
+                          </div>
+                        </button>
+                      </DrawerFooter>
+                    )}
+                  </div>
+                </DrawerContent>
+              </Drawer>
             )}
           </div>
         </div>
       </div>
-
-      {/* Mobile Drawer */}
-      <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <DrawerContent side='right' className='md:hidden'>
-          <div className='flex flex-col h-full'>
-            {/* Header */}
-            <DrawerHeader>
-              <DrawerTitle>Menu</DrawerTitle>
-              <DrawerClose asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  aria-label='Close navigation menu'
-                >
-                  <X className='h-5 w-5' />
-                </Button>
-              </DrawerClose>
-            </DrawerHeader>
-
-            {/* Navigation Links */}
-            <nav className='flex-1 p-4 overflow-y-auto'>
-              <ul className='space-y-2'>
-                {links.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={closeMobileMenu}
-                        className={`block px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                          isActive
-                            ? "text-primary bg-muted"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-
-            {/* User Profile Section */}
-            {isLoaded && isSignedIn && (
-              <DrawerFooter>
-                <div className='flex items-center gap-3'>
-                  <UserButton afterSignOutUrl='/' />
-                  <div className='flex flex-col flex-1 min-w-0'>
-                    <span className='text-sm font-medium truncate'>
-                      {user?.firstName || user?.username || "User"}
-                    </span>
-                    <span className='text-xs text-muted-foreground'>
-                      Manage account
-                    </span>
-                  </div>
-                </div>
-              </DrawerFooter>
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
     </nav>
   );
 }
