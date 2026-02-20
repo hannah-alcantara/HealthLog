@@ -3,8 +3,9 @@
 import { useState, useMemo } from "react";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
-import { SymptomForm } from "@/components/symptoms/symptom-form";
-import { SymptomFiltersComponent } from "@/components/symptoms/symptom-filters";
+import dynamic from "next/dynamic";
+const SymptomForm = dynamic(() => import("@/components/symptoms/symptom-form").then(m => ({ default: m.SymptomForm })), { ssr: false });
+const SymptomFiltersComponent = dynamic(() => import("@/components/symptoms/symptom-filters").then(m => ({ default: m.SymptomFiltersComponent })), { ssr: false });
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   type SortOption,
 } from "@/lib/utils/symptom-filters";
 import { toast } from "sonner";
+import { ConvexErrorBoundary } from "@/components/convex-error-boundary";
 
 type DialogState =
   | { type: "closed" }
@@ -110,6 +112,7 @@ export default function SymptomsPage() {
   });
 
   return (
+    <ConvexErrorBoundary>
     <div className='container mx-auto py-8 px-4'>
       <div className='max-w-7xl mx-auto'>
         <div className='mb-6'>
@@ -203,5 +206,6 @@ export default function SymptomsPage() {
         </Dialog>
       </div>
     </div>
+    </ConvexErrorBoundary>
   );
 }

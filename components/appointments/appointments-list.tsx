@@ -129,7 +129,7 @@ export function AppointmentsList({
                     {appointment.generatedQuestions &&
                     appointment.generatedQuestions.length > 0
                       ? "Update Questions"
-                      : "Prepare for Next Visit"}
+                      : "Prepare for Visit"}
                   </Button>
                 </div>
               </CardContent>

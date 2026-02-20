@@ -55,7 +55,7 @@ const COMMON_TRIGGERS = [
   "Exercise",
   "Food",
   "Medication",
-] as const;
+];
 
 export function SymptomForm({
   defaultValues,
@@ -85,13 +85,13 @@ export function SymptomForm({
     control,
     formState: { errors },
   } = useForm<CreateSymptomInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(createSymptomSchema) as any,
     defaultValues: formDefaultValues as Partial<CreateSymptomInput>,
   });
 
   const severity = watch("severity");
   const symptomType = watch("symptomType");
-  const triggers = watch("triggers");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [filteredSymptoms, setFilteredSymptoms] = React.useState<string[]>([]);
   const symptomInputRef = React.useRef<HTMLInputElement>(null);
@@ -177,7 +177,7 @@ export function SymptomForm({
   const normalizeSymptomType = (input: string): string => {
     const trimmedInput = input.trim();
     const matchedSymptom = COMMON_SYMPTOMS.find(
-      (symptom) => symptom.toLowerCase() === trimmedInput.toLowerCase()
+      (symptom) => symptom.toLowerCase() === trimmedInput.toLowerCase(),
     );
     return matchedSymptom || trimmedInput;
   };
@@ -194,7 +194,7 @@ export function SymptomForm({
   React.useEffect(() => {
     const triggersString =
       selectedTriggers.length > 0 ? selectedTriggers.join(", ") : null;
-    setValue("triggers", triggersString as any);
+    setValue("triggers", triggersString ?? undefined);
   }, [selectedTriggers, setValue]);
 
   const handleTriggerToggle = (trigger: string) => {
@@ -231,7 +231,10 @@ export function SymptomForm({
   return (
     <>
       <div className='border-t -mx-6' />
-      <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-8 px-4'>
+      <form
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className='space-y-8 px-4'
+      >
         {/* Symptom Type */}
         <div className='space-y-2 relative'>
           <Label
@@ -319,9 +322,7 @@ export function SymptomForm({
               <DateTimePicker
                 value={field.value ? new Date(field.value) : undefined}
                 onChange={(date) => {
-                  field.onChange(
-                    date ? date.getTime() : Date.now(),
-                  );
+                  field.onChange(date ? date.getTime() : Date.now());
                 }}
                 placeholder='Select date and time'
                 disableFuture
@@ -346,7 +347,7 @@ export function SymptomForm({
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
               let bgColor = "";
               let hoverColor = "";
-              let textColor = "text-white";
+              const textColor = "text-primary-foreground";
 
               // Create smooth gradient: each button has unique color from green to red
               switch (num) {
@@ -434,7 +435,7 @@ export function SymptomForm({
                   label = "Mild";
                   break;
                 case 4:
-                  iconColor = "text-yellow-400";
+                  iconColor = "text-yellow-600";
                   Icon = Meh;
                   label = "Moderate";
                   break;
@@ -463,7 +464,7 @@ export function SymptomForm({
                   {Icon ? (
                     <>
                       <div className='h-6 flex items-center justify-center mb-1'>
-                        <span className='text-[9px] text-muted-foreground uppercase font-medium text-center leading-tight'>
+                        <span className='text-[10px] text-foreground uppercase font-medium text-center leading-tight'>
                           {label}
                         </span>
                       </div>
@@ -490,7 +491,10 @@ export function SymptomForm({
             htmlFor='notes'
             className='text-xs font-medium uppercase text-foreground'
           >
-            Notes <span className='text-muted-foreground normal-case'>(Optional)</span>
+            Notes{" "}
+            <span className='text-muted-foreground normal-case'>
+              (Optional)
+            </span>
           </Label>
           <Textarea
             id='notes'
@@ -534,7 +538,7 @@ export function SymptomForm({
 
             {/* Custom Triggers (not in COMMON_TRIGGERS) */}
             {selectedTriggers
-              .filter((trigger) => !COMMON_TRIGGERS.includes(trigger as any))
+              .filter((trigger) => !COMMON_TRIGGERS.includes(trigger))
               .map((trigger) => (
                 <button
                   key={trigger}

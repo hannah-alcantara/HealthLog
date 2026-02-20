@@ -10,103 +10,153 @@
 - Yarn package manager
 - Modern browser for testing (Chrome 60+, Firefox 55+, Safari 11+, Edge 79+)
 - Convex account (free tier: https://www.convex.dev/)
+- Clerk account (free tier: https://clerk.com/)
 
 ## Installation
 
-### 1. Install Convex
+### 1. Install Dependencies
 
 ```bash
-# Install Convex globally
-npm install -g convex
-
-# Initialize Convex in the project
-npx convex dev
-
-# This will:
-# - Create convex/ directory
-# - Generate convex.json config
-# - Start Convex development server
-# - Provide deployment URL (save this for .env.local)
+yarn install
 ```
 
-### 2. Install Dependencies
-
-```bash
-# Convex client libraries
-yarn add convex @convex-dev/auth
-
-# Form handling and validation (already installed)
-# yarn add react-hook-form @hookform/resolvers zod
-
-# UI components (Radix UI - already installed)
-# Recharts for charts (already installed)
-```
-
-### 3. Configure Environment Variables
+### 2. Configure Environment Variables
 
 Create `.env.local` in project root:
 
 ```bash
-# Convex deployment URL (from npx convex dev output)
+# Convex deployment URL (from Convex dashboard)
 NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 
-# Feature flag for gradual migration
-NEXT_PUBLIC_USE_CONVEX=true
+# Clerk authentication keys (from Clerk dashboard)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Clerk redirect URLs
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+
+# Gemini API key (for AI question generation)
+# Note: Anthropic integration planned for a future release
+GEMINI_API_KEY=AIza...
 ```
 
-### 4. Update Next.js Config
-
-Add to `next.config.ts`:
-
-```typescript
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  // ... existing config
-
-  // Enable Convex
-  experimental: {
-    serverActions: true,
-  },
-};
-
-export default nextConfig;
-```
-
-### 5. Install Testing Dependencies
+### 3. Set Up Convex
 
 ```bash
-# Convex testing utilities
-yarn add -D convex-test
+# Initialize Convex (first time only)
+npx convex dev
 
-# Jest and React Testing Library (already installed)
-# Playwright for E2E tests (already installed)
+# This will:
+# - Create convex/ directory with generated types
+# - Start the Convex development server
+# - Auto-deploy schema changes on save
 ```
 
-## Convex Setup
+### 4. Configure Clerk + Convex JWT
 
-### 1. Create Schema (`convex/schema.ts`)
+In your Clerk dashboard, add a JWT template named `convex` with the following claims:
+
+```json
+{
+  "sub": "{{user.id}}"
+}
+```
+
+In your Convex dashboard, add the Clerk issuer URL to the auth configuration.
+
+## Development Workflow
+
+### Starting Development
+
+```bash
+# Terminal 1: Start Convex dev server (auto-deploys on save)
+npx convex dev
+
+# Terminal 2: Start Next.js dev server
+yarn dev
+```
+
+Then open http://localhost:3000.
+
+### Convex Dashboard
+
+Monitor your database in real-time:
+- Open: https://dashboard.convex.dev
+- View tables, run queries, inspect logs
+- Debug function errors in real-time
+
+### Convex Commands
+
+```bash
+# Start dev server (auto-deploys on save)
+npx convex dev
+
+# Deploy to production
+npx convex deploy --prod
+
+# View function logs
+npx convex logs
+```
+
+## Architecture Overview
+
+### Data Flow
+
+1. User authenticates via Clerk
+2. Clerk JWT is passed to Convex via `ConvexProviderWithClerk`
+3. Convex functions verify identity with `ctx.auth.getUserIdentity()`
+4. All queries/mutations are scoped to `identity.subject` (Clerk user ID)
+5. React components use `useQuery` / `useMutation` for real-time reactive data
+
+### Key Files
+
+```
+app/
+  layout.tsx              # ClerkProvider + ConvexProviderWithClerk
+  page.tsx                # Server component — routes auth vs landing page
+convex/
+  schema.ts               # Database schema (symptoms + appointments tables)
+  symptoms.ts             # Symptom queries and mutations
+  appointments.ts         # Appointment queries and mutations
+  ai.ts                   # Anthropic AI action for question generation
+lib/
+  hooks/
+    use-symptoms.ts       # useQuery wrapper for symptoms
+    use-appointments.ts   # useQuery wrapper for appointments
+  schemas/
+    symptom.ts            # Zod validation schema
+    appointment.ts        # Zod validation schema
+components/
+  convex-client-provider.tsx   # ConvexProviderWithClerk setup
+  convex-error-boundary.tsx    # Error boundary for connection failures
+  convex-status.tsx            # Connection status indicator
+```
+
+## Convex Schema
 
 ```typescript
+// convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
   symptoms: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),          // Clerk user ID (identity.subject)
     symptomType: v.string(),
     severity: v.number(),
-    bodyPart: v.optional(v.string()),
     triggers: v.optional(v.string()),
     notes: v.optional(v.string()),
-    loggedAt: v.number(),
+    loggedAt: v.number(),        // Unix timestamp (ms)
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "loggedAt"]),
 
   appointments: defineTable({
-    userId: v.id("users"),
-    date: v.number(),
+    userId: v.string(),          // Clerk user ID (identity.subject)
+    date: v.number(),            // Unix timestamp (ms)
     doctorName: v.string(),
     reason: v.string(),
     symptoms: v.optional(v.string()),
@@ -118,13 +168,12 @@ export default defineSchema({
 });
 ```
 
-### 2. Create Symptom Functions (`convex/symptoms.ts`)
+## Convex Function Patterns
+
+### Query Pattern
 
 ```typescript
-import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
-
-// Query: Get all symptoms
+// convex/symptoms.ts
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
@@ -138,13 +187,15 @@ export const getAll = query({
       .collect();
   },
 });
+```
 
-// Mutation: Create symptom
+### Mutation Pattern
+
+```typescript
 export const create = mutation({
   args: {
     symptomType: v.string(),
     severity: v.number(),
-    bodyPart: v.optional(v.string()),
     triggers: v.optional(v.string()),
     notes: v.optional(v.string()),
     loggedAt: v.number(),
@@ -154,214 +205,59 @@ export const create = mutation({
     if (!identity) throw new Error("Unauthorized");
 
     return await ctx.db.insert("symptoms", {
-      userId: identity.subject as any,
+      userId: identity.subject,
       ...args,
     });
   },
 });
-
-// Add update and remove mutations...
 ```
 
-### 3. Create Appointment Functions (`convex/appointments.ts`)
-
-Similar structure to symptoms.ts (see [data-model.md](./data-model.md) for full implementation).
-
-### 4. Setup Convex Provider (`app/layout.tsx`)
+### React Hook Pattern
 
 ```typescript
-import { ConvexProvider, ConvexReactClient } from "convex/react";
-
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <ConvexProvider client={convex}>
-          {children}
-        </ConvexProvider>
-      </body>
-    </html>
-  );
-}
-```
-
-## Implementation Phases
-
-### Phase 0: Convex Setup (CRITICAL)
-1. Run `npx convex dev` and save deployment URL
-2. Create `convex/schema.ts` with symptoms and appointments tables
-3. Push schema: `npx convex deploy` (or auto-deploys with `npx convex dev`)
-4. Verify schema in Convex dashboard: https://dashboard.convex.dev
-5. Add ConvexProvider to `app/layout.tsx`
-
-### Phase 1: Symptom Feature (Test-First)
-**Goal**: Implement symptom logging with Convex backend
-
-**Order**:
-1. **Convex Backend**:
-   - Create `convex/symptoms.ts` with queries and mutations
-   - Write tests using `convex-test` (see [research.md](./research.md) for examples)
-   - Deploy: `npx convex deploy`
-
-2. **Client-side Zod Schemas** (`lib/schemas/symptom.ts`):
-   - Create Zod schema for form validation
-   - Write unit tests for schema validation rules
-   - Ensure Convex validators and Zod schemas are in sync
-
-3. **React Components**:
-   - Update `components/symptoms/symptom-form.tsx` to use Convex `useMutation`
-   - Update `components/symptoms/symptoms-list.tsx` to use Convex `useQuery`
-   - Write component tests with mocked Convex client
-   - Update `app/symptoms/page.tsx`
-
-4. **Integration Tests**:
-   - Test full symptom logging flow
-   - Verify real-time updates (add symptom → automatically appears in list)
-   - Test optimistic updates
-
-**Testing**:
-```bash
-# Convex function tests
-yarn test convex/symptoms.test.ts
-
-# Component tests
-yarn test components/symptoms
-
-# E2E tests (uses Convex dev deployment)
-yarn test:e2e symptom-logging.spec.ts
-```
-
-### Phase 2: Appointments Feature
-**Goal**: Implement appointment tracking with Convex
-
-**Order**: Same as Phase 1, but for appointments
-- Create `convex/appointments.ts`
-- Update components to use Convex hooks
-- Test appointment creation, editing, and question generation
-
-### Phase 3: Dashboard Analytics
-**Goal**: Create dashboard with real-time symptom stats
-
-**Order**:
-1. Create Convex queries for dashboard data aggregation
-2. Update dashboard components to use reactive Convex queries
-3. Implement charts with automatic updates (zero polling)
-4. Test real-time dashboard updates
-
-### Phase 4: Migration from localStorage
-**Goal**: Migrate existing localStorage data to Convex
-
-**Order**:
-1. Create migration utility (`lib/utils/migrate-to-convex.ts`)
-2. Add migration banner component
-3. Test migration with sample localStorage data
-4. Document rollback procedure
-
-**Migration Script** (see [research.md](./research.md) for full implementation):
-```typescript
+// lib/hooks/use-symptoms.ts
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-export async function migrateLocalStorageToConvex(convex) {
-  const symptomsRaw = localStorage.getItem('health-log:symptoms');
+export function useSymptoms() {
+  const symptoms = useQuery(api.symptoms.getAll) ?? [];
+  const createMutation = useMutation(api.symptoms.create);
 
-  if (symptomsRaw) {
-    const symptoms = JSON.parse(symptomsRaw);
-    for (const symptom of symptoms) {
-      await convex.mutation(api.symptoms.create, {
-        symptomType: symptom.symptomType,
-        severity: symptom.severity,
-        loggedAt: new Date(symptom.loggedAt).getTime(),
-        // ... other fields
-      });
-    }
-  }
+  const create = async (data: CreateSymptomInput) => {
+    await createMutation(data);
+  };
 
-  // Clear localStorage after successful migration
-  localStorage.removeItem('health-log:symptoms');
+  return { symptoms, create, loading: symptoms === undefined };
 }
 ```
 
-### Phase 5: Authentication (Optional for MVP)
-**Goal**: Add Convex anonymous authentication
+## AI Question Generation
 
-**Order**:
-1. Install `@convex-dev/auth`: `yarn add @convex-dev/auth`
-2. Configure auth in `convex/auth.config.ts`
-3. Update queries/mutations to use `ctx.auth.getUserIdentity()`
-4. Test anonymous sessions persist across page reloads
+The app uses Google Gemini (`gemini-2.5-flash`) to generate appointment questions. The action runs server-side via Convex:
 
-### Phase 6: Performance Optimization
-**Goal**: Meet performance budgets with Convex
-
-**Optimizations**:
-- Use Convex pagination for large datasets (500+ symptoms)
-- Limit dashboard queries to last 30 days
-- Implement client-side filtering for instant search
-- Use Convex's automatic memoization (queries are cached)
-
-**Testing**: Lighthouse audit with Convex data
-- Performance ≥ 90
-- Accessibility = 100
-- Best Practices ≥ 90
-
-## Development Workflow
-
-### Starting Development
-
-```bash
-# Terminal 1: Start Convex dev server
-npx convex dev
-
-# Terminal 2: Start Next.js dev server
-yarn dev
-
-# Terminal 3: Run tests in watch mode
-yarn test:watch
+```typescript
+// convex/ai.ts
+export const generateAppointmentQuestions = action({
+  args: {
+    appointmentSymptoms: v.optional(v.string()),
+    appointmentDate: v.number(),
+    startDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Fetches symptoms between the last and next appointment
+    // Calls Gemini API to generate 5 personalized doctor questions
+    // Returns string[]
+  },
+});
 ```
 
-### Convex Dashboard
-
-Monitor your database in real-time:
-- Open: https://dashboard.convex.dev
-- View tables, run queries, inspect logs
-- Debug function errors in real-time
-
-### Running Tests
+The `GEMINI_API_KEY` environment variable must be set in the Convex dashboard (not just `.env.local`) for production use:
 
 ```bash
-# Unit tests (Zod schemas, utilities)
-yarn test lib/
-
-# Convex function tests
-yarn test convex/
-
-# Component tests
-yarn test components/
-
-# E2E tests (uses Convex dev deployment)
-yarn test:e2e
-
-# All tests with coverage
-yarn test:coverage
+npx convex env set GEMINI_API_KEY AIza...
 ```
 
-### Convex Commands
-
-```bash
-# Start dev server (auto-deploys on save)
-npx convex dev
-
-# Deploy to production
-npx convex deploy --prod
-
-# View function logs
-npx convex logs
-
-# Reset database (DEV ONLY - DESTRUCTIVE)
-npx convex data delete symptoms --all
-```
+> **Note**: Anthropic Claude integration is planned for a future release.
 
 ## Troubleshooting
 
@@ -373,37 +269,39 @@ npx convex data delete symptoms --all
 2. Ensure `npx convex dev` is running
 3. Verify deployment exists in Convex dashboard
 
+### Auth Issues
+
+**Problem**: Queries return empty / mutations throw "Unauthorized"
+**Solution**:
+1. Verify Clerk JWT template named `convex` exists in Clerk dashboard
+2. Check Clerk issuer URL is configured in Convex auth settings
+3. Ensure `ConvexProviderWithClerk` wraps the app in `app/layout.tsx`
+
 ### Schema Sync Issues
 
-**Problem**: Convex validators don't match Zod schemas
+**Problem**: TypeScript errors on Convex function args
 **Solution**:
-1. Compare `convex/schema.ts` with `lib/schemas/*.ts`
-2. Update both manually (no auto-sync yet)
-3. Run tests to verify both sides validate correctly
+1. Run `npx convex dev` to regenerate types in `convex/_generated/`
+2. Ensure `convex/schema.ts` matches the validators in your functions
+3. Zod schemas in `lib/schemas/` are client-side only — keep them in sync with Convex validators manually
 
-### Migration Failures
+### AI Generation Not Working
 
-**Problem**: localStorage migration fails partway through
+**Problem**: `generateAppointmentQuestions` action fails
 **Solution**:
-1. Migration script should be idempotent (check if data already exists)
-2. Don't clear localStorage until ALL data is successfully migrated
-3. Provide export to JSON as backup before migration
+1. Set `GEMINI_API_KEY` in Convex environment: `npx convex env set GEMINI_API_KEY AIza...`
+2. Check Convex function logs: `npx convex logs`
+3. Verify the key has access to `gemini-2.5-flash`
 
-### Test Failures with Convex
+## Pre-Deploy Checklist
 
-**Common issues**:
-- **Mock Convex hooks**: Use `vi.mock('convex/react')` for component tests
-- **Convex dev server**: Ensure running for E2E tests
-- **Async queries**: Use `waitFor` from React Testing Library
-
-## Pre-Commit Checklist
-
-- [ ] All tests passing: `yarn test`
-- [ ] Convex functions deployed: `npx convex deploy`
-- [ ] Schema matches validators and Zod schemas
-- [ ] ESLint passing: `yarn lint`
-- [ ] TypeScript compiling: `yarn build`
-- [ ] E2E tests passing: `yarn test:e2e`
+- [ ] `npx convex deploy --prod` — deploy Convex functions to production
+- [ ] Convex env vars set: `GEMINI_API_KEY`
+- [ ] Clerk JWT template `convex` configured
+- [ ] Clerk production keys in hosting environment variables
+- [ ] `NEXT_PUBLIC_CONVEX_URL` points to production deployment
+- [ ] `yarn build` passes with no errors
+- [ ] `yarn lint` passes with no warnings
 
 ## Resources
 
@@ -411,12 +309,11 @@ npx convex data delete symptoms --all
 - [Convex Quickstart](https://docs.convex.dev/quickstart)
 - [Convex React Integration](https://docs.convex.dev/client/react)
 - [Convex Schema Design](https://docs.convex.dev/database/schemas)
-- [Convex Authentication](https://docs.convex.dev/auth)
-- [Convex Testing](https://docs.convex.dev/functions/testing)
+- [Convex + Clerk Auth](https://docs.convex.dev/auth/clerk)
 
 ### Project Documentation
-- [research.md](./research.md) - Convex architecture decisions
-- [data-model.md](./data-model.md) - Schema definitions and examples
+- [research.md](./research.md) - Architecture decisions
+- [data-model.md](./data-model.md) - Schema definitions
 - [contracts/](./contracts/) - API contracts for Convex functions
 - [CLAUDE.md](../../CLAUDE.md) - Project-wide conventions
 
@@ -425,13 +322,3 @@ npx convex data delete symptoms --all
 - [React 19 Documentation](https://react.dev)
 - [Zod Documentation](https://zod.dev)
 - [React Hook Form Documentation](https://react-hook-form.com)
-
-## Next Steps After Implementation
-
-1. Run `/speckit.tasks` to generate task breakdown
-2. Run `/speckit.implement` to execute tasks
-3. Run `/speckit.analyze` to validate consistency
-4. Create pull request with:
-   - Lighthouse scores
-   - Test coverage reports
-   - Convex deployment link

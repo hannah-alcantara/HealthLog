@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { AppointmentsList } from "@/components/appointments/appointments-list";
-import { AppointmentForm } from "@/components/appointments/appointment-form";
-import { GenerateQuestions } from "@/components/appointments/generate-questions";
+import dynamic from "next/dynamic";
+const AppointmentForm = dynamic(() => import("@/components/appointments/appointment-form").then(m => ({ default: m.AppointmentForm })), { ssr: false });
+const GenerateQuestions = dynamic(() => import("@/components/appointments/generate-questions").then(m => ({ default: m.GenerateQuestions })), { ssr: false });
 import {
   Dialog,
   DialogContent,

@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +40,7 @@ export function LandingPage() {
           </h2>
           <p className='text-center text-muted-foreground mb-12'>
             A simple, three-step process to get you prepared for your next
-            doctor's visit.
+            doctor&apos;s visit.
           </p>
 
           <div className='grid md:grid-cols-3 gap-8'>

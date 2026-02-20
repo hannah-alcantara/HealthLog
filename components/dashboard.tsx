@@ -6,10 +6,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSymptoms } from "@/lib/hooks/use-symptoms";
 import { useAppointments } from "@/lib/hooks/use-appointments";
 import { SymptomsList } from "@/components/symptoms/symptoms-list";
-import { SymptomForm } from "@/components/symptoms/symptom-form";
-import { SeverityTrendChart } from "@/components/dashboard/severity-trend-chart";
-import { TimeDistributionChart } from "@/components/dashboard/time-distribution-chart";
-import { SymptomHeatmap } from "@/components/dashboard/symptom-heatmap";
+const SymptomForm = dynamic(() => import("@/components/symptoms/symptom-form").then(m => ({ default: m.SymptomForm })), { ssr: false });
+import dynamic from "next/dynamic";
+const SeverityTrendChart = dynamic(() => import("@/components/dashboard/severity-trend-chart").then(m => ({ default: m.SeverityTrendChart })), { ssr: false });
+const TimeDistributionChart = dynamic(() => import("@/components/dashboard/time-distribution-chart").then(m => ({ default: m.TimeDistributionChart })), { ssr: false });
+const SymptomHeatmap = dynamic(() => import("@/components/dashboard/symptom-heatmap").then(m => ({ default: m.SymptomHeatmap })), { ssr: false });
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Symptom, CreateSymptomInput } from "@/lib/schemas/symptom";
-import { GenerateQuestions } from "@/components/appointments/generate-questions";
+const GenerateQuestions = dynamic(() => import("@/components/appointments/generate-questions").then(m => ({ default: m.GenerateQuestions })), { ssr: false });
 import { toast } from "sonner";
 import { Plus, Sparkles, TrendingUp, Zap, TriangleAlert } from "lucide-react";
 
@@ -400,9 +401,9 @@ export function Dashboard() {
                 <Card className='gap-0'>
                   <CardHeader>
                     <div className='flex justify-between items-start'>
-                      <h3 className='text-lg font-semibold'>
+                      <h2 className='text-lg font-semibold'>
                         Ready for your next appointment?
-                      </h3>
+                      </h2>
                       <div className='p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30'>
                         <Sparkles className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
                       </div>
@@ -468,7 +469,7 @@ export function Dashboard() {
                 {/* Severity Trends */}
                 <Card className='flex-1'>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>Severity Trends</h3>
+                    <h2 className='text-lg font-semibold'>Severity Trends</h2>
                     <p className='text-sm text-muted-foreground'>
                       Top 3 symptoms by week over the past month
                     </p>
@@ -483,9 +484,9 @@ export function Dashboard() {
               <div className='space-y-6 flex flex-col'>
                 <Card>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>
+                    <h2 className='text-lg font-semibold'>
                       Time of Day Distribution
-                    </h3>
+                    </h2>
                     <p className='text-sm text-muted-foreground'>
                       When symptoms occur throughout the day
                     </p>
@@ -497,9 +498,9 @@ export function Dashboard() {
 
                 <Card>
                   <CardHeader>
-                    <h3 className='text-lg font-semibold'>
+                    <h2 className='text-lg font-semibold'>
                       Symptom Activity Calendar
-                    </h3>
+                    </h2>
                     <p className='text-sm text-muted-foreground'>
                       Daily symptom count over the past 3 months
                     </p>
@@ -638,7 +639,7 @@ export function Dashboard() {
           className='sm:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg p-0'
           aria-label='Log Symptom'
         >
-          <Plus className='h-6 w-6' />
+          <Plus className='size-6' />
         </Button>
       </div>
     </div>

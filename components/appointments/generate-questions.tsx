@@ -1,23 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAction } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { useAppointments } from '@/lib/hooks/use-appointments';
-import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
-import type { Appointment } from '@/lib/schemas/appointment';
-import type { Symptom } from '@/lib/schemas/symptom';
+} from "@/components/ui/select";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAppointments } from "@/lib/hooks/use-appointments";
+import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
+import type { Appointment } from "@/lib/schemas/appointment";
+import type { Symptom } from "@/lib/schemas/symptom";
 
 // Appointment-specific mode: appointment is known upfront
 interface AppointmentModeProps {
@@ -42,21 +41,21 @@ interface QuickPickModeProps {
 type GenerateQuestionsProps = AppointmentModeProps | QuickPickModeProps;
 
 function questionsToText(questions: string[]): string {
-  return questions.join('\n');
+  return questions.join("\n");
 }
 
 function textToQuestions(text: string): string[] {
   return text
-    .split('\n')
+    .split("\n")
     .map((q) => q.trim())
     .filter((q) => q.length > 0);
 }
 
 function formatAppointmentLabel(appt: Appointment): string {
-  const date = new Date(appt.date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  const date = new Date(appt.date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
   return `${appt.doctorName} — ${date}`;
 }
@@ -71,13 +70,17 @@ export function GenerateQuestions({
   const isQuickPickMode = appointment === undefined;
 
   const [text, setText] = useState(
-    appointment ? questionsToText(appointment.generatedQuestions || []) : ''
+    appointment ? questionsToText(appointment.generatedQuestions || []) : "",
   );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const generateQuestionsAction = useAction(api.ai.generateAppointmentQuestions);
+  const generateQuestionsAction = useAction(
+    api.ai.generateAppointmentQuestions,
+  );
   const { update } = useAppointments();
 
   const handleGenerate = async () => {
@@ -86,11 +89,16 @@ export function GenerateQuestions({
       const previousAppointment = isQuickPickMode
         ? undefined
         : allAppointments
-            .filter((appt) => appt.date < appointment!.date && appt._id !== appointment!._id)
+            .filter(
+              (appt) =>
+                appt.date < appointment!.date && appt._id !== appointment!._id,
+            )
             .sort((a, b) => b.date - a.date)[0];
 
       const generated = await generateQuestionsAction({
-        appointmentSymptoms: isQuickPickMode ? undefined : appointment?.symptoms,
+        appointmentSymptoms: isQuickPickMode
+          ? undefined
+          : appointment?.symptoms,
         appointmentDate: isQuickPickMode ? Date.now() : appointment!.date,
         startDate: previousAppointment?.date,
       });
@@ -100,10 +108,10 @@ export function GenerateQuestions({
       } else {
         setText(questionsToText(generated));
       }
-      toast.success('Questions generated!');
+      toast.success("Questions generated!");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to generate questions'
+        error instanceof Error ? error.message : "Failed to generate questions",
       );
     } finally {
       setIsGenerating(false);
@@ -120,12 +128,14 @@ export function GenerateQuestions({
     if (!selectedAppointmentId || textToQuestions(text).length === 0) return;
     setIsSaving(true);
     try {
-      await update(selectedAppointmentId, { generatedQuestions: textToQuestions(text) });
-      toast.success('Questions saved to appointment');
+      await update(selectedAppointmentId, {
+        generatedQuestions: textToQuestions(text),
+      });
+      toast.success("Questions saved to appointment");
       onCancel();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to save questions'
+        error instanceof Error ? error.message : "Failed to save questions",
       );
     } finally {
       setIsSaving(false);
@@ -133,64 +143,61 @@ export function GenerateQuestions({
   };
 
   const questionCount = textToQuestions(text).length;
-  const sortedAppointments = [...allAppointments].sort((a, b) => a.date - b.date);
+  const sortedAppointments = [...allAppointments].sort(
+    (a, b) => a.date - b.date,
+  );
 
   return (
-    <div className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>Generate Questions</DialogTitle>
-      </DialogHeader>
-
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
+    <div className='space-y-4'>
+      <div className='space-y-4'>
+        <p className='text-sm text-muted-foreground'>
           {isQuickPickMode
-            ? 'Generate questions based on your symptom history. Optionally save them to an upcoming appointment.'
-            : 'Generate questions with AI, then edit freely. Each line is one question.'}
+            ? "Generate questions based on your symptom history. Select an appointment to save them."
+            : "Generate questions with AI, then edit freely. Each line is one question."}
         </p>
 
         <Button
           onClick={handleGenerate}
           disabled={isGenerating}
-          variant={text.trim() ? 'outline' : 'default'}
-          size="sm"
-          className="flex items-center gap-2"
+          variant={text.trim() ? "outline" : "default"}
+          size='sm'
+          className='flex items-center gap-2'
         >
-          <Sparkles className="h-4 w-4" />
+          <Sparkles className='h-4 w-4' />
           {isGenerating
-            ? 'Generating…'
+            ? "Generating…"
             : text.trim()
-            ? 'Regenerate with AI'
-            : 'Generate with AI'}
+              ? "Regenerate with AI"
+              : "Generate with AI"}
         </Button>
 
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           {questionCount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {questionCount} {questionCount === 1 ? 'question' : 'questions'}
+            <p className='text-xs text-muted-foreground'>
+              {questionCount} {questionCount === 1 ? "question" : "questions"}
             </p>
           )}
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Type your questions here, one per line…"
-            className="min-h-[200px] text-sm resize-none"
+            placeholder='Type your questions here'
+            className='min-h-[200px] text-sm resize-none'
           />
         </div>
 
         {/* Quick-pick mode: appointment selector */}
         {isQuickPickMode && questionCount > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Save to appointment{' '}
-              <span className="text-muted-foreground font-normal">(optional)</span>
+          <div className='space-y-2'>
+            <label className='text-sm font-medium'>
+              Select appointment to save questions
             </label>
             {sortedAppointments.length > 0 ? (
               <Select
-                value={selectedAppointmentId ?? ''}
+                value={selectedAppointmentId ?? ""}
                 onValueChange={(val) => setSelectedAppointmentId(val)}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an appointment…" />
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder='Select an appointment…' />
                 </SelectTrigger>
                 <SelectContent>
                   {sortedAppointments.map((appt) => (
@@ -201,37 +208,40 @@ export function GenerateQuestions({
                 </SelectContent>
               </Select>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No appointments found — add one to save these questions.
+              <p className='text-sm text-muted-foreground'>
+                No appointments found. Create an appointment first to save these questions.
               </p>
             )}
           </div>
         )}
 
-        <div className="flex gap-2 justify-end pt-2">
+        <div className='flex gap-2 justify-end pt-2'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={onCancel}
             disabled={isSubmitting || isSaving}
           >
-            {isQuickPickMode && !selectedAppointmentId && questionCount > 0 ? 'Done' : 'Cancel'}
+            Cancel
           </Button>
 
           {isQuickPickMode ? (
-            selectedAppointmentId && (
-              <Button
-                onClick={handleSaveQuickPick}
-                disabled={isSaving || questionCount === 0}
-              >
-                {isSaving ? 'Saving…' : 'Save to Appointment'}
-              </Button>
-            )
+            <Button
+              onClick={handleSaveQuickPick}
+              disabled={
+                isSaving ||
+                questionCount === 0 ||
+                !selectedAppointmentId ||
+                sortedAppointments.length === 0
+              }
+            >
+              {isSaving ? "Saving…" : "Save to Appointment"}
+            </Button>
           ) : (
             <Button
               onClick={handleSaveAppointment}
               disabled={isSubmitting || questionCount === 0}
             >
-              {isSubmitting ? 'Saving…' : 'Save Questions'}
+              {isSubmitting ? "Saving…" : "Save Questions"}
             </Button>
           )}
         </div>

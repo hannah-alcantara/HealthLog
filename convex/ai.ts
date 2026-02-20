@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 
 /**
  * AI Actions using Gemini API
@@ -146,7 +147,7 @@ export const generateAppointmentQuestions = action({
  * - Recent notes from symptom logs
  */
 function formatSymptomDataForAI(
-  symptoms: any[],
+  symptoms: Doc<"symptoms">[],
   appointmentSymptoms?: string,
 ): string {
   if (symptoms.length === 0) {
@@ -161,7 +162,7 @@ function formatSymptomDataForAI(
   );
 
   // Group symptoms by type and analyze patterns
-  const symptomGroups: Record<string, any[]> = {};
+  const symptomGroups: Record<string, Doc<"symptoms">[]> = {};
   symptoms.forEach((symptom) => {
     if (!symptomGroups[symptom.symptomType]) {
       symptomGroups[symptom.symptomType] = [];

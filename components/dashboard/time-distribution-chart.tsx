@@ -77,7 +77,7 @@ export function TimeDistributionChart({
               <span className='font-medium text-muted-foreground'>
                 {period.label} ({period.timeRange}):
               </span>
-              <span className='text-muted-foreground/50'>
+              <span className='text-muted-foreground'>
                 {period.percentage}%
               </span>
             </div>

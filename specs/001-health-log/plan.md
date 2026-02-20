@@ -33,7 +33,7 @@ Building a healthcare tracking application with symptom logging, appointment tra
 - **Date Handling**: date-fns 4.1.0, react-day-picker 9.12.0
 - **Notifications**: sonner 2.0.7 (toast notifications)
 
-**Storage**: Convex cloud database with real-time synchronization (localStorage completely removed)
+**Storage**: Convex cloud database with real-time synchronization
 
 **Testing**:
 
@@ -86,7 +86,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Jest + React Testing Library configured (package.json scripts present)
 - [x] Playwright for E2E testing (installed and configured)
 - [x] Coverage targets defined: 80% utilities, 90% business logic, 100% validation
-- [ ] **ACTION REQUIRED**: Convex-specific testing patterns need research (Phase 0)
+- [x] **ACTION REQUIRED**: Convex-specific testing patterns need research (Phase 0)
 
 ### User Experience Consistency
 
@@ -101,13 +101,13 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - [x] Core Web Vitals targets defined
 - [x] Bundle size limits: JS <200KB, CSS <50KB
 - [x] Performance budgets per feature type
-- [ ] **ACTION REQUIRED**: Convex query optimization patterns need research (Phase 0)
+- [x] **ACTION REQUIRED**: Convex query optimization patterns need research (Phase 0)
 
 ### Data Integrity & Security
 
 - [x] Zod validation on client side (already implemented)
-- [ ] **ACTION REQUIRED**: Convex validators for server-side validation (Phase 0)
-- [ ] **ACTION REQUIRED**: Convex authentication strategy (Phase 0)
+- [x] **ACTION REQUIRED**: Convex validators for server-side validation (Phase 0)
+- [x] **ACTION REQUIRED**: Convex authentication strategy (Phase 0)
 - [x] No sensitive data logging (principle documented)
 
 ### Gate Evaluation (Initial)
@@ -120,7 +120,6 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 2. Convex query optimization for health data
 3. Convex authentication setup (anonymous vs authenticated users)
 4. Convex schema validation approach
-5. Migration strategy from localStorage to Convex
 
 ---
 
@@ -246,8 +245,8 @@ health-log/
 │   │   ├── symptom.ts
 │   │   └── appointment.ts
 │   ├── hooks/                  # MODIFIED: React hooks for Convex integration
-│   │   ├── use-symptoms.ts     # Replaces localStorage with Convex queries
-│   │   └── use-appointments.ts # Replaces localStorage with Convex queries
+│   │   ├── use-symptoms.ts     # Convex queries
+│   │   └── use-appointments.ts # Convex queries
 │   ├── utils/
 │   │   ├── symptom-filters.ts
 │   │   └── question-generator.ts

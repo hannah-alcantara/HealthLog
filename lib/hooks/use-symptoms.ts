@@ -68,7 +68,7 @@ export function useSymptoms() {
   const create = useCallback(
     async (input: CreateSymptomInput): Promise<void> => {
       // Filter out undefined fields to prevent them being sent as null over the network
-      const cleanInput: any = {
+      const cleanInput: CreateSymptomInput = {
         symptomType: input.symptomType,
         severity: input.severity,
         loggedAt: input.loggedAt,

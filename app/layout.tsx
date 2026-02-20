@@ -4,16 +4,22 @@ import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
+import { ConvexErrorBoundary } from "@/components/convex-error-boundary";
+import { ConvexStatus } from "@/components/convex-status";
 import { ClerkProvider } from "@clerk/nextjs";
 
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",
   subsets: ["latin"],
+  weight: ["400"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -41,11 +47,14 @@ export default function RootLayout({
         <body
           className={`${manrope.variable} ${robotoMono.variable} antialiased bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 min-h-screen`}
         >
-          <ConvexClientProvider>
-            <Navigation />
-            {children}
-            <Toaster position='top-right' richColors />
-          </ConvexClientProvider>
+          <ConvexErrorBoundary>
+            <ConvexClientProvider>
+              <Navigation />
+              <main>{children}</main>
+              <ConvexStatus />
+              <Toaster position='bottom-right' richColors />
+            </ConvexClientProvider>
+          </ConvexErrorBoundary>
         </body>
       </html>
     </ClerkProvider>

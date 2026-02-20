@@ -15,6 +15,9 @@ interface AppointmentFormProps {
   isSubmitting?: boolean;
 }
 
+// Get default date outside component to avoid purity issues
+const getDefaultDate = () => Date.now();
+
 export function AppointmentForm({
   defaultValues,
   onSubmit,
@@ -29,7 +32,7 @@ export function AppointmentForm({
   } = useForm<CreateAppointmentInput>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: defaultValues || {
-      date: Date.now(),
+      date: getDefaultDate(),
       doctorName: '',
       reason: '',
       symptoms: undefined,

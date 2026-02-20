@@ -97,9 +97,9 @@ export const getById = query({
 
     const symptom = await ctx.db.get(args.id);
 
-    // Verify ownership
+    // Return null if not found or not owned by this user
     if (!symptom || symptom.userId !== identity.subject) {
-      throw new Error("Symptom not found or unauthorized");
+      return null;
     }
 
     return symptom;
